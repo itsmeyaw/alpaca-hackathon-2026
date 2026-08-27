@@ -1,0 +1,367 @@
+Run a `/grilling` session, using the `/domain-modeling` skill.
+
+
+Base directory for this skill: /Users/itsmeyaw/.claude/skills/grill-with-docs
+Relative paths in this skill (e.g., scripts/, references/) are relative to this base directory.
+
+Create a trading agent for a month long hackathon. Read the @RESEARCH.md for implementation.
+
+The main objective: 
+Options Alpha Agents
+
+Build an autonomous AI trading agent designed to generate P&L using Alpaca's trading platform. Develop a clear, testable trading strategy and demonstrate how your agent identifies opportunities, makes trading decisions, manages positions, and performs over the course of the competition. You may explore options, trading agents, portfolio income, or other approaches supported by Alpaca. 
+
+Implementation: Python 3.14 Backend (or other version, change .venv if different) (unless there is compelling reasons for change) and simple NextJS frontend (or something else, maybe Nuxt or Svelte)
+
+Additional feature idea: Simple dashboard for information regarding decision history, reporting, etc. 
+
+Focus: High P&L
+
+Hosting stack: AWS, no budget cap but keep as low cost as possible. Use terraform if possible (local deployable) with remote state file in AWS.
+
+Use most of your recommendation and focus grilling only on highly ambigue questions or require clearing.
+Called the Read tool with the following input: {"filePath":"/Users/itsmeyaw/projects/alpaca-hackathon/RESEARCH.md"}
+<path>/Users/itsmeyaw/projects/alpaca-hackathon/RESEARCH.md</path>
+<type>file</type>
+<content>
+1: # AI Trading Agent Research Brief
+2: 
+3: ## Hackathon Objective
+4: 
+5: The project is judged on P&L in Alpaca paper trading, effective use of Alpaca's API/MCP/CLI, originality, and clear execution. The winning design should prioritize a robust live system and visible agent behavior over an impressive but unvalidated end-to-end model.
+6: 
+7: ## Executive Recommendation
+8: 
+9: Build **Catalyst Router**: an event-driven, regime-aware mixture-of-experts agent that decides whether an unusual move is driven by new information or temporary liquidity/noise.
+10: 
+11: - A credible catalyst plus price and volume confirmation routes to a continuation strategy.
+12: - An unexplained, extreme market-relative move routes to a mean-reversion strategy.
+13: - Ambiguous, contradictory, illiquid, stale, or high-risk cases route to `NO_TRADE`.
+14: 
+15: The LLM performs structured news/event extraction and explains decisions. Deterministic quantitative code produces forecasts, sizes positions, enforces risk limits, and submits orders. This is materially more defensible than allowing an LLM to freely predict prices or execute arbitrary trades.
+16: 
+17: ## What State of the Art Actually Says
+18: 
+19: ### LLM agents
+20: 
+21: Multi-agent frameworks such as TradingAgents use specialized fundamental, sentiment, technical, bull/bear, trader, and risk roles, reporting stronger backtest results than simpler agents [1]. FinMem reports benefits from a layered memory that prioritizes information by relevance and timescale [2].
+22: 
+23: The strongest recent evidence is cautionary:
+24: 
+25: - AI-Trader finds that general LLM capability does not automatically create trading capability; most tested agents had poor returns and weak risk management [3].
+26: - StockBench similarly finds that most models struggle to beat a buy-and-hold baseline [4].
+27: - A 2026 audit found only 2 of 19 closed-loop agent studies had extractable time-consistent splits, only one modeled transaction costs, and none achieved the highest reproducibility tier [5].
+28: 
+29: **Implication:** LLMs should be constrained research/orchestration components, not unconstrained predictive and execution engines.
+30: 
+31: ### Predictive models
+32: 
+33: For cross-sectional return prediction, trees and neural networks have historically produced large gains over linear benchmarks by modeling nonlinear predictor interactions. Momentum, liquidity, and volatility consistently appear as important signals [6].
+34: 
+35: Relevant recent architectures:
+36: 
+37: - **StockMixer** is a strong, efficient MLP for mixing indicators, time horizons, and cross-stock relationships [7].
+38: - **MASTER** is a market-guided transformer that models dynamic, cross-time stock correlations and adapts feature relevance to the market state [8].
+39: 
+40: For a hackathon, start with LightGBM or XGBoost plus well-defined features. They are quick to train, simple to explain, and robust enough to be a credible benchmark. Treat StockMixer/MASTER as optional challengers rather than mandatory infrastructure.
+41: 
+42: ### News and event extraction
+43: 
+44: LLM-derived financial sentiment can improve return prediction. A study using 965,375 US financial news articles reported a self-financing strategy with an OPT-based sentiment signal that substantially outperformed a dictionary baseline [9]. However, historical LLM evaluations can be contaminated by model knowledge and company-identity effects; anonymizing named companies is one proposed mitigation [10].
+45: 
+46: Use an LLM to emit structured event records, not a vague sentiment label:
+47: 
+48: ```json
+49: {
+50:   "event_type": "earnings_guidance",
+51:   "direction": "negative",
+52:   "magnitude": 0.81,
+53:   "novelty": 0.74,
+54:   "surprise": 0.67,
+55:   "expected_horizon_minutes": 180,
+56:   "confidence": 0.79,
+57:   "affected_symbols": ["XYZ"],
+58:   "invalidating_evidence": ["guidance withdrawal clarified"]
+59: }
+60: ```
+61: 
+62: ### Intraday structure
+63: 
+64: Both continuation and reversal effects exist intraday. Cross-sectional returns can continue at recurring half-hour intervals, while short-horizon reversal is associated with temporary liquidity imbalances and bid-ask bounce [11].
+65: 
+66: This supports Catalyst Router's key hypothesis: the same large move should be treated as continuation when it contains new information and reversion when it appears to be temporary liquidity pressure.
+67: 
+68: ### Reinforcement learning
+69: 
+70: FinRL and FinRL-Meta offer useful environments, constraints, and reference implementations [12]. But a robustness benchmark found that many standard deep-RL portfolio methods generalized poorly and degraded quickly in backtests [13].
+71: 
+72: Do not use end-to-end PPO/SAC/DDPG as the sole production strategy in a short contest. A contextual bandit that allocates risk among independently validated strategies is more realistic. A trained RL model can run in shadow mode as a creative comparison or future extension.
+73: 
+74: ## Proposed System: Catalyst Router
+75: 
+76: ### Data and universe selection
+77: 
+78: Use Alpaca to identify the active, liquid universe on each trading day:
+79: 
+80: 1. Query the most active stocks and market movers.
+81: 2. Filter to tradable, shortable, liquid equities.
+82: 3. Exclude low-priced names, halts, LULD events, large spreads, stale data, and recent corporate actions.
+83: 4. Select approximately 30-75 symbols rather than attempting to trade the complete market.
+84: 5. Include SPY, QQQ, sector ETFs, and optionally BTC/USD and ETH/USD as regime/risk-appetite references.
+85: 
+86: Initial filters:
+87: 
+88: - Price greater than `$5`.
+89: - Median daily dollar volume greater than `$50M`.
+90: - Spread below `8-15 bps`.
+91: - No trading halt, LULD, or stale quote.
+92: - Sufficient history and recent news coverage.
+93: 
+94: ### Expert signals
+95: 
+96: | Expert | Input | Output |
+97: | --- | --- | --- |
+98: | Catalyst analyst | Alpaca news + LLM | Event type, direction, novelty, confidence, horizon |
+99: | Momentum expert | Residual return, opening range, VWAP, volume | Continuation confidence |
+100: | Reversion expert | Return z-score, VWAP distance, spread, liquidity | Reversion confidence |
+101: | Regime expert | SPY/QQQ trend, breadth, realized volatility, correlation | Risk-on/risk-off/volatile regime |
+102: | Risk critic | Exposure, drawdown, stale data, disagreement | Approve, reduce, veto |
+103: 
+104: The router must return one typed state:
+105: 
+106: ```text
+107: CATALYST_CONTINUATION
+108: LIQUIDITY_REVERSION
+109: REGIME_TREND
+110: NO_TRADE
+111: ```
+112: 
+113: ### Entry rules
+114: 
+115: **Catalyst continuation**
+116: 
+117: - Material news is timestamped before the move.
+118: - Event confidence and novelty exceed calibrated thresholds.
+119: - Price is above/below VWAP in the event direction.
+120: - Relative volume and market-relative return confirm the thesis.
+121: - Spread and estimated execution costs are acceptable.
+122: 
+123: **Liquidity reversion**
+124: 
+125: - No credible new information explains the move.
+126: - Sector- and market-adjusted return is extreme.
+127: - Price is materially displaced from VWAP.
+128: - Volume does not indicate sustained information arrival.
+129: - Avoid the first opening minutes and scheduled earnings windows.
+130: 
+131: Only enter when conservative edge clears costs:
+132: 
+133: ```text
+134: expected_edge > spread + estimated_slippage + uncertainty_buffer
+135: ```
+136: 
+137: ### Risk and sizing
+138: 
+139: The LLM may propose a thesis but must never choose the quantity. Position size must derive from stop distance and an account-level risk budget:
+140: 
+141: ```text
+142: shares = per_trade_risk_budget / abs(entry_price - stop_price)
+143: ```
+144: 
+145: Initial hard limits:
+146: 
+147: - Risk per trade: `0.25%-0.50%` of equity.
+148: - Maximum simultaneous positions: `5`.
+149: - Maximum individual symbol exposure: `15%`.
+150: - Maximum sector exposure: `30%`.
+151: - Daily loss circuit breaker: `1.5%-2%`.
+152: - Maximum portfolio drawdown: `4%-5%`.
+153: - Do not average down unless a separately validated strategy explicitly requires it.
+154: 
+155: Use a small regime-conditioned SPY/QQQ sleeve only if the judging period is long enough to make being entirely in cash an unacceptable benchmark risk. Retain most capital for high-conviction active trades.
+156: 
+157: ### Exits
+158: 
+159: - Use volatility-scaled profit targets and stops.
+160: - Attach Alpaca bracket orders in regular market hours.
+161: - Apply a maximum holding period consistent with the predicted event horizon.
+162: - Exit on thesis invalidation as well as price stops.
+163: - Close most intraday strategies before the bell.
+164: - Hold overnight only for high-confidence multi-hour catalysts.
+165: 
+166: ## Alpaca Implementation Plan
+167: 
+168: ### Architecture
+169: 
+170: ```text
+171: Alpaca streams + news
+172:         |
+173: Feature store -> quantitative experts -> router -> LLM event analyst
+174:         |                                         |
+175:         +----------------> Risk Governor <--------+
+176:                                  |
+177:                           TradeIntent validator
+178:                                  |
+179:                   Alpaca Trading API / MCP / CLI
+180:                                  |
+181:                    Trade-update stream + audit log
+182: ```
+183: 
+184: ### Trading API and alpaca-py
+185: 
+186: Use the Python SDK for the always-on service and WebSocket subscriptions:
+187: 
+188: - Real-time quotes, trades, minute bars, updated bars, statuses, and LULDs.
+189: - Historical bars and snapshots for feature construction.
+190: - Trading stream for fill, cancellation, rejection, and replacement updates.
+191: - Market clock/calendar to avoid invalid session behavior.
+192: - Account, positions, and activity APIs for reconciliation.
+193: 
+194: Alpaca recommends streaming for current data rather than polling historical endpoints. Updated bars can arrive after their original minute, so the feature pipeline must handle bar corrections rather than treating the first received value as final.
+195: 
+196: ### MCP server
+197: 
+198: Use MCP as the LLM-facing tool interface. Useful tools include:
+199: 
+200: - `get_market_movers`, `get_most_active_stocks`, and `get_stock_snapshot`.
+201: - `get_stock_bars`, `get_stock_quotes`, and `get_news`.
+202: - `get_account_info`, `get_all_positions`, and `get_orders`.
+203: - `place_stock_order`, `cancel_order_by_id`, and `replace_order_by_id`.
+204: 
+205: The LLM should produce a typed `TradeIntent`; the deterministic Risk Governor checks price freshness, buying power, signal confidence, stop placement, exposure, duplicate order IDs, and kill-switch status before invoking an order tool.
+206: 
+207: ### CLI
+208: 
+209: Use the Alpaca CLI as an operator and demonstration surface:
+210: 
+211: ```bash
+212: alpaca doctor
+213: alpaca account get
+214: alpaca position list
+215: alpaca account portfolio
+216: alpaca order submit --symbol AAPL --side buy --qty 1 --type market --dry-run
+217: ```
+218: 
+219: It produces structured JSON, supports `--dry-run`, and can retrieve account, positions, portfolio history, orders, market data, news, and watchlists. Include it in the demo to satisfy the technology-implementation criterion visibly.
+220: 
+221: ### Execution safeguards
+222: 
+223: - Assign deterministic `client_order_id` values for idempotency.
+224: - Treat the trade-update stream as order-state authority.
+225: - Reconcile local state with Alpaca on startup and after reconnects.
+226: - Reject stale quotes, stale news, invalid prices, and duplicate intents.
+227: - Cancel aged or contradictory entry orders.
+228: - Maintain a global kill switch and an automatic daily-loss circuit breaker.
+229: - Use regular-hours bracket/OCO orders where applicable.
+230: - Use limit orders only in extended hours. Bracket orders are not supported there.
+231: 
+232: ### Paper-trading caveats
+233: 
+234: Alpaca paper trading simulates fills from real-time quotes but does not account for market impact, information leakage, latency-driven slippage, queue position, price improvement, regulatory fees, or dividends. A paper-only account has IEX data, which is a small portion of total US market volume. Do not build a sub-minute quote-level strategy without the appropriate consolidated data subscription, and do not optimize around simulator fill artifacts.
+235: 
+236: ## Validation Before the Judged Period
+237: 
+238: The Deflated Sharpe Ratio corrects for multiple testing and non-normality, addressing selection bias created when many strategy configurations are tested [14].
+239: 
+240: Validation checklist:
+241: 
+242: 1. Use chronological walk-forward splits, never random cross-validation.
+243: 2. Purge overlapping label windows between train and test sets.
+244: 3. Construct news and the symbol universe point-in-time.
+245: 4. Include signal, inference, and order latency before execution.
+246: 5. Fill at bid/ask plus conservative slippage, not at bar close.
+247: 6. Include estimated transaction costs even though paper trading may omit them.
+248: 7. Freeze parameters before the judged window.
+249: 8. Compare with cash, SPY, equal-weight, basic momentum, and no-LLM baselines.
+250: 9. Report results by strategy, event type, regime, side, symbol, and holding period.
+251: 10. Run several random seeds for neural or RL models.
+252: 
+253: Track P&L, return, Sharpe/Sortino, maximum drawdown, profit factor, hit rate, average win/loss, turnover, estimated costs, concentration, beta, calibration by confidence bucket, and P&L attributed to each expert.
+254: 
+255: ## Alternative Concepts
+256: 
+257: | Concept | P&L potential | Originality | Delivery risk |
+258: | --- | --- | --- | --- |
+259: | Catalyst Router | High | High | Medium |
+260: | Regime-adaptive strategy council | High | Medium | Medium |
+261: | Crypto-to-equity Night Watch | Medium-high | High | Medium |
+262: | Event-driven options volatility agent | Medium | Very high | High |
+263: | Supply-chain news propagation graph | Medium | Very high | High |
+264: | Intraday seasonality/reversal agent | Medium | Medium | Low |
+265: 
+266: ### Crypto-to-equity Night Watch
+267: 
+268: Use BTC/USD, ETH/USD, overnight equity data, news, and global-risk proxies to estimate risk appetite ahead of the US open. Trade liquid index ETFs and semiconductors rather than trying to predict individual names. It is visually compelling because the agent is active while US cash equities are closed.
+269: 
+270: ### Event-driven options volatility agent
+271: 
+272: Compare structured LLM uncertainty about scheduled events with observed implied volatility, then trade defined-risk spreads. This is original, but data, fill behavior, and short contest windows make P&L less dependable.
+273: 
+274: ### Supply-chain propagation graph
+275: 
+276: Build an explicit graph of suppliers, customers, competitors, sectors, and ETFs. When news hits one company, estimate delayed effects on related names. This is differentiated, but requires point-in-time relationship data and careful claim validation.
+277: 
+278: ### Regime-adaptive strategy council
+279: 
+280: Let several small deterministic strategies vote: trend, mean reversion, event continuation, defensive ETF rotation, and cash. A contextual bandit allocates a risk budget to strategies with current evidence, rather than asking a single model to solve every regime.
+281: 
+282: ## Presentation Plan
+283: 
+284: Central message:
+285: 
+286: > We do not ask an LLM to guess the next price. We ask it whether a move contains new information, then route the move to a validated quantitative strategy under a hard risk governor.
+287: 
+288: Demonstrate these artifacts live:
+289: 
+290: 1. Current Alpaca movers and selected liquid universe.
+291: 2. A generated structured event card from Alpaca news.
+292: 3. Bull, bear, and risk-critic viewpoints.
+293: 4. A visible veto or `NO_TRADE` example, not only successful trades.
+294: 5. The typed `TradeIntent` and deterministic risk checks.
+295: 6. MCP tool calls and CLI `--dry-run`/account inspection.
+296: 7. Submission, trade update, bracket creation, and exit lifecycle.
+297: 8. P&L and drawdown against SPY and simple baselines.
+298: 9. An ablation without event routing or LLM extraction.
+299: 10. A complete, timestamped decision trail for every trade.
+300: 
+301: ## References
+302: 
+303: [1] [TradingAgents: Multi-Agents LLM Financial Trading Framework](https://consensus.app/papers/details/e7ae4968482e5773b718765f4182ddaf/?utm_source=unknown), Xiao et al., 2024, arXiv. “The framework includes Bull and Bear researcher agents assessing market conditions, a risk management team monitoring exposure, and traders synthesizing insights.”
+304: 
+305: [2] [FinMem: A Performance-Enhanced LLM Trading Agent With Layered Memory and Character Design](https://consensus.app/papers/details/5651cdce424e54bea80bc7f0e5469351/?utm_source=unknown), Yu et al., 2023, IEEE Transactions on Big Data. “The Memory module... employs a layered approach to process and prioritize data based on its timeliness and relevance.”
+306: 
+307: [3] [AI-Trader: Benchmarking Autonomous Agents in Real-Time Financial Markets](https://consensus.app/papers/details/2a4518ff43dc5107841241801020596c/?utm_source=unknown), Fan et al., 2025, arXiv. “General intelligence does not automatically translate to effective trading capability, with most agents exhibiting poor returns and weak risk management.”
+308: 
+309: [4] [StockBench: Can LLM Agents Trade Stocks Profitably In Real-world Markets?](https://consensus.app/papers/details/f9feb25af9a6556baa4fadf0d32c6c31/?utm_source=unknown), Chen et al., 2025, arXiv. “Most models struggle to outperform the simple buy-and-hold baseline.”
+310: 
+311: [5] [Agentic Trading: When LLM Agents Meet Financial Markets](https://consensus.app/papers/details/33b2ad06c2cf5136bd3a5109bf6fa769/?utm_source=unknown), Xia et al., 2026, arXiv. “Only 2/19 studies report extractable time-consistent split protocols... and no study reaches R3 reproducibility.”
+312: 
+313: [6] Gu, Kelly, and Xiu. [Empirical Asset Pricing via Machine Learning](https://doi.org/10.1093/rfs/hhaa009), 2020. DOI: `10.1093/rfs/hhaa009`. “We identify the best-performing methods (trees and neural networks)... momentum, liquidity, and volatility.”
+314: 
+315: [7] Fan and Shen. [StockMixer: A Simple Yet Strong MLP-Based Architecture for Stock Price Forecasting](https://doi.org/10.1609/aaai.v38i8.28681), 2024. DOI: `10.1609/aaai.v38i8.28681`. “StockMixer outperforms various state-of-the-art forecasting methods with a notable margin while reducing memory usage and runtime cost.”
+316: 
+317: [8] Li et al. [MASTER: Market-Guided Stock Transformer for Stock Price Forecasting](https://doi.org/10.1609/aaai.v38i1.27767), 2024. DOI: `10.1609/aaai.v38i1.27767`. “MASTER... models the momentary and cross-time stock correlation and leverages market information for automatic feature selection.”
+318: 
+319: [9] Kirtac and Germano. [Enhanced Financial Sentiment Analysis and Trading Strategy Development Using Large Language Models](https://doi.org/10.18653/v1/2024.wassa-1.1), 2024. DOI: `10.18653/v1/2024.wassa-1.1`. “A self-financing strategy based on OPT scores achieves a Sharpe ratio of 3.05.”
+320: 
+321: [10] Glasserman and Lin. [Assessing Look-Ahead Bias in Stock Return Predictions Generated by GPT Sentiment Analysis](https://arxiv.org/abs/2309.17322), 2023. DOI: `10.48550/arXiv.2309.17322`. “The authors’ proposed anonymization procedure is therefore potentially useful in out-of-sample implementation.”
+322: 
+323: [11] Heston, Korajczyk, and Sadka. [Intraday Patterns in the Cross-Section of Stock Returns](https://doi.org/10.1111/j.1540-6261.2010.01573.x), 2010. DOI: `10.1111/j.1540-6261.2010.01573.x`. “Short-term return reversal is driven by temporary liquidity imbalances lasting less than an hour and bid-ask bounce.”
+324: 
+325: [12] Liu et al. [FinRL-Meta: Market Environments and Benchmarks for Data-Driven Financial Reinforcement Learning](https://doi.org/10.52202/068431-0134), 2022. DOI: `10.52202/068431-0134`. “Low signal-to-noise ratio... survivorship bias... and model overfitting” are central challenges.
+326: 
+327: [13] Velay et al. [Benchmarking Robustness of Deep Reinforcement Learning Approaches to Online Portfolio Management](https://doi.org/10.1109/INISTA59065.2023.10310402), 2023. DOI: `10.1109/INISTA59065.2023.10310402`. “Most Deep Reinforcement Learning algorithms were not robust, with strategies generalizing poorly.”
+328: 
+329: [14] Bailey and Lopez de Prado. [The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality](https://doi.org/10.3905/jpm.2014.40.5.094), 2014. DOI: `10.3905/jpm.2014.40.5.094`. “DSR helps separate legitimate empirical findings from statistical flukes.”
+330: 
+331: ## Official Alpaca Documentation
+332: 
+333: - [Trading MCP Server](https://docs.alpaca.markets/us/docs/alpaca-mcp-server)
+334: - [Trading CLI](https://docs.alpaca.markets/us/docs/alpacas-cli)
+335: - [Paper Trading](https://docs.alpaca.markets/us/docs/paper-trading)
+336: - [Placing Orders](https://docs.alpaca.markets/us/docs/orders-at-alpaca)
+337: - [Real-time Stock Data](https://docs.alpaca.markets/us/docs/real-time-stock-pricing-data)
+338: - [Historical Stock Data](https://docs.alpaca.markets/us/docs/historical-stock-data-1)
+
+(End of file - total 338 lines)
+</content>

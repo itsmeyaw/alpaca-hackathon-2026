@@ -1,0 +1,195 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M12J1MVV5974WR0D06YFF6XX",
+  "session_id": "ses_fbb1a3fefffe3UyHgOa68t9RAz",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-27T21:29:46.577089Z",
+  "branch": "main",
+  "checkpoints_count": 16,
+  "save_step_count": 9,
+  "files_touched": [
+    "CONTEXT.md",
+    "docs/adr/0001-use-a-hybrid-catalyst-router.md",
+    "docs/adr/0002-start-with-free-alpaca-market-data.md",
+    "docs/adr/0003-allow-controlled-overnight-catalyst-risk.md",
+    "docs/adr/0004-budget-correlated-portfolio-risk.md",
+    "docs/adr/0005-keep-trained-models-in-shadow-mode.md",
+    "docs/adr/0006-bound-live-strategy-adaptation.md",
+    "docs/adr/0007-limit-live-option-structures-with-indicative-data.md",
+    "docs/adr/0008-separate-public-reporting-from-operator-control.md",
+    "docs/adr/0009-use-a-small-single-region-aws-deployment.md",
+    "docs/adr/0010-use-dynamodb-for-operational-state.md",
+    "docs/adr/0011-separate-alpaca-runtime-and-agent-tool-authority.md",
+    "docs/adr/0012-use-a-small-event-driven-market-universe.md"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-sol",
+  "turn_id": "cd47d197727e",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 254386,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 23312645,
+    "output_tokens": 67264,
+    "api_call_count": 158
+  },
+  "session_metrics": {
+    "turn_count": 16
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-27T21:29:46.42102Z",
+    "agent_lines": 478,
+    "agent_removed": 0,
+    "human_added": 5870,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 6348,
+    "total_lines_changed": 6348,
+    "agent_percentage": 7.529930686830498,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 385,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".env": 2,
+        ".opencode/plugins/entire.ts": 269,
+        "AGENTS.md": 9,
+        "CLAUDE.md": 9,
+        "docs/agents/domain.md": 51,
+        "docs/agents/issue-tracker.md": 45
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 278,
+      "user_lines_removed": 1,
+      "agent_lines_added": 214,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".opencode/plugins/entire.ts": 269,
+        "CLAUDE.md": 9
+      },
+      "user_removed_per_file": {
+        "CLAUDE.md": 1
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 278,
+      "user_lines_removed": 1,
+      "agent_lines_added": 255,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".opencode/plugins/entire.ts": 269,
+        "CLAUDE.md": 9
+      },
+      "user_removed_per_file": {
+        "CLAUDE.md": 1
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 278,
+      "user_lines_removed": 1,
+      "agent_lines_added": 292,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".opencode/plugins/entire.ts": 269,
+        "CLAUDE.md": 9
+      },
+      "user_removed_per_file": {
+        "CLAUDE.md": 1
+      }
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 278,
+      "user_lines_removed": 1,
+      "agent_lines_added": 322,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".opencode/plugins/entire.ts": 269,
+        "CLAUDE.md": 9
+      },
+      "user_removed_per_file": {
+        "CLAUDE.md": 1
+      }
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 278,
+      "user_lines_removed": 1,
+      "agent_lines_added": 361,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".opencode/plugins/entire.ts": 269,
+        "CLAUDE.md": 9
+      },
+      "user_removed_per_file": {
+        "CLAUDE.md": 1
+      }
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 278,
+      "user_lines_removed": 1,
+      "agent_lines_added": 375,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".opencode/plugins/entire.ts": 269,
+        "CLAUDE.md": 9
+      },
+      "user_removed_per_file": {
+        "CLAUDE.md": 1
+      }
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 278,
+      "user_lines_removed": 1,
+      "agent_lines_added": 410,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".opencode/plugins/entire.ts": 269,
+        "CLAUDE.md": 9
+      },
+      "user_removed_per_file": {
+        "CLAUDE.md": 1
+      }
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 326,
+      "user_lines_removed": 1,
+      "agent_lines_added": 470,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".opencode/plugins/entire.ts": 269,
+        "CLAUDE.md": 9,
+        "CONTEXT.md": 48
+      },
+      "user_removed_per_file": {
+        "CLAUDE.md": 1
+      }
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 278,
+      "user_lines_removed": 1,
+      "agent_lines_added": 6471,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".opencode/plugins/entire.ts": 269,
+        "CLAUDE.md": 9
+      },
+      "user_removed_per_file": {
+        "CLAUDE.md": 1
+      }
+    }
+  ]
+}
