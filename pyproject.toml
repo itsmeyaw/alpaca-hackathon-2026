@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "catalyst-router"
+version = "0.1.0"
+description = "A regime-aware Alpaca paper-trading agent"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+  "alpaca-py>=0.44.0,<0.45",
+  "boto3>=1.43.0,<2",
+  "fastapi>=0.141.0,<0.142",
+  "pydantic>=2.13.0,<3",
+  "python-dotenv>=1.2.0,<2",
+  "uvicorn[standard]>=0.41.0,<0.42",
+]
+
+[dependency-groups]
+dev = [
+  "boto3-stubs[dynamodb]>=1.43.0,<2",
+  "httpx>=0.28.0,<0.29",
+  "mypy>=1.19.0,<2",
+  "pytest>=9.0.0,<10",
+  "pytest-cov>=7.0.0,<8",
+  "ruff>=0.15.0,<0.16",
+]
+
+[project.scripts]
+catalyst-router = "catalyst_router.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/catalyst_router"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers"
+testpaths = ["tests"]
+markers = [
+  "integration: requires a local or AWS service",
+  "paper: requires Alpaca paper credentials",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+packages = ["catalyst_router"]

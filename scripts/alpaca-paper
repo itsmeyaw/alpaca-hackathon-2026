@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+arguments=("$@")
+
+for argument in "${arguments[@]}"; do
+  if [[ "$argument" == --live* ]]; then
+    printf '%s\n' "Refusing --live: this repository is paper-trading only." >&2
+    exit 2
+  fi
+  if [[ "$argument" == --dry-run=* ]]; then
+    printf '%s\n' "Use the exact --dry-run flag; explicit values are refused." >&2
+    exit 2
+  fi
+done
+
+for index in "${!arguments[@]}"; do
+  command="${arguments[index]}"
+  subcommand="${arguments[index + 1]:-}"
+  next_command="${arguments[index + 2]:-}"
+
+  case "$command:$subcommand" in
+    order:submit)
+      dry_run=false
+      for argument in "${arguments[@]}"; do
+        [[ "$argument" == "--dry-run" ]] && dry_run=true
+      done
+      if [[ "$dry_run" != true ]]; then
+        printf '%s\n' "Refusing order submission without --dry-run." >&2
+        exit 2
+      fi
+      ;;
+    order:replace|order:cancel|order:cancel-all|position:close|position:close-all)
+      printf '%s\n' "Refusing mutating Alpaca CLI command in the read-only iteration." >&2
+      exit 2
+      ;;
+    option:exercise|option:do-not-exercise|watchlist:create|watchlist:add|watchlist:remove|watchlist:delete)
+      printf '%s\n' "Refusing mutating Alpaca CLI command in the read-only iteration." >&2
+      exit 2
+      ;;
+    api:POST|api:PUT|api:PATCH|api:DELETE)
+      printf '%s\n' "Refusing mutating raw Alpaca API command." >&2
+      exit 2
+      ;;
+  esac
+
+  if [[ "$command:$subcommand:$next_command" == "account:config:set" ]]; then
+    printf '%s\n' "Refusing account configuration mutation." >&2
+    exit 2
+  fi
+done
+
+set -a
+source "$(git rev-parse --show-toplevel)/.env"
+set +a
+
+export ALPACA_API_KEY="$ALPACA_KEY"
+export ALPACA_SECRET_KEY="$ALPACA_SECRET"
+export ALPACA_LIVE_TRADE=false
+
+exec alpaca "$@"
