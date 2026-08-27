@@ -1,0 +1,1 @@
+Re-review current `git diff HEAD` in /Users/itsmeyaw/projects/alpaca-hackathon. Confirm training dependencies are isolated, artifacts/data ignored, credentials not exposed, no code path from challenger to DecisionEngine/RiskGovernor/orders, cache reuse fails closed, and tests cover key pure seams. Report only high/medium actionable findings or say no blocking findings.
