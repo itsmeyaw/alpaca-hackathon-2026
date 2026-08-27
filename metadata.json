@@ -3,7 +3,7 @@
   "checkpoint_id": "01M12KGRS9K94PSC2TG085PXSC",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     ".gitignore",
     "Makefile",
@@ -25,13 +25,20 @@
       "compact_transcript": "/1/transcript.jsonl",
       "content_hash": "/1/content_hash.txt",
       "prompt": "/1/prompt.txt"
+    },
+    {
+      "metadata": "/2/metadata.json",
+      "transcript": "/2/full.jsonl",
+      "compact_transcript": "/2/transcript.jsonl",
+      "content_hash": "/2/content_hash.txt",
+      "prompt": "/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 119652,
+    "input_tokens": 188242,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 373285,
-    "output_tokens": 2565,
-    "api_call_count": 13
+    "cache_read_tokens": 552765,
+    "output_tokens": 3968,
+    "api_call_count": 19
   }
 }

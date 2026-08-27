@@ -1,0 +1,73 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M12KGRS9K94PSC2TG085PXSC",
+  "session_id": "ses_fbacd1b82ffeT6zGTCA2uNwcOq",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-27T21:55:20.529721Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    ".gitignore",
+    "Makefile",
+    "README.md",
+    "pyproject.toml",
+    "uv.lock"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-luna",
+  "turn_id": "53602520ac8c",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 68590,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 179480,
+    "output_tokens": 1403,
+    "api_call_count": 6
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-27T21:55:20.504942Z",
+    "agent_lines": 2,
+    "agent_removed": 0,
+    "human_added": 140,
+    "human_modified": 1,
+    "human_removed": 0,
+    "total_committed": 143,
+    "total_lines_changed": 143,
+    "agent_percentage": 1.3986013986013985,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 1410,
+      "user_lines_removed": 1,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".gitignore": 1,
+        "Makefile": 4,
+        "README.md": 15,
+        "docs/training/local-benchmark.md": 66,
+        "pyproject.toml": 6,
+        "scripts/train-challengers": 664,
+        "src/catalyst_router/training.py": 381,
+        "tests/unit/test_training.py": 128,
+        "uv.lock": 145
+      },
+      "user_removed_per_file": {
+        "Makefile": 1
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1410,
+      "agent_lines_removed": 1
+    }
+  ]
+}
