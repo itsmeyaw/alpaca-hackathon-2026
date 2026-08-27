@@ -22,3 +22,4 @@ dashboard/.next/
 dashboard/out/
 dashboard/*.tsbuildinfo
 .DS_Store
+.local/

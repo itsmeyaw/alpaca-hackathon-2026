@@ -54,6 +54,21 @@ AWS_REGION=us-east-1
 
 Order execution remains absent until DynamoDB idempotency, reconciliation, and risk-reservation integration tests are complete.
 
+## Local Challenger Training
+
+Train price-only challenger models from cached raw IEX bars:
+
+```bash
+make train-local
+```
+
+The runner compares deterministic baselines, linear models, histogram boosting, and XGBoost
+with purged chronological walk-forward validation and a diagnostic holdout. Data and model
+artifacts stay under the ignored `.local/training/` directory. Every resulting manifest has
+`authority=SHADOW_ONLY`; numeric results cannot promote a model or affect a `TradeIntent`.
+
+See `docs/training/local-benchmark.md` for the current winner, experiment history, and limits.
+
 The provisioned AWS table can be exercised read-only with:
 
 ```bash

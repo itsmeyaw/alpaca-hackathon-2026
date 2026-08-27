@@ -1,4 +1,4 @@
-.PHONY: check test test-integration dashboard-build docker-build infra-fmt
+.PHONY: check test test-integration train-local dashboard-build docker-build infra-fmt
 
 check:
 	uv run ruff format --check .
@@ -13,6 +13,9 @@ test:
 test-integration:
 	docker compose up -d dynamodb
 	DYNAMODB_ENDPOINT_URL=http://localhost:8001 AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local uv run pytest -m integration tests/integration/test_dynamodb_store.py
+
+train-local:
+	uv run --group training scripts/train-challengers
 
 dashboard-build:
 	npm --prefix dashboard run typecheck

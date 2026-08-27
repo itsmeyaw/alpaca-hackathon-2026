@@ -26,6 +26,13 @@ dev = [
   "pytest-cov>=7.0.0,<8",
   "ruff>=0.15.0,<0.16",
 ]
+training = [
+  "joblib>=1.5,<2",
+  "numpy>=2.3,<3",
+  "pandas>=2.3,<4",
+  "scikit-learn>=1.7,<2",
+  "xgboost>=3,<4",
+]
 
 [project.scripts]
 catalyst-router = "catalyst_router.cli:main"

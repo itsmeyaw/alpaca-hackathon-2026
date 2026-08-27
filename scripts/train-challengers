@@ -1,0 +1,705 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import platform
+import subprocess
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime, timedelta
+from importlib.metadata import version
+from math import isfinite
+from pathlib import Path
+from statistics import fmean, pstdev
+from typing import Any
+
+import joblib
+import numpy as np
+import pandas as pd
+from alpaca.data.enums import Adjustment, DataFeed
+from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.requests import StockBarsRequest
+from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
+from dotenv import load_dotenv
+from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
+from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from xgboost import XGBClassifier, XGBRegressor
+
+from catalyst_router.training import (
+    FEATURE_NAMES,
+    BarCacheSpecification,
+    EvaluationResult,
+    MarketBar,
+    TrainingExample,
+    build_training_examples,
+    evaluate_predictions,
+    evaluate_return_forecasts,
+    purged_walk_forward_splits,
+    sha256_file,
+    validate_bar_cache,
+)
+
+DEFAULT_SYMBOLS = (
+    "SPY",
+    "QQQ",
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "AMZN",
+    "META",
+    "GOOGL",
+    "TSLA",
+    "AMD",
+    "JPM",
+    "XOM",
+)
+PROBABILITY_THRESHOLDS = (0.50, 0.55, 0.60)
+RETURN_EDGE_GATES_BPS = (0.0, 4.0, 8.0, 12.0)
+
+
+@dataclass(frozen=True, slots=True)
+class Candidate:
+    name: str
+    prediction_kind: str
+    factory: Callable[[], ClassifierMixin | RegressorMixin] | None = None
+    baseline: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RankedCandidate:
+    name: str
+    prediction_kind: str
+    decision_gate: float
+    selection_score: float
+    validation: dict[str, Any]
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Train and compare local shadow challengers with purged walk-forward validation."
+        )
+    )
+    parser.add_argument("--start", default="2025-01-01")
+    parser.add_argument("--end", default=datetime.now(UTC).date().isoformat())
+    parser.add_argument("--symbols", default=",".join(DEFAULT_SYMBOLS))
+    parser.add_argument("--timeframe-minutes", type=int, default=15)
+    parser.add_argument("--horizon-bars", type=int, default=16)
+    parser.add_argument("--cost-bps", type=float, default=12.0)
+    parser.add_argument("--folds", type=int, default=4)
+    parser.add_argument("--holdout-fraction", type=float, default=0.15)
+    parser.add_argument("--cache-dir", type=Path, default=Path(".local/training/data"))
+    parser.add_argument("--artifact-dir", type=Path, default=Path(".local/training/artifacts"))
+    parser.add_argument("--refresh", action="store_true")
+    return parser.parse_args()
+
+
+def candidates() -> tuple[Candidate, ...]:
+    return (
+        Candidate("always_long", "return", baseline="long"),
+        Candidate("momentum_4", "return", baseline="momentum"),
+        Candidate("reversion_4", "return", baseline="reversion"),
+        Candidate(
+            "logistic_l2",
+            "probability",
+            factory=lambda: make_pipeline(
+                StandardScaler(),
+                LogisticRegression(C=0.1, max_iter=1_000, random_state=42),
+            ),
+        ),
+        Candidate(
+            "hist_gradient_boosting",
+            "probability",
+            factory=lambda: HistGradientBoostingClassifier(
+                learning_rate=0.05,
+                max_iter=200,
+                max_leaf_nodes=15,
+                l2_regularization=1.0,
+                random_state=42,
+            ),
+        ),
+        Candidate(
+            "xgboost_shallow",
+            "probability",
+            factory=lambda: XGBClassifier(
+                n_estimators=250,
+                max_depth=2,
+                learning_rate=0.04,
+                min_child_weight=20,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                reg_lambda=10,
+                objective="binary:logistic",
+                eval_metric="logloss",
+                n_jobs=4,
+                random_state=42,
+            ),
+        ),
+        Candidate(
+            "xgboost_regularized",
+            "probability",
+            factory=lambda: XGBClassifier(
+                n_estimators=350,
+                max_depth=4,
+                learning_rate=0.025,
+                min_child_weight=40,
+                subsample=0.75,
+                colsample_bytree=0.75,
+                reg_alpha=0.1,
+                reg_lambda=20,
+                objective="binary:logistic",
+                eval_metric="logloss",
+                n_jobs=4,
+                random_state=42,
+            ),
+        ),
+        Candidate(
+            "ridge_return",
+            "return",
+            factory=lambda: make_pipeline(StandardScaler(), Ridge(alpha=10.0)),
+        ),
+        Candidate(
+            "hist_gradient_return",
+            "return",
+            factory=lambda: HistGradientBoostingRegressor(
+                learning_rate=0.04,
+                max_iter=250,
+                max_leaf_nodes=15,
+                l2_regularization=5.0,
+                random_state=42,
+            ),
+        ),
+        Candidate(
+            "xgboost_return_shallow",
+            "return",
+            factory=lambda: XGBRegressor(
+                n_estimators=300,
+                max_depth=2,
+                learning_rate=0.03,
+                min_child_weight=30,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                reg_lambda=20,
+                objective="reg:squarederror",
+                eval_metric="rmse",
+                n_jobs=4,
+                random_state=42,
+            ),
+        ),
+        Candidate(
+            "xgboost_return_robust",
+            "return",
+            factory=lambda: XGBRegressor(
+                n_estimators=350,
+                max_depth=3,
+                learning_rate=0.025,
+                min_child_weight=40,
+                subsample=0.75,
+                colsample_bytree=0.75,
+                reg_alpha=0.1,
+                reg_lambda=25,
+                objective="reg:pseudohubererror",
+                eval_metric="mphe",
+                n_jobs=4,
+                random_state=42,
+            ),
+        ),
+    )
+
+
+def main() -> int:
+    args = parse_args()
+    if not 0 < args.holdout_fraction < 0.5:
+        raise ValueError("holdout-fraction must be between 0 and 0.5")
+    symbols = tuple(dict.fromkeys(value.strip().upper() for value in args.symbols.split(",")))
+    if "SPY" not in symbols:
+        raise ValueError("SPY is required as the market reference")
+
+    cache_path = cache_file(args, symbols)
+    if args.refresh or not cache_path.exists():
+        download_bars(args, symbols, cache_path)
+    else:
+        validate_bar_cache(
+            cache_path,
+            BarCacheSpecification(args.start, args.end, symbols, args.timeframe_minutes),
+        )
+    frame = pd.read_csv(cache_path, parse_dates=["timestamp"])
+    market_bars = frame_to_bars(frame, timeframe_minutes=args.timeframe_minutes)
+    examples = build_training_examples(
+        market_bars,
+        horizon_bars=args.horizon_bars,
+        min_history=20,
+    )
+    development, holdout, holdout_start = chronological_holdout(
+        examples,
+        fraction=args.holdout_fraction,
+        purge=timedelta(minutes=args.timeframe_minutes * args.horizon_bars),
+    )
+    print(
+        f"Built {len(examples):,} examples; development={len(development):,}, "
+        f"holdout={len(holdout):,} from {holdout_start.isoformat()}"
+    )
+
+    unique_development_times = len({item.observed_at for item in development})
+    folds = purged_walk_forward_splits(
+        development,
+        folds=args.folds,
+        minimum_train_timestamps=max(100, int(unique_development_times * 0.4)),
+        purge=timedelta(minutes=args.timeframe_minutes * args.horizon_bars),
+    )
+    periods_per_year = 252 * 390 / (args.timeframe_minutes * args.horizon_bars)
+    rankings = rank_candidates(
+        development,
+        folds,
+        cost_bps=args.cost_bps,
+        periods_per_year=periods_per_year,
+    )
+    winner = rankings[0]
+    candidate = next(item for item in candidates() if item.name == winner.name)
+    model, holdout_probabilities = fit_and_predict(candidate, development, holdout)
+    holdout_result = evaluate_candidate(
+        candidate,
+        holdout,
+        holdout_probabilities,
+        decision_gate=winner.decision_gate,
+        cost_bps=args.cost_bps,
+        periods_per_year=periods_per_year,
+    )
+
+    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    run_dir = args.artifact_dir / run_id
+    run_dir.mkdir(parents=True, exist_ok=False)
+    model_path = save_model(model, candidate, run_dir)
+    manifest = build_manifest(
+        args=args,
+        symbols=symbols,
+        cache_path=cache_path,
+        examples=examples,
+        development=development,
+        holdout=holdout,
+        rankings=rankings,
+        winner=winner,
+        holdout_result=holdout_result,
+        candidate=candidate,
+        model=model,
+        model_path=model_path,
+        run_id=run_id,
+    )
+    manifest_path = run_dir / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    latest = args.artifact_dir / "latest.json"
+    args.artifact_dir.mkdir(parents=True, exist_ok=True)
+    latest.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+
+    print_rankings(rankings)
+    print(
+        f"Holdout: return={holdout_result.cumulative_return:.2%}, "
+        f"Sharpe={holdout_result.annualized_sharpe:.2f}, "
+        f"drawdown={holdout_result.max_drawdown:.2%}, trades={holdout_result.trades}"
+    )
+    print(f"Shadow artifact: {run_dir}")
+    if manifest["numeric_shadow_gate_passed"]:
+        print("Numeric shadow gate passed; manual promotion remains prohibited.")
+    else:
+        print("Result remains shadow-only; numeric shadow gate was not met.")
+    return 0
+
+
+def cache_file(args: argparse.Namespace, symbols: tuple[str, ...]) -> Path:
+    symbol_hash = hashlib.sha256(",".join(symbols).encode()).hexdigest()[:10]
+    return args.cache_dir / (
+        f"iex-{args.timeframe_minutes}m-{args.start}-{args.end}-{symbol_hash}.csv"
+    )
+
+
+def download_bars(args: argparse.Namespace, symbols: tuple[str, ...], path: Path) -> None:
+    load_dotenv()
+    key = os.getenv("ALPACA_KEY")
+    secret = os.getenv("ALPACA_SECRET")
+    if not key or not secret:
+        raise RuntimeError("ALPACA_KEY and ALPACA_SECRET are required")
+    client = StockHistoricalDataClient(key, secret)
+    frames = []
+    for symbol in symbols:
+        print(f"Downloading {symbol} raw IEX bars...")
+        response = client.get_stock_bars(
+            StockBarsRequest(
+                symbol_or_symbols=symbol,
+                timeframe=TimeFrame(args.timeframe_minutes, TimeFrameUnit.Minute),
+                start=datetime.fromisoformat(args.start).replace(tzinfo=UTC),
+                end=datetime.fromisoformat(args.end).replace(tzinfo=UTC) + timedelta(days=1),
+                adjustment=Adjustment.RAW,
+                feed=DataFeed.IEX,
+            )
+        ).df
+        if response.empty:
+            raise RuntimeError(f"Alpaca returned no bars for {symbol}")
+        frames.append(response.reset_index())
+
+    frame = pd.concat(frames, ignore_index=True)
+    local_time = pd.DatetimeIndex(frame["timestamp"]).tz_convert("America/New_York")
+    minute = local_time.hour * 60 + local_time.minute
+    frame = frame[(minute >= 570) & (minute < 960)].copy()
+    frame = frame.sort_values(["timestamp", "symbol"])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    frame.to_csv(path, index=False)
+    cache_metadata_path(path).write_text(
+        json.dumps(
+            {
+                "adjustment": "raw",
+                "end": args.end,
+                "feed": "iex",
+                "rows": len(frame),
+                "sha256": sha256_file(path),
+                "start": args.start,
+                "symbols": symbols,
+                "timeframe_minutes": args.timeframe_minutes,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n"
+    )
+    print(f"Cached {len(frame):,} regular-session bars at {path}")
+
+
+def cache_metadata_path(path: Path) -> Path:
+    return path.with_suffix(".meta.json")
+
+
+def frame_to_bars(frame: pd.DataFrame, *, timeframe_minutes: int) -> list[MarketBar]:
+    required = {"symbol", "timestamp", "open", "high", "low", "close", "volume", "vwap"}
+    missing = required - set(frame.columns)
+    if missing:
+        raise ValueError(f"bar cache is missing columns: {sorted(missing)}")
+    return [
+        MarketBar(
+            symbol=str(row.symbol),
+            timestamp=row.timestamp.to_pydatetime() + timedelta(minutes=timeframe_minutes),
+            open=float(row.open),
+            high=float(row.high),
+            low=float(row.low),
+            close=float(row.close),
+            volume=float(row.volume),
+            vwap=float(row.vwap),
+        )
+        for row in frame.itertuples(index=False)
+    ]
+
+
+def chronological_holdout(
+    examples: tuple[TrainingExample, ...], *, fraction: float, purge: timedelta
+) -> tuple[tuple[TrainingExample, ...], tuple[TrainingExample, ...], datetime]:
+    timestamps = sorted({item.observed_at for item in examples})
+    holdout_start = timestamps[int(len(timestamps) * (1 - fraction))]
+    development = tuple(
+        item
+        for item in examples
+        if max(item.label_end_at, item.observed_at + purge) < holdout_start
+    )
+    holdout = tuple(item for item in examples if item.observed_at >= holdout_start)
+    if not development or not holdout:
+        raise ValueError("development or holdout partition is empty")
+    return development, holdout, holdout_start
+
+
+def evaluate_candidate(
+    candidate: Candidate,
+    examples: tuple[TrainingExample, ...],
+    predictions: np.ndarray[Any, np.dtype[np.float64]],
+    *,
+    decision_gate: float,
+    cost_bps: float,
+    periods_per_year: float,
+) -> EvaluationResult:
+    values = tuple(float(value) for value in predictions)
+    if candidate.prediction_kind == "probability":
+        return evaluate_predictions(
+            examples,
+            values,
+            confidence_threshold=decision_gate,
+            cost_bps=cost_bps,
+            max_positions=3,
+            periods_per_year=periods_per_year,
+        )
+    return evaluate_return_forecasts(
+        examples,
+        values,
+        minimum_edge_bps=decision_gate,
+        cost_bps=cost_bps,
+        max_positions=3,
+        periods_per_year=periods_per_year,
+    )
+
+
+def rank_candidates(
+    examples: tuple[TrainingExample, ...],
+    folds: tuple[Any, ...],
+    *,
+    cost_bps: float,
+    periods_per_year: float,
+) -> list[RankedCandidate]:
+    results: list[RankedCandidate] = []
+    for candidate in candidates():
+        fold_probabilities = []
+        fold_examples = []
+        for fold_number, fold in enumerate(folds, start=1):
+            train = tuple(examples[index] for index in fold.train_indices)
+            validation = tuple(examples[index] for index in fold.validation_indices)
+            _, probabilities = fit_and_predict(candidate, train, validation)
+            fold_examples.append(validation)
+            fold_probabilities.append(probabilities)
+            print(f"Fitted {candidate.name} fold {fold_number}/{len(folds)}")
+
+        decision_gates = (
+            PROBABILITY_THRESHOLDS
+            if candidate.prediction_kind == "probability"
+            else RETURN_EDGE_GATES_BPS
+        )
+        for decision_gate in decision_gates:
+            evaluations = [
+                evaluate_candidate(
+                    candidate,
+                    validation,
+                    probabilities,
+                    decision_gate=decision_gate,
+                    cost_bps=cost_bps,
+                    periods_per_year=periods_per_year,
+                )
+                for validation, probabilities in zip(fold_examples, fold_probabilities, strict=True)
+            ]
+            if any(item.trades < 30 for item in evaluations):
+                continue
+            sharpes = [item.annualized_sharpe for item in evaluations]
+            mean_drawdown = fmean(item.max_drawdown for item in evaluations)
+            selection_score = fmean(sharpes) - pstdev(sharpes) - 5 * mean_drawdown
+            results.append(
+                RankedCandidate(
+                    name=candidate.name,
+                    prediction_kind=candidate.prediction_kind,
+                    decision_gate=decision_gate,
+                    selection_score=selection_score,
+                    validation={
+                        "folds": len(evaluations),
+                        "trades": sum(item.trades for item in evaluations),
+                        "mean_cumulative_return": fmean(
+                            item.cumulative_return for item in evaluations
+                        ),
+                        "mean_sharpe": fmean(sharpes),
+                        "sharpe_stability": pstdev(sharpes),
+                        "mean_max_drawdown": mean_drawdown,
+                        "mean_hit_rate": fmean(item.hit_rate for item in evaluations),
+                        "fold_results": [asdict(item) for item in evaluations],
+                    },
+                )
+            )
+    if not results:
+        raise RuntimeError("all candidates failed minimum validation coverage")
+    return sorted(results, key=lambda item: item.selection_score, reverse=True)
+
+
+def fit_and_predict(
+    candidate: Candidate,
+    train: tuple[TrainingExample, ...],
+    evaluation: tuple[TrainingExample, ...],
+) -> tuple[ClassifierMixin | RegressorMixin | None, np.ndarray[Any, np.dtype[np.float64]]]:
+    evaluation_features = feature_matrix(evaluation)
+    if candidate.baseline:
+        return None, baseline_probabilities(candidate.baseline, evaluation_features)
+    if candidate.factory is None:
+        raise ValueError(f"candidate {candidate.name} has no implementation")
+    model = candidate.factory()
+    labels = np.asarray(
+        [
+            item.forward_return > 0
+            if candidate.prediction_kind == "probability"
+            else item.forward_return
+            for item in train
+        ],
+        dtype=np.float64,
+    )
+    model.fit(feature_matrix(train), labels)
+    if candidate.prediction_kind == "probability":
+        if not hasattr(model, "predict_proba"):
+            raise TypeError(f"{candidate.name} must be a classifier")
+        predictions = model.predict_proba(evaluation_features)[:, 1]
+    else:
+        predictions = model.predict(evaluation_features)
+    return model, np.asarray(predictions, dtype=np.float64)
+
+
+def feature_matrix(
+    examples: tuple[TrainingExample, ...],
+) -> np.ndarray[Any, np.dtype[np.float64]]:
+    return np.asarray([item.features for item in examples], dtype=np.float64)
+
+
+def baseline_probabilities(
+    baseline: str, features: np.ndarray[Any, np.dtype[np.float64]]
+) -> np.ndarray[Any, np.dtype[np.float64]]:
+    if baseline == "long":
+        return np.full(len(features), 0.01, dtype=np.float64)
+    momentum = features[:, FEATURE_NAMES.index("return_4")]
+    if baseline == "momentum":
+        return momentum
+    if baseline == "reversion":
+        return -momentum
+    raise ValueError(f"unknown baseline {baseline}")
+
+
+def save_model(
+    model: ClassifierMixin | RegressorMixin | None, candidate: Candidate, run_dir: Path
+) -> Path | None:
+    if model is None:
+        return None
+    if isinstance(model, (XGBClassifier, XGBRegressor)):
+        path = run_dir / "model.ubj"
+        model.save_model(path)
+    else:
+        path = run_dir / "model.joblib"
+        joblib.dump(model, path)
+    return path
+
+
+def build_manifest(
+    *,
+    args: argparse.Namespace,
+    symbols: tuple[str, ...],
+    cache_path: Path,
+    examples: tuple[TrainingExample, ...],
+    development: tuple[TrainingExample, ...],
+    holdout: tuple[TrainingExample, ...],
+    rankings: list[RankedCandidate],
+    winner: RankedCandidate,
+    holdout_result: EvaluationResult,
+    candidate: Candidate,
+    model: ClassifierMixin | RegressorMixin | None,
+    model_path: Path | None,
+    run_id: str,
+) -> dict[str, Any]:
+    numeric_shadow_gate_passed = (
+        winner.selection_score > 0
+        and all(fold["cumulative_return"] > 0 for fold in winner.validation["fold_results"])
+        and holdout_result.cumulative_return > 0
+        and holdout_result.annualized_sharpe > 0
+        and holdout_result.trades >= 30
+    )
+    return {
+        "authority": "SHADOW_ONLY",
+        "run_id": run_id,
+        "created_at": datetime.now(UTC).isoformat(),
+        "feature_schema": "bar-features-v2",
+        "feature_names": FEATURE_NAMES,
+        "candidate": winner.name,
+        "prediction_kind": winner.prediction_kind,
+        "decision_gate": winner.decision_gate,
+        "selection_score": winner.selection_score,
+        "validation": winner.validation,
+        "holdout": asdict(holdout_result),
+        "numeric_shadow_gate_passed": numeric_shadow_gate_passed,
+        "promotion_eligible": False,
+        "promotion_blockers": [
+            "manual versioned promotion decision is required",
+            "no point-in-time event features or incumbent strategy comparison",
+            "fixed-cost bars do not validate executable quotes, slippage, or short borrow",
+            "walk-forward folds must be consistently positive",
+            "iterative holdout results are diagnostic, not untouched promotion evidence",
+        ],
+        "cost_bps": args.cost_bps,
+        "timeframe_minutes": args.timeframe_minutes,
+        "horizon_bars": args.horizon_bars,
+        "symbols": symbols,
+        "sample": {
+            "examples": len(examples),
+            "development_examples": len(development),
+            "holdout_examples": len(holdout),
+            "first_observation": examples[0].observed_at.isoformat(),
+            "last_observation": examples[-1].observed_at.isoformat(),
+        },
+        "data": {
+            "feed": "iex",
+            "adjustment": "raw",
+            "cache_sha256": sha256_file(cache_path),
+        },
+        "arguments": {
+            "cost_bps": args.cost_bps,
+            "end": args.end,
+            "folds": args.folds,
+            "holdout_fraction": args.holdout_fraction,
+            "horizon_bars": args.horizon_bars,
+            "start": args.start,
+            "symbols": symbols,
+            "timeframe_minutes": args.timeframe_minutes,
+        },
+        "model": {
+            "path": str(model_path) if model_path else None,
+            "sha256": sha256_file(model_path) if model_path else None,
+            "parameters": model_parameters(candidate, model),
+        },
+        "packages": {
+            "numpy": version("numpy"),
+            "pandas": version("pandas"),
+            "scikit-learn": version("scikit-learn"),
+            "xgboost": version("xgboost"),
+        },
+        "runtime": {
+            "git_revision": git_revision(),
+            "python": platform.python_version(),
+            "random_seed": 42,
+            "training_core_sha256": sha256_file(
+                Path(__file__).resolve().parents[1] / "src/catalyst_router/training.py"
+            ),
+            "training_runner_sha256": sha256_file(Path(__file__).resolve()),
+        },
+        "rankings": [asdict(item) for item in rankings],
+    }
+
+
+def git_revision() -> str | None:
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except FileNotFoundError, subprocess.CalledProcessError:
+        return None
+
+
+def model_parameters(
+    candidate: Candidate, model: ClassifierMixin | RegressorMixin | None
+) -> dict[str, Any]:
+    if model is None:
+        return {"baseline": candidate.baseline}
+    return {key: _json_parameter(value) for key, value in model.get_params(deep=False).items()}
+
+
+def _json_parameter(value: Any) -> Any:
+    if isinstance(value, float) and not isfinite(value):
+        return str(value)
+    if isinstance(value, (bool, float, int, str)) or value is None:
+        return value
+    return repr(value)
+
+
+def print_rankings(rankings: list[RankedCandidate]) -> None:
+    print("\nValidation ranking")
+    for rank, item in enumerate(rankings[:10], start=1):
+        gate_unit = "prob" if item.prediction_kind == "probability" else "bps"
+        print(
+            f"{rank:>2}. {item.name:<24} gate={item.decision_gate:.2f}{gate_unit:<4} "
+            f"score={item.selection_score:>7.2f} "
+            f"Sharpe={item.validation['mean_sharpe']:>6.2f} "
+            f"return={item.validation['mean_cumulative_return']:>7.2%}"
+        )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
