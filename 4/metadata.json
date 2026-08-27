@@ -1,0 +1,71 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M12KGRS9K94PSC2TG085PXSC",
+  "session_id": "ses_fbb1a3fefffe3UyHgOa68t9RAz",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-27T21:55:34.81361Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".gitignore",
+    "Makefile",
+    "README.md",
+    "docs/training/local-benchmark.md",
+    "pyproject.toml",
+    "scripts/train-challengers",
+    "src/catalyst_router/training.py",
+    "tests/unit/test_training.py",
+    "uv.lock"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-sol",
+  "turn_id": "0210c8049f5a",
+  "checkpoint_transcript_start": 179,
+  "transcript_lines_at_start": 179,
+  "compact_transcript_start": 179,
+  "token_usage": {
+    "input_tokens": 147115,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 8154881,
+    "output_tokens": 31303,
+    "api_call_count": 85
+  },
+  "session_metrics": {
+    "turn_count": 18
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-27T21:55:34.525668Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 1,
+    "total_committed": 0,
+    "total_lines_changed": 1,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 1554,
+      "user_lines_removed": 1,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".gitignore": 1,
+        "Makefile": 4,
+        "README.md": 15,
+        "docs/training/local-benchmark.md": 66,
+        "pyproject.toml": 7,
+        "scripts/train-challengers": 705,
+        "src/catalyst_router/training.py": 419,
+        "tests/unit/test_training.py": 190,
+        "uv.lock": 147
+      },
+      "user_removed_per_file": {
+        "Makefile": 1
+      }
+    }
+  ]
+}
