@@ -3,7 +3,7 @@
   "checkpoint_id": "01M14WZZ4FCCZ4TST16356T3VX",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 25,
+  "checkpoints_count": 34,
   "files_touched": [
     "Dockerfile",
     "Makefile",
@@ -34,6 +34,7 @@
     "tests/integration/test_api.py",
     "tests/integration/test_dynamodb_store.py",
     "tests/integration/test_reconciliation.py",
+    "tests/unit/test_alpaca.py",
     "tests/unit/test_challenger.py",
     "tests/unit/test_settings.py",
     "tests/unit/test_store.py",
@@ -160,13 +161,20 @@
       "compact_transcript": "/16/transcript.jsonl",
       "content_hash": "/16/content_hash.txt",
       "prompt": "/16/prompt.txt"
+    },
+    {
+      "metadata": "/17/metadata.json",
+      "transcript": "/17/full.jsonl",
+      "compact_transcript": "/17/transcript.jsonl",
+      "content_hash": "/17/content_hash.txt",
+      "prompt": "/17/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 116464,
+    "input_tokens": 600312,
     "cache_creation_tokens": 1647972,
-    "cache_read_tokens": 34651560,
-    "output_tokens": 145585,
-    "api_call_count": 403
+    "cache_read_tokens": 43018288,
+    "output_tokens": 178156,
+    "api_call_count": 509
   }
 }
