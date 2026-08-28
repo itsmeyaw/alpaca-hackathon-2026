@@ -3,7 +3,7 @@
   "checkpoint_id": "01M14WZZ4FCCZ4TST16356T3VX",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 10,
+  "checkpoints_count": 11,
   "files_touched": [
     "Dockerfile",
     "Makefile",
@@ -77,13 +77,20 @@
       "compact_transcript": "/5/transcript.jsonl",
       "content_hash": "/5/content_hash.txt",
       "prompt": "/5/prompt.txt"
+    },
+    {
+      "metadata": "/6/metadata.json",
+      "transcript": "/6/full.jsonl",
+      "compact_transcript": "/6/transcript.jsonl",
+      "content_hash": "/6/content_hash.txt",
+      "prompt": "/6/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 158,
-    "cache_creation_tokens": 530700,
-    "cache_read_tokens": 4366043,
-    "output_tokens": 22976,
-    "api_call_count": 79
+    "input_tokens": 182,
+    "cache_creation_tokens": 595067,
+    "cache_read_tokens": 4868850,
+    "output_tokens": 25522,
+    "api_call_count": 91
   }
 }
