@@ -30,3 +30,44 @@ variable "environment" {
     error_message = "Only the prod competition environment is currently supported."
   }
 }
+
+variable "api_image_tag" {
+  type        = string
+  description = "Immutable ECR image tag deployed to App Runner."
+
+  validation {
+    condition     = length(var.api_image_tag) > 0 && var.api_image_tag != "latest"
+    error_message = "api_image_tag must be a non-latest immutable tag."
+  }
+}
+
+variable "worker_image_tag" {
+  type        = string
+  description = "Immutable ECR image tag deployed to the ECS worker."
+
+  validation {
+    condition     = length(var.worker_image_tag) > 0 && var.worker_image_tag != "latest"
+    error_message = "worker_image_tag must be a non-latest immutable tag."
+  }
+}
+
+variable "worker_alarm_actions" {
+  type        = list(string)
+  description = "SNS action ARNs notified when the worker is not running."
+  default     = []
+}
+
+variable "challenger_run_id" {
+  type        = string
+  description = "Immutable shadow challenger artifact directory in the archive bucket."
+}
+
+variable "challenger_manifest_sha256" {
+  type        = string
+  description = "Trusted SHA-256 digest for the deployed challenger manifest."
+
+  validation {
+    condition     = can(regex("^[0-9a-f]{64}$", var.challenger_manifest_sha256))
+    error_message = "challenger_manifest_sha256 must be a lowercase SHA-256 digest."
+  }
+}

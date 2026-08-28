@@ -1,6 +1,6 @@
 # Catalyst Router
 
-Catalyst Router is an autonomous Alpaca paper-trading agent. The first vertical slice is deliberately read-only: it validates paper credentials, reconciles account state, evaluates deterministic route and risk decisions, and exposes sanitized status APIs. It contains no order-submission method.
+Catalyst Router is an autonomous Alpaca paper-trading agent. Its first execution slice trades at most one long equity position at a time from deterministic incumbent signals. Every entry is risk-sized, idempotently claimed in DynamoDB, and submitted to Alpaca paper trading as a day bracket with server-hosted stop-loss and take-profit orders. Challenger models remain shadow-only.
 
 ## Setup
 
@@ -21,7 +21,18 @@ uv run catalyst-router reconcile
 uv run catalyst-router serve
 ```
 
-The API starts in `PAUSED`. Open `http://127.0.0.1:8000/docs` or query:
+The API starts in `PAUSED`. Operator mode changes use the authenticated local/AWS execution identity, not the public API:
+
+```bash
+uv run catalyst-router resume --reason "paper competition start"
+uv run catalyst-router pause --reason "operator review"
+uv run catalyst-router flatten --reason "close all paper exposure"
+```
+
+Production control commands are authenticated and authorized by the caller's AWS IAM
+credentials and DynamoDB permissions. They are never exposed through App Runner or CloudFront.
+
+Open `http://127.0.0.1:8000/docs` or query:
 
 ```bash
 curl http://127.0.0.1:8000/health
@@ -52,7 +63,7 @@ DYNAMODB_ENDPOINT_URL=http://localhost:8001
 AWS_REGION=us-east-1
 ```
 
-Order execution remains absent until DynamoDB idempotency, reconciliation, and risk-reservation integration tests are complete.
+Set `PAPER_EXECUTION_ENABLED=true` only on the private worker. `RUNNING` mode, a current reconciliation epoch, an empty paper account, a fresh incumbent signal, and deterministic Risk Governor approval are all required before submission.
 
 ## Local Challenger Training
 

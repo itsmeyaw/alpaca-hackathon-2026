@@ -48,6 +48,7 @@ def test_public_api_is_read_only_and_sanitized() -> None:
         status = client.get("/api/public/status")
         readiness = client.get("/ready")
         decisions = client.get("/api/public/decisions")
+        challenger = client.get("/api/public/challenger")
         hidden_operator = client.post("/api/operator/reconcile")
 
     assert status.status_code == 200
@@ -58,6 +59,31 @@ def test_public_api_is_read_only_and_sanitized() -> None:
     assert decisions.json()[0]["summary"] == "data quality veto"
     assert "payload" not in decisions.json()[0]
     assert "execution_epoch" not in status.json()
+    assert challenger.json() == {
+        "deployed": False,
+        "loaded": False,
+        "authority": None,
+        "run_id": None,
+        "created_at": None,
+        "candidate": None,
+        "feature_schema": None,
+        "decision_gate": None,
+        "horizon_bars": None,
+        "timeframe_minutes": None,
+        "symbol_count": None,
+        "selection_score": None,
+        "validation_return": None,
+        "validation_sharpe": None,
+        "positive_folds": None,
+        "folds": None,
+        "holdout_return": None,
+        "holdout_sharpe": None,
+        "holdout_max_drawdown": None,
+        "holdout_trades": None,
+        "numeric_shadow_gate_passed": None,
+        "promotion_eligible": False,
+        "model_sha256": None,
+    }
     assert hidden_operator.status_code == 404
 
 

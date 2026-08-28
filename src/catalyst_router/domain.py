@@ -43,11 +43,20 @@ class RiskDecisionStatus(StrEnum):
     VETOED = "VETOED"
 
 
+class OrderExecutionStatus(StrEnum):
+    PREPARED = "PREPARED"
+    UNKNOWN = "UNKNOWN"
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+    REJECTED = "REJECTED"
+
+
 class AgentState(FrozenModel):
     mode: AgentMode = AgentMode.PAUSED
     version: int = 0
     execution_epoch: str = "not-started"
     reconciled_epoch: str | None = None
+    active_order_id: str | None = None
+    equity_peak: Decimal | None = None
     reason: str = "initialized safely in PAUSED"
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -63,6 +72,7 @@ class AccountSnapshot(FrozenModel):
     portfolio_value: Decimal
     trading_blocked: bool
     options_trading_level: int
+    last_equity: Decimal | None = None
 
 
 class MarketClockSnapshot(FrozenModel):
@@ -94,6 +104,27 @@ class ReconciliationSnapshot(FrozenModel):
     positions: tuple[PositionSnapshot, ...]
     open_orders: tuple[OpenOrderSnapshot, ...]
     captured_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class QuoteSnapshot(FrozenModel):
+    symbol: str
+    bid_price: Decimal = Field(gt=0)
+    ask_price: Decimal = Field(gt=0)
+    timestamp: datetime
+    feed: str
+
+    @model_validator(mode="after")
+    def validate_market(self) -> QuoteSnapshot:
+        if self.timestamp.tzinfo is None:
+            raise ValueError("quote timestamp must be timezone-aware")
+        if self.ask_price < self.bid_price:
+            raise ValueError("ask price must not be below bid price")
+        return self
+
+    @property
+    def spread_bps(self) -> Decimal:
+        midpoint = (self.ask_price + self.bid_price) / Decimal("2")
+        return (self.ask_price - self.bid_price) / midpoint * Decimal("10000")
 
 
 class SignalFrame(FrozenModel):
@@ -177,6 +208,50 @@ class RiskDecision(FrozenModel):
     decided_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class OrderPlan(FrozenModel):
+    client_order_id: str = Field(min_length=1, max_length=48)
+    intent_id: str
+    symbol: str
+    side: Side
+    quantity: int = Field(gt=0)
+    limit_price: Decimal = Field(gt=0)
+    stop_price: Decimal = Field(gt=0)
+    take_profit_price: Decimal = Field(gt=0)
+    risk_amount: Decimal = Field(gt=0)
+    exposure_group: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    expires_at: datetime
+
+    @model_validator(mode="after")
+    def validate_long_bracket(self) -> OrderPlan:
+        if self.side is not Side.BUY:
+            raise ValueError("the first execution slice supports long equity orders only")
+        if not self.stop_price < self.limit_price < self.take_profit_price:
+            raise ValueError("long bracket prices must be stop < entry < take profit")
+        if self.expires_at.tzinfo is None or self.expires_at <= self.created_at:
+            raise ValueError("order plan expiry must be timezone-aware and after creation")
+        return self
+
+
+class OrderExecution(FrozenModel):
+    plan: OrderPlan
+    request_hash: str = Field(min_length=64, max_length=64)
+    status: OrderExecutionStatus = OrderExecutionStatus.PREPARED
+    version: int = Field(default=0, ge=0)
+    alpaca_order_id: str | None = None
+    broker_status: str | None = None
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class BrokerOrderSnapshot(FrozenModel):
+    order_id: str
+    client_order_id: str
+    symbol: str
+    side: Side
+    quantity: int = Field(gt=0)
+    status: str
+
+
 class PublicDecisionRecord(FrozenModel):
     decision_id: str
     decision_type: str
@@ -222,6 +297,7 @@ class DecisionRecord(PublicDecisionRecord):
     def create(
         cls,
         *,
+        decision_id: str | None = None,
         decision_type: str,
         summary: str,
         route: Route | None = None,
@@ -232,7 +308,7 @@ class DecisionRecord(PublicDecisionRecord):
         occurred_at: datetime | None = None,
     ) -> DecisionRecord:
         return cls(
-            decision_id=str(uuid4()),
+            decision_id=decision_id or str(uuid4()),
             decision_type=decision_type,
             occurred_at=occurred_at or datetime.now(UTC),
             route=route,

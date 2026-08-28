@@ -10,6 +10,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 
+from catalyst_router.challenger import PublicChallengerStatus
 from catalyst_router.container import Container
 from catalyst_router.domain import AgentMode, PublicDecisionRecord
 from catalyst_router.settings import Settings
@@ -36,13 +37,15 @@ def create_app(container: Container | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        if app_container.settings.auto_reconcile and app_container.broker is not None:
+        if (
+            app_container.settings.runtime_role != "reporting"
+            and app_container.settings.auto_reconcile
+            and app_container.broker is not None
+        ):
             try:
                 await asyncio.to_thread(app_container.reconciliation_service().reconcile)
             except Exception:
                 logger.exception("startup reconciliation failed; agent remains fenced")
-        else:
-            app_container.store.begin_execution()
         yield
 
     app = FastAPI(title="Catalyst Router", version="0.1.0", lifespan=lifespan)
@@ -78,6 +81,12 @@ def create_app(container: Container | None = None) -> FastAPI:
         limit: Annotated[int, Query(ge=1, le=100)] = 50,
     ) -> list[PublicDecisionRecord]:
         return container.store.list_public_decisions(limit)
+
+    @app.get("/api/public/challenger", response_model=PublicChallengerStatus)
+    def public_challenger(container: ContainerDependency) -> PublicChallengerStatus:
+        if container.challenger is None:
+            return PublicChallengerStatus.not_deployed()
+        return container.challenger.status
 
     @app.post("/api/operator/reconcile", include_in_schema=False)
     def operator_reconcile() -> None:

@@ -26,4 +26,36 @@ aws secretsmanager put-secret-value \
   --secret-string file://runtime-secret.json
 ```
 
-Do not commit `runtime-secret.json`. Networking, CloudFront, the ECS task definition, and the service are deliberately deferred until the read-only image and reconciliation flow are deployed from immutable artifacts.
+Do not commit `runtime-secret.json`.
+
+The read-only API runs on App Runner and the static dashboard is delivered from the private
+dashboard bucket through CloudFront. Deployment requires an immutable ECR image tag and an
+immutable challenger run ID:
+
+```bash
+terraform -chdir=infra/environments/prod apply \
+  -var='api_image_tag=<immutable-tag>' \
+  -var='challenger_run_id=<run-id>' \
+  -var='challenger_manifest_sha256=<manifest-sha256>'
+```
+
+The App Runner service injects the runtime secret as `ALPACA_CREDENTIALS`, parses its
+`ALPACA_KEY` and `ALPACA_SECRET` fields, and reconciles against only the Alpaca Paper Trading API
+at `https://paper-api.alpaca.markets/v2`. It loads and verifies the private S3 manifest and model
+at startup. The API exposes only sanitized challenger metadata; the model remains `SHADOW_ONLY`
+and has no order path.
+
+Build, upload, and invalidate the dashboard with:
+
+```bash
+TERRAFORM_BIN=terraform make deploy-dashboard
+```
+
+Read the deployed URLs and verify the public surfaces with:
+
+```bash
+terraform -chdir=infra/environments/prod output -raw dashboard_url
+terraform -chdir=infra/environments/prod output -raw api_service_url
+curl "$(terraform -chdir=infra/environments/prod output -raw dashboard_url)/api/public/status"
+curl "$(terraform -chdir=infra/environments/prod output -raw dashboard_url)/api/public/challenger"
+```

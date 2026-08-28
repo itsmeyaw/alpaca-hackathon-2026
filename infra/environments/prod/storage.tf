@@ -169,6 +169,25 @@ data "aws_iam_policy_document" "dashboard_tls" {
       values   = ["false"]
     }
   }
+
+  statement {
+    sid    = "AllowCloudFrontRead"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.dashboard.arn}/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [aws_cloudfront_distribution.dashboard.arn]
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "archive" {

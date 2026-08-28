@@ -8,6 +8,12 @@ output "trader_log_group_name" { value = aws_cloudwatch_log_group.trader.name }
 output "ecs_cluster_name" { value = aws_ecs_cluster.trader.name }
 output "task_execution_role_arn" { value = aws_iam_role.task_execution.arn }
 output "trader_task_role_arn" { value = aws_iam_role.trader.arn }
+output "api_service_url" { value = "https://${aws_apprunner_service.api.service_url}" }
+output "dashboard_url" { value = "https://${aws_cloudfront_distribution.dashboard.domain_name}" }
+output "cloudfront_distribution_id" { value = aws_cloudfront_distribution.dashboard.id }
+output "trader_service_name" { value = aws_ecs_service.trader.name }
+output "trader_task_definition_arn" { value = aws_ecs_task_definition.trader.arn }
+output "trader_security_group_id" { value = aws_security_group.trader.id }
 
 output "trader_environment" {
   value = {
@@ -15,7 +21,8 @@ output "trader_environment" {
     STATE_BACKEND        = "dynamodb"
     DYNAMODB_TABLE       = aws_dynamodb_table.operational.name
     COMPETITION_ID       = "alpaca-hackathon-2026"
-    AUTO_RECONCILE       = "true"
+    RUNTIME_ROLE         = "worker"
+    AUTO_RECONCILE       = "false"
     PUBLIC_DELAY_SECONDS = "900"
   }
 }

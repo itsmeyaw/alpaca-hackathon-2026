@@ -12,6 +12,7 @@ from pathlib import Path
 from statistics import fmean, pstdev
 from zoneinfo import ZoneInfo
 
+FEATURE_SCHEMA = "bar-features-v2"
 FEATURE_NAMES = (
     "return_1",
     "return_4",
@@ -71,6 +72,23 @@ class TrainingExample:
             raise ValueError("training example does not match the feature schema")
         if not all(isfinite(value) for value in (*self.features, self.forward_return)):
             raise ValueError("training examples must contain finite values")
+
+
+@dataclass(frozen=True, slots=True)
+class FeatureVector:
+    symbol: str
+    observed_at: datetime
+    schema: str
+    names: tuple[str, ...]
+    values: tuple[float, ...]
+
+    def __post_init__(self) -> None:
+        if self.observed_at.tzinfo is None:
+            raise ValueError("feature vector timestamps must be timezone-aware")
+        if len(self.names) != len(self.values):
+            raise ValueError("feature names and values must have equal lengths")
+        if not all(isfinite(value) for value in self.values):
+            raise ValueError("feature vectors must contain finite values")
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,6 +154,115 @@ class _PartialExample:
     return_12: float
     realized_vol_8: float
     forward_return: float
+
+
+def build_feature_vectors(
+    bars: list[MarketBar],
+    *,
+    min_history: int = 20,
+    market_symbol: str = "SPY",
+) -> tuple[FeatureVector, ...]:
+    """Build point-in-time features without requiring future labels."""
+    if min_history < 13:
+        raise ValueError("min_history must be at least 13 bars")
+
+    by_symbol: dict[str, list[MarketBar]] = defaultdict(list)
+    for bar in bars:
+        by_symbol[bar.symbol].append(bar)
+
+    partials: list[_PartialExample] = []
+    for symbol, symbol_bars in by_symbol.items():
+        ordered = sorted(symbol_bars, key=lambda item: item.timestamp)
+        if len({bar.timestamp for bar in ordered}) != len(ordered):
+            raise ValueError(f"duplicate timestamps for {symbol}")
+        one_bar_returns = [0.0]
+        one_bar_returns.extend(
+            current.close / previous.close - 1 for previous, current in pairwise(ordered)
+        )
+        for index in range(min_history - 1, len(ordered)):
+            current = ordered[index]
+            return_1 = current.close / ordered[index - 1].close - 1
+            return_4 = current.close / ordered[index - 4].close - 1
+            return_12 = current.close / ordered[index - 12].close - 1
+            volume_window = ordered[index - min_history + 1 : index + 1]
+            mean_volume = fmean(bar.volume for bar in volume_window)
+            window_low = min(bar.low for bar in volume_window)
+            window_high = max(bar.high for bar in volume_window)
+            window_span = window_high - window_low
+            realized_volatility = sqrt(
+                fmean(value * value for value in one_bar_returns[index - 7 : index + 1])
+            )
+            local_timestamp = current.timestamp.astimezone(_NEW_YORK)
+            minute = local_timestamp.hour * 60 + local_timestamp.minute
+            angle = 2 * pi * (minute - 570) / 390
+            partials.append(
+                _PartialExample(
+                    symbol=symbol,
+                    observed_at=current.timestamp,
+                    label_end_at=current.timestamp,
+                    features=(
+                        return_1,
+                        return_4,
+                        return_12,
+                        (current.high - current.low) / current.close,
+                        current.close / current.vwap - 1,
+                        current.volume / mean_volume - 1 if mean_volume else 0.0,
+                        realized_volatility,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        (current.close - window_low) / window_span - 0.5 if window_span else 0.0,
+                        0.0,
+                        sin(angle),
+                        cos(angle),
+                    ),
+                    return_4=return_4,
+                    return_12=return_12,
+                    realized_vol_8=realized_volatility,
+                    forward_return=0.0,
+                )
+            )
+
+    market_context = {
+        item.observed_at: (item.return_4, item.return_12, item.realized_vol_8)
+        for item in partials
+        if item.symbol == market_symbol
+    }
+    by_timestamp: dict[datetime, list[_PartialExample]] = defaultdict(list)
+    for item in partials:
+        by_timestamp[item.observed_at].append(item)
+    cross_sectional_rank = {}
+    for timestamp, items in by_timestamp.items():
+        ranked_items = sorted(items, key=lambda item: item.return_4)
+        denominator = max(1, len(ranked_items) - 1)
+        for rank, item in enumerate(ranked_items):
+            cross_sectional_rank[(timestamp, item.symbol)] = rank / denominator - 0.5
+
+    vectors = []
+    for item in partials:
+        context = market_context.get(item.observed_at)
+        if context is None:
+            continue
+        market_return_4, market_return_12, market_volatility = context
+        features = list(item.features)
+        features[7] = item.return_4 - market_return_4
+        features[8] = item.return_12 - market_return_12
+        features[9] = market_return_4
+        features[10] = market_return_12
+        features[11] = market_volatility
+        features[13] = cross_sectional_rank[(item.observed_at, item.symbol)]
+        vectors.append(
+            FeatureVector(
+                symbol=item.symbol,
+                observed_at=item.observed_at,
+                schema=FEATURE_SCHEMA,
+                names=FEATURE_NAMES,
+                values=tuple(features),
+            )
+        )
+    return tuple(sorted(vectors, key=lambda item: (item.observed_at, item.symbol)))
 
 
 def build_training_examples(

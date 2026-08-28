@@ -35,3 +35,27 @@ def test_auto_reconcile_without_credentials_is_rejected_by_container() -> None:
 
     with pytest.raises(RuntimeError, match="requires Alpaca credentials"):
         Container.build(configured)
+
+
+def test_reads_packed_alpaca_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ALPACA_KEY", raising=False)
+    monkeypatch.delenv("ALPACA_SECRET", raising=False)
+    monkeypatch.setenv(
+        "ALPACA_CREDENTIALS",
+        '{"ALPACA_KEY":"paper-key","ALPACA_SECRET":"paper-secret"}',
+    )
+
+    configured = Settings.from_env()
+
+    assert configured.require_alpaca() == ("paper-key", "paper-secret")
+
+
+def test_rejects_invalid_packed_alpaca_credentials(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("ALPACA_KEY", raising=False)
+    monkeypatch.delenv("ALPACA_SECRET", raising=False)
+    monkeypatch.setenv("ALPACA_CREDENTIALS", '{"ALPACA_KEY":"paper-key"}')
+
+    with pytest.raises(ValueError, match="must contain string key and secret values"):
+        Settings.from_env()

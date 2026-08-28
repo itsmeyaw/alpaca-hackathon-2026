@@ -1,4 +1,4 @@
-.PHONY: check test test-integration train-local dashboard-build docker-build infra-fmt
+.PHONY: check test test-integration train-local dashboard-build deploy-dashboard docker-build infra-fmt
 
 check:
 	uv run ruff format --check .
@@ -20,6 +20,9 @@ train-local:
 dashboard-build:
 	npm --prefix dashboard run typecheck
 	npm --prefix dashboard run build
+
+deploy-dashboard: dashboard-build
+	scripts/deploy-dashboard
 
 docker-build:
 	docker build --platform linux/amd64 -t catalyst-router:local .

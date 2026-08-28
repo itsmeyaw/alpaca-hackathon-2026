@@ -81,6 +81,7 @@ data "aws_iam_policy_document" "trader" {
     effect = "Allow"
     actions = [
       "dynamodb:DescribeTable",
+      "dynamodb:ConditionCheckItem",
       "dynamodb:GetItem",
       "dynamodb:PutItem",
       "dynamodb:Query",
@@ -90,26 +91,10 @@ data "aws_iam_policy_document" "trader" {
   }
 
   statement {
-    sid    = "ListArchive"
-    effect = "Allow"
-    actions = [
-      "s3:GetBucketLocation",
-      "s3:ListBucket",
-      "s3:ListBucketMultipartUploads",
-    ]
-    resources = [aws_s3_bucket.archive.arn]
-  }
-
-  statement {
-    sid    = "ArchiveObservations"
-    effect = "Allow"
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:AbortMultipartUpload",
-      "s3:ListMultipartUploadParts",
-    ]
-    resources = ["${aws_s3_bucket.archive.arn}/*"]
+    sid       = "ReadChallengerArtifacts"
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.archive.arn}/models/${var.challenger_run_id}/*"]
   }
 }
 

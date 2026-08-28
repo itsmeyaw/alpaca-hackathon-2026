@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
@@ -9,7 +10,14 @@ from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.types import TypeSerializer
 from botocore.exceptions import ClientError
 
-from catalyst_router.domain import AgentState, DecisionRecord, PublicDecisionRecord
+from catalyst_router.domain import (
+    AgentMode,
+    AgentState,
+    DecisionRecord,
+    OrderExecution,
+    OrderExecutionStatus,
+    PublicDecisionRecord,
+)
 
 if TYPE_CHECKING:
     from mypy_boto3_dynamodb.type_defs import TransactWriteItemTypeDef
@@ -26,12 +34,14 @@ class DynamoOperationalStore:
         region: str,
         endpoint_url: str | None = None,
         public_delay_seconds: int = 0,
+        initialize_missing: bool = True,
     ) -> None:
         resource = boto3.resource("dynamodb", region_name=region, endpoint_url=endpoint_url)
         self._table = resource.Table(table_name)
         self._client = boto3.client("dynamodb", region_name=region, endpoint_url=endpoint_url)
         self._competition_id = competition_id
         self._public_delay = timedelta(seconds=public_delay_seconds)
+        self._initialize_missing = initialize_missing
 
     @property
     def _control_key(self) -> dict[str, str]:
@@ -42,7 +52,10 @@ class DynamoOperationalStore:
         item: dict[str, Any] = {
             **self._control_key,
             "payload": state.model_dump_json(),
+            "mode": state.mode,
             "version": state.version,
+            "execution_epoch": state.execution_epoch,
+            "reconciled_epoch": state.reconciled_epoch,
         }
         try:
             self._table.put_item(
@@ -59,7 +72,9 @@ class DynamoOperationalStore:
         response = self._table.get_item(Key=self._control_key, ConsistentRead=True)
         item = response.get("Item")
         if item is None:
-            return self.initialize()
+            if self._initialize_missing:
+                return self.initialize()
+            return AgentState(reason="operational state is not initialized")
         payload = item.get("payload")
         if not isinstance(payload, (str, bytes, bytearray)):
             raise RuntimeError("agent state payload is missing or invalid")
@@ -78,14 +93,19 @@ class DynamoOperationalStore:
         self._replace_state(state, new_state)
         return new_state
 
-    def commit_reconciliation(self, epoch: str, record: DecisionRecord) -> AgentState:
+    def transition_agent_mode(
+        self, mode: AgentMode, *, reason: str, record: DecisionRecord
+    ) -> AgentState:
         state = self.get_agent_state()
-        if state.execution_epoch != epoch:
-            raise RuntimeError("execution epoch changed during reconciliation")
+        if state.mode is AgentMode.KILLED:
+            raise RuntimeError("KILLED agent mode is terminal")
+        if mode is AgentMode.RUNNING and not state.is_reconciled:
+            raise RuntimeError("startup reconciliation is required before RUNNING")
         new_state = state.model_copy(
             update={
+                "mode": mode,
+                "reason": reason,
                 "version": state.version + 1,
-                "reconciled_epoch": epoch,
                 "updated_at": datetime.now(UTC),
             }
         )
@@ -102,7 +122,57 @@ class DynamoOperationalStore:
                         {
                             **self._control_key,
                             "payload": new_state.model_dump_json(),
+                            "mode": new_state.mode,
                             "version": new_state.version,
+                            "execution_epoch": new_state.execution_epoch,
+                            "reconciled_epoch": new_state.reconciled_epoch,
+                        }
+                    ),
+                    "ConditionExpression": "attribute_exists(PK) AND #version = :expected",
+                    "ExpressionAttributeNames": {"#version": "version"},
+                    "ExpressionAttributeValues": {":expected": serializer.serialize(state.version)},
+                }
+            },
+            *self._decision_operations(record, serializer),
+        ]
+        self._client.transact_write_items(TransactItems=operations)
+        return new_state
+
+    def commit_reconciliation(
+        self, epoch: str, record: DecisionRecord, *, equity: Decimal | None = None
+    ) -> AgentState:
+        state = self.get_agent_state()
+        if state.execution_epoch != epoch:
+            raise RuntimeError("execution epoch changed during reconciliation")
+        new_state = state.model_copy(
+            update={
+                "version": state.version + 1,
+                "reconciled_epoch": epoch,
+                "equity_peak": (
+                    max(state.equity_peak or equity, equity)
+                    if equity is not None
+                    else state.equity_peak
+                ),
+                "updated_at": datetime.now(UTC),
+            }
+        )
+        serializer = TypeSerializer()
+
+        def serialized(item: dict[str, Any]) -> dict[str, Any]:
+            return {key: serializer.serialize(value) for key, value in item.items()}
+
+        operations: list[TransactWriteItemTypeDef] = [
+            {
+                "Put": {
+                    "TableName": self._table.name,
+                    "Item": serialized(
+                        {
+                            **self._control_key,
+                            "payload": new_state.model_dump_json(),
+                            "mode": new_state.mode,
+                            "version": new_state.version,
+                            "execution_epoch": new_state.execution_epoch,
+                            "reconciled_epoch": new_state.reconciled_epoch,
                         }
                     ),
                     "ConditionExpression": "attribute_exists(PK) AND #version = :expected",
@@ -117,7 +187,14 @@ class DynamoOperationalStore:
 
     def _replace_state(self, old: AgentState, new: AgentState) -> None:
         self._table.put_item(
-            Item={**self._control_key, "payload": new.model_dump_json(), "version": new.version},
+            Item={
+                **self._control_key,
+                "payload": new.model_dump_json(),
+                "mode": new.mode,
+                "version": new.version,
+                "execution_epoch": new.execution_epoch,
+                "reconciled_epoch": new.reconciled_epoch,
+            },
             ConditionExpression="attribute_exists(PK) AND #version = :expected",
             ExpressionAttributeNames={"#version": "version"},
             ExpressionAttributeValues={":expected": old.version},
@@ -127,6 +204,201 @@ class DynamoOperationalStore:
         serializer = TypeSerializer()
         operations = self._decision_operations(record, serializer)
         self._client.transact_write_items(TransactItems=operations)
+
+    def append_decision_once(
+        self, record: DecisionRecord, *, expected_epoch: str | None = None
+    ) -> bool:
+        serializer = TypeSerializer()
+        operations = self._decision_operations(record, serializer)
+        if expected_epoch is not None:
+            operations.insert(
+                0,
+                {
+                    "ConditionCheck": {
+                        "TableName": self._table.name,
+                        "Key": {
+                            key: serializer.serialize(value)
+                            for key, value in self._control_key.items()
+                        },
+                        "ConditionExpression": (
+                            "execution_epoch = :epoch AND reconciled_epoch = :epoch"
+                        ),
+                        "ExpressionAttributeValues": {
+                            ":epoch": serializer.serialize(expected_epoch)
+                        },
+                    }
+                },
+            )
+        try:
+            self._client.transact_write_items(TransactItems=operations)
+            return True
+        except ClientError as exc:
+            reasons = exc.response.get("CancellationReasons", [])
+            if (
+                expected_epoch is not None
+                and reasons
+                and reasons[0].get("Code") == "ConditionalCheckFailed"
+            ):
+                raise RuntimeError("worker lost execution epoch ownership") from exc
+            reason_codes = {reason.get("Code") for reason in reasons}
+            if (
+                exc.response["Error"]["Code"] == "TransactionCanceledException"
+                and "ConditionalCheckFailed" in reason_codes
+                and reason_codes <= {"ConditionalCheckFailed", "None"}
+            ):
+                return False
+            raise
+
+    @property
+    def _order_partition_key(self) -> str:
+        return f"COMP#{self._competition_id}"
+
+    def claim_order(self, execution: OrderExecution, *, expected_epoch: str) -> bool:
+        client_order_id = execution.plan.client_order_id
+        state = self.get_agent_state()
+        if (
+            state.mode is not AgentMode.RUNNING
+            or state.execution_epoch != expected_epoch
+            or not state.is_reconciled
+        ):
+            raise RuntimeError("agent is not authorized for new exposure")
+        existing = self.get_order(client_order_id)
+        if existing is not None:
+            if (
+                existing.status in {OrderExecutionStatus.PREPARED, OrderExecutionStatus.UNKNOWN}
+                and state.active_order_id != client_order_id
+            ):
+                raise RuntimeError("agent is not authorized for order recovery")
+            return False
+        if state.active_order_id is not None:
+            raise RuntimeError("agent is not authorized for new exposure")
+        new_state = state.model_copy(
+            update={
+                "active_order_id": client_order_id,
+                "version": state.version + 1,
+                "updated_at": datetime.now(UTC),
+            }
+        )
+        serializer = TypeSerializer()
+        order_item = {
+            "PK": self._order_partition_key,
+            "SK": f"ORDER#{client_order_id}",
+            "payload": execution.model_dump_json(),
+            "status": execution.status,
+            "version": execution.version,
+        }
+        operations: list[TransactWriteItemTypeDef] = [
+            {
+                "Put": {
+                    "TableName": self._table.name,
+                    "Item": {
+                        key: serializer.serialize(value)
+                        for key, value in {
+                            **self._control_key,
+                            "payload": new_state.model_dump_json(),
+                            "mode": new_state.mode,
+                            "version": new_state.version,
+                            "execution_epoch": new_state.execution_epoch,
+                            "reconciled_epoch": new_state.reconciled_epoch,
+                        }.items()
+                    },
+                    "ConditionExpression": (
+                        "#version = :expected_version AND #mode = :running "
+                        "AND execution_epoch = :epoch AND reconciled_epoch = :epoch"
+                    ),
+                    "ExpressionAttributeNames": {"#mode": "mode", "#version": "version"},
+                    "ExpressionAttributeValues": {
+                        ":expected_version": serializer.serialize(state.version),
+                        ":running": serializer.serialize(AgentMode.RUNNING),
+                        ":epoch": serializer.serialize(expected_epoch),
+                    },
+                }
+            },
+            {
+                "Put": {
+                    "TableName": self._table.name,
+                    "Item": {key: serializer.serialize(value) for key, value in order_item.items()},
+                    "ConditionExpression": "attribute_not_exists(PK) AND attribute_not_exists(SK)",
+                }
+            },
+        ]
+        try:
+            self._client.transact_write_items(TransactItems=operations)
+            return True
+        except ClientError as exc:
+            reasons = exc.response.get("CancellationReasons", [])
+            if reasons and reasons[0].get("Code") == "ConditionalCheckFailed":
+                raise RuntimeError("agent is not authorized for new exposure") from exc
+            if len(reasons) > 1 and reasons[1].get("Code") == "ConditionalCheckFailed":
+                return False
+            raise
+
+    def get_order(self, client_order_id: str) -> OrderExecution | None:
+        response = self._table.get_item(
+            Key={"PK": self._order_partition_key, "SK": f"ORDER#{client_order_id}"},
+            ConsistentRead=True,
+        )
+        item = response.get("Item")
+        if item is None:
+            return None
+        payload = item.get("payload")
+        if not isinstance(payload, (str, bytes, bytearray)):
+            raise RuntimeError("order execution payload is missing or invalid")
+        return OrderExecution.model_validate_json(payload)
+
+    def clear_active_order(self, client_order_id: str) -> AgentState:
+        state = self.get_agent_state()
+        if state.active_order_id != client_order_id:
+            raise RuntimeError("active order changed concurrently")
+        new_state = state.model_copy(
+            update={
+                "active_order_id": None,
+                "version": state.version + 1,
+                "updated_at": datetime.now(UTC),
+            }
+        )
+        self._replace_state(state, new_state)
+        return new_state
+
+    def update_equity_peak(self, equity: Decimal) -> AgentState:
+        state = self.get_agent_state()
+        if state.equity_peak is not None and equity <= state.equity_peak:
+            return state
+        new_state = state.model_copy(
+            update={
+                "equity_peak": equity,
+                "version": state.version + 1,
+                "updated_at": datetime.now(UTC),
+            }
+        )
+        self._replace_state(state, new_state)
+        return new_state
+
+    def update_order(
+        self,
+        execution: OrderExecution,
+        *,
+        expected_status: OrderExecutionStatus,
+    ) -> OrderExecution:
+        self._table.put_item(
+            Item={
+                "PK": self._order_partition_key,
+                "SK": f"ORDER#{execution.plan.client_order_id}",
+                "payload": execution.model_dump_json(),
+                "status": execution.status,
+                "version": execution.version,
+            },
+            ConditionExpression=(
+                "attribute_exists(PK) AND #status = :expected_status "
+                "AND #version = :expected_version"
+            ),
+            ExpressionAttributeNames={"#status": "status", "#version": "version"},
+            ExpressionAttributeValues={
+                ":expected_status": expected_status,
+                ":expected_version": execution.version - 1,
+            },
+        )
+        return execution
 
     def _decision_operations(
         self, record: DecisionRecord, serializer: TypeSerializer

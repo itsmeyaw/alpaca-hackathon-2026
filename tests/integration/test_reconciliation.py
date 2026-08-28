@@ -7,8 +7,10 @@ from catalyst_router.adapters.memory import InMemoryOperationalStore
 from catalyst_router.domain import (
     AccountSnapshot,
     AgentState,
+    BrokerOrderSnapshot,
     DecisionRecord,
     MarketClockSnapshot,
+    OrderPlan,
     ReconciliationSnapshot,
 )
 from catalyst_router.service import ReconciliationService
@@ -40,9 +42,23 @@ class FakePaperBroker:
             captured_at=now,
         )
 
+    def get_order_by_client_id(self, client_order_id: str) -> BrokerOrderSnapshot | None:
+        del client_order_id
+        return None
+
+    def submit_order(self, plan: OrderPlan) -> BrokerOrderSnapshot:
+        del plan
+        raise AssertionError("reconciliation must not submit orders")
+
+    def flatten(self) -> None:
+        raise AssertionError("reconciliation must not flatten a healthy account")
+
 
 class FailingCommitStore(InMemoryOperationalStore):
-    def commit_reconciliation(self, epoch: str, record: DecisionRecord) -> AgentState:
+    def commit_reconciliation(
+        self, epoch: str, record: DecisionRecord, *, equity: Decimal | None = None
+    ) -> AgentState:
+        del epoch, record, equity
         raise RuntimeError("conditional write failed")
 
 
@@ -54,6 +70,7 @@ def test_reconciliation_fences_execution_and_records_result() -> None:
 
     assert snapshot.account.options_trading_level == 3
     assert store.get_agent_state().is_reconciled
+    assert store.get_agent_state().equity_peak == Decimal("100000")
     assert store.list_public_decisions()[0].decision_type == "RECONCILIATION_COMPLETED"
 
 

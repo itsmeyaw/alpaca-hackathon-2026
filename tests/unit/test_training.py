@@ -7,9 +7,11 @@ import pytest
 
 from catalyst_router.training import (
     FEATURE_NAMES,
+    FEATURE_SCHEMA,
     BarCacheSpecification,
     MarketBar,
     TrainingExample,
+    build_feature_vectors,
     build_training_examples,
     evaluate_predictions,
     evaluate_return_forecasts,
@@ -66,6 +68,25 @@ def test_builds_point_in_time_features_and_same_session_label() -> None:
     assert isclose(feature["market_return_4"], 119 / 115 - 1)
     assert isclose(feature["relative_return_12"], (238 / 214 - 1) - (119 / 107 - 1))
     assert isclose(first_aapl.forward_return, 242 / 238 - 1)
+
+
+def test_live_feature_vector_matches_training_features_without_future_bars() -> None:
+    spy = bars("SPY", [100.0 + index for index in range(20)])
+    aapl = bars("AAPL", [200.0 + 2 * index for index in range(20)])
+    future_spy = bars("SPY", [100.0 + index for index in range(22)])[20:]
+    future_aapl = bars("AAPL", [200.0 + 2 * index for index in range(22)])[20:]
+
+    live = build_feature_vectors(spy + aapl)
+    trained = build_training_examples(
+        spy + future_spy + aapl + future_aapl,
+        horizon_bars=2,
+    )
+
+    live_aapl = next(item for item in live if item.symbol == "AAPL")
+    trained_aapl = next(item for item in trained if item.symbol == "AAPL")
+    assert live_aapl.schema == FEATURE_SCHEMA
+    assert live_aapl.observed_at == trained_aapl.observed_at
+    assert live_aapl.values == trained_aapl.features
 
 
 def test_walk_forward_splits_purge_overlapping_training_labels() -> None:
