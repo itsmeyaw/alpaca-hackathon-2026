@@ -1,0 +1,95 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M14WZZ4FCCZ4TST16356T3VX",
+  "session_id": "ses_fba9e0006ffeHEBb9I8UxiIjYv",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-28T19:19:36.007715Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "Dockerfile",
+    "infra/README.md",
+    "infra/environments/prod/outputs.tf",
+    "infra/environments/prod/storage.tf",
+    "infra/environments/prod/variables.tf",
+    "pyproject.toml",
+    "src/catalyst_router/api.py",
+    "src/catalyst_router/container.py",
+    "src/catalyst_router/settings.py",
+    "tests/integration/test_api.py",
+    "uv.lock"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-luna",
+  "turn_id": "7350e2fcb49f",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 59882,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 383092,
+    "output_tokens": 2259,
+    "api_call_count": 10
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-28T19:19:35.985149Z",
+    "agent_lines": 136,
+    "agent_removed": 8,
+    "human_added": 2721,
+    "human_modified": 4,
+    "human_removed": 0,
+    "total_committed": 2861,
+    "total_lines_changed": 2911,
+    "agent_percentage": 4.946753692889041,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 1798,
+      "user_lines_removed": 291,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "Dockerfile": 2,
+        "dashboard/app/globals.css": 61,
+        "dashboard/components.json": 25,
+        "dashboard/components/dashboard.tsx": 155,
+        "dashboard/components/ui/badge.tsx": 52,
+        "dashboard/components/ui/button.tsx": 56,
+        "dashboard/components/ui/card.tsx": 100,
+        "dashboard/lib/api.ts": 29,
+        "dashboard/lib/utils.ts": 6,
+        "dashboard/package-lock.json": 837,
+        "dashboard/package.json": 8,
+        "dashboard/postcss.config.mjs": 5,
+        "dashboard/tsconfig.json": 5,
+        "infra/README.md": 23,
+        "infra/environments/prod/delivery.tf": 199,
+        "infra/environments/prod/outputs.tf": 3,
+        "infra/environments/prod/storage.tf": 19,
+        "infra/environments/prod/variables.tf": 10,
+        "pyproject.toml": 3,
+        "src/catalyst_router/api.py": 7,
+        "src/catalyst_router/challenger.py": 153,
+        "src/catalyst_router/container.py": 8,
+        "src/catalyst_router/settings.py": 2,
+        "tests/integration/test_api.py": 26,
+        "uv.lock": 4
+      },
+      "user_removed_per_file": {
+        "Dockerfile": 2,
+        "dashboard/app/globals.css": 139,
+        "dashboard/components/dashboard.tsx": 137,
+        "dashboard/lib/api.ts": 2,
+        "dashboard/package-lock.json": 8,
+        "dashboard/package.json": 1,
+        "infra/README.md": 1,
+        "src/catalyst_router/container.py": 1
+      }
+    }
+  ]
+}
