@@ -1,0 +1,1 @@
+Research repository specs only. Read CONTEXT.md, docs/adr, docs/agents issue tracker guidance, and inspect relevant GitHub issues with gh. Do not edit. Identify the originating requirements and acceptance criteria for enabling paper trading, safety constraints, any decisions already made, and exact issue references. Return concise findings with file/line or issue URLs.
