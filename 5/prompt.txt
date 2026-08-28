@@ -1,0 +1,1 @@
+Review current uncommitted changes against CONTEXT.md and ADRs, especially shadow-only authority and reporting/operator separation. Assess whether tests adequately cover the confirmed seams for this first inference increment and identify behavioral regressions. Do not edit files. Return concise findings ordered by severity with file/line references.
