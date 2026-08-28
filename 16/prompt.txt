@@ -1,0 +1,1 @@
+Make the dashboard to use shadcn UI. Light mode. Yellow theme. Example command using shadcn via npx: npx shadcn@latest init --preset b6HGgLcLQ --template next . Keep the preset number.

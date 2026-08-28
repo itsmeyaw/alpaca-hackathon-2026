@@ -1,0 +1,89 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M14WZZ4FCCZ4TST16356T3VX",
+  "session_id": "ses_fbac76eabffeFEhmhNUU0CAUFy",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-28T19:19:38.05977Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "save_step_count": 2,
+  "files_touched": [
+    "Dockerfile",
+    "infra/README.md",
+    "infra/environments/prod/outputs.tf",
+    "infra/environments/prod/storage.tf",
+    "infra/environments/prod/variables.tf",
+    "pyproject.toml",
+    "src/catalyst_router/api.py",
+    "src/catalyst_router/container.py",
+    "src/catalyst_router/settings.py",
+    "tests/integration/test_api.py",
+    "uv.lock"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-terra",
+  "turn_id": "271ab3e248f4",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 5766,
+    "cache_creation_tokens": 137473,
+    "cache_read_tokens": 2230708,
+    "output_tokens": 11599,
+    "api_call_count": 49
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-28T19:19:38.009724Z",
+    "agent_lines": 145,
+    "agent_removed": 8,
+    "human_added": 3171,
+    "human_modified": 4,
+    "human_removed": 0,
+    "total_committed": 3320,
+    "total_lines_changed": 3370,
+    "agent_percentage": 4.540059347181009,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 489,
+      "user_lines_removed": 7,
+      "agent_lines_added": 1301,
+      "agent_lines_removed": 286,
+      "user_added_per_file": {
+        "Dockerfile": 2,
+        "dashboard/components/dashboard.tsx": 11,
+        "dashboard/lib/api.ts": 29,
+        "infra/README.md": 14,
+        "infra/environments/prod/delivery.tf": 198,
+        "infra/environments/prod/outputs.tf": 3,
+        "infra/environments/prod/storage.tf": 19,
+        "infra/environments/prod/variables.tf": 10,
+        "pyproject.toml": 3,
+        "src/catalyst_router/api.py": 7,
+        "src/catalyst_router/challenger.py": 153,
+        "src/catalyst_router/container.py": 8,
+        "src/catalyst_router/settings.py": 2,
+        "tests/integration/test_api.py": 26,
+        "uv.lock": 4
+      },
+      "user_removed_per_file": {
+        "Dockerfile": 2,
+        "dashboard/components/dashboard.tsx": 1,
+        "dashboard/lib/api.ts": 2,
+        "infra/README.md": 1,
+        "src/catalyst_router/container.py": 1
+      }
+    }
+  ]
+}
