@@ -3,12 +3,13 @@
   "checkpoint_id": "01M14WZZ4FCCZ4TST16356T3VX",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 16,
+  "checkpoints_count": 20,
   "files_touched": [
     "Dockerfile",
     "Makefile",
     "README.md",
     "infra/README.md",
+    "infra/environments/prod/delivery.tf",
     "infra/environments/prod/ecs.tf",
     "infra/environments/prod/iam.tf",
     "infra/environments/prod/observability.tf",
@@ -18,8 +19,10 @@
     "pyproject.toml",
     "src/catalyst_router/adapters/alpaca.py",
     "src/catalyst_router/adapters/dynamodb.py",
+    "src/catalyst_router/adapters/market_data.py",
     "src/catalyst_router/adapters/memory.py",
     "src/catalyst_router/api.py",
+    "src/catalyst_router/challenger.py",
     "src/catalyst_router/cli.py",
     "src/catalyst_router/container.py",
     "src/catalyst_router/domain.py",
@@ -27,12 +30,15 @@
     "src/catalyst_router/service.py",
     "src/catalyst_router/settings.py",
     "src/catalyst_router/training.py",
+    "src/catalyst_router/worker.py",
     "tests/integration/test_api.py",
     "tests/integration/test_dynamodb_store.py",
     "tests/integration/test_reconciliation.py",
+    "tests/unit/test_challenger.py",
     "tests/unit/test_settings.py",
     "tests/unit/test_store.py",
     "tests/unit/test_training.py",
+    "tests/unit/test_worker.py",
     "uv.lock"
   ],
   "sessions": [
@@ -119,13 +125,20 @@
       "compact_transcript": "/11/transcript.jsonl",
       "content_hash": "/11/content_hash.txt",
       "prompt": "/11/prompt.txt"
+    },
+    {
+      "metadata": "/12/metadata.json",
+      "transcript": "/12/full.jsonl",
+      "compact_transcript": "/12/transcript.jsonl",
+      "content_hash": "/12/content_hash.txt",
+      "prompt": "/12/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 272,
-    "cache_creation_tokens": 978901,
-    "cache_read_tokens": 6886277,
-    "output_tokens": 53399,
-    "api_call_count": 136
+    "input_tokens": 654,
+    "cache_creation_tokens": 1473528,
+    "cache_read_tokens": 31606994,
+    "output_tokens": 128082,
+    "api_call_count": 328
   }
 }

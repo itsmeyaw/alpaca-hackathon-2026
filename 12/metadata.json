@@ -1,0 +1,162 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M14WZZ4FCCZ4TST16356T3VX",
+  "session_id": "ses_fb68a44ffffeS2aO5rLI1pHNLt",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-28T19:19:35.645793Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "save_step_count": 4,
+  "files_touched": [
+    "Dockerfile",
+    "Makefile",
+    "infra/README.md",
+    "infra/environments/prod/delivery.tf",
+    "infra/environments/prod/ecs.tf",
+    "infra/environments/prod/iam.tf",
+    "infra/environments/prod/observability.tf",
+    "infra/environments/prod/outputs.tf",
+    "infra/environments/prod/storage.tf",
+    "infra/environments/prod/variables.tf",
+    "pyproject.toml",
+    "src/catalyst_router/adapters/alpaca.py",
+    "src/catalyst_router/adapters/dynamodb.py",
+    "src/catalyst_router/adapters/market_data.py",
+    "src/catalyst_router/adapters/memory.py",
+    "src/catalyst_router/api.py",
+    "src/catalyst_router/challenger.py",
+    "src/catalyst_router/cli.py",
+    "src/catalyst_router/container.py",
+    "src/catalyst_router/domain.py",
+    "src/catalyst_router/ports.py",
+    "src/catalyst_router/settings.py",
+    "src/catalyst_router/training.py",
+    "src/catalyst_router/worker.py",
+    "tests/integration/test_api.py",
+    "tests/integration/test_dynamodb_store.py",
+    "tests/unit/test_challenger.py",
+    "tests/unit/test_settings.py",
+    "tests/unit/test_store.py",
+    "tests/unit/test_training.py",
+    "tests/unit/test_worker.py",
+    "uv.lock"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-sol",
+  "turn_id": "bba4ae8d8bf2",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 382,
+    "cache_creation_tokens": 494627,
+    "cache_read_tokens": 24720717,
+    "output_tokens": 74683,
+    "api_call_count": 192
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-28T19:19:35.454204Z",
+    "agent_lines": 1590,
+    "agent_removed": 38,
+    "human_added": 1015,
+    "human_modified": 34,
+    "human_removed": 0,
+    "total_committed": 2639,
+    "total_lines_changed": 2685,
+    "agent_percentage": 60.63314711359404,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 2038,
+      "user_lines_removed": 295,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "Dockerfile": 2,
+        "Makefile": 4,
+        "dashboard/app/globals.css": 61,
+        "dashboard/components.json": 25,
+        "dashboard/components/dashboard.tsx": 155,
+        "dashboard/components/ui/badge.tsx": 52,
+        "dashboard/components/ui/button.tsx": 56,
+        "dashboard/components/ui/card.tsx": 100,
+        "dashboard/lib/api.ts": 54,
+        "dashboard/lib/utils.ts": 6,
+        "dashboard/package-lock.json": 837,
+        "dashboard/package.json": 8,
+        "dashboard/postcss.config.mjs": 5,
+        "dashboard/tsconfig.json": 5,
+        "infra/README.md": 33,
+        "infra/environments/prod/delivery.tf": 226,
+        "infra/environments/prod/outputs.tf": 3,
+        "infra/environments/prod/storage.tf": 19,
+        "infra/environments/prod/variables.tf": 20,
+        "pyproject.toml": 3,
+        "scripts/deploy-dashboard": 17,
+        "src/catalyst_router/adapters/alpaca.py": 9,
+        "src/catalyst_router/api.py": 7,
+        "src/catalyst_router/challenger.py": 170,
+        "src/catalyst_router/container.py": 14,
+        "src/catalyst_router/settings.py": 18,
+        "tests/integration/test_api.py": 26,
+        "tests/unit/test_alpaca.py": 27,
+        "tests/unit/test_challenger.py": 32,
+        "tests/unit/test_settings.py": 24,
+        "uv.lock": 20
+      },
+      "user_removed_per_file": {
+        "Dockerfile": 2,
+        "Makefile": 1,
+        "dashboard/app/globals.css": 139,
+        "dashboard/components/dashboard.tsx": 137,
+        "dashboard/lib/api.ts": 2,
+        "dashboard/package-lock.json": 8,
+        "dashboard/package.json": 1,
+        "infra/README.md": 1,
+        "src/catalyst_router/adapters/alpaca.py": 1,
+        "src/catalyst_router/container.py": 1,
+        "src/catalyst_router/settings.py": 2
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2905,
+      "agent_lines_removed": 323
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2980,
+      "agent_lines_removed": 324
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2980,
+      "agent_lines_removed": 324
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 252,
+      "user_lines_removed": 20,
+      "agent_lines_added": 4388,
+      "agent_lines_removed": 341,
+      "user_added_per_file": {
+        "src/catalyst_router/execution.py": 133,
+        "tests/unit/test_alpaca.py": 1,
+        "tests/unit/test_execution.py": 118
+      },
+      "user_removed_per_file": {
+        "src/catalyst_router/execution.py": 11,
+        "tests/unit/test_execution.py": 9
+      }
+    }
+  ]
+}
