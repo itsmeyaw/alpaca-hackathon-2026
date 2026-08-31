@@ -1,0 +1,111 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1B88SNVBWHA7A98Q6YBZ0QK",
+  "session_id": "ses_fb6142e43ffeW8462nNzCxywN4",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-31T06:31:53.847882Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "save_step_count": 3,
+  "files_touched": [
+    "CONTEXT.md",
+    "README.md",
+    "dashboard/app/globals.css",
+    "dashboard/components/dashboard.tsx",
+    "dashboard/lib/api.ts",
+    "dashboard/package-lock.json",
+    "dashboard/package.json",
+    "dashboard/tsconfig.json",
+    "docs/adr/0005-keep-trained-models-in-shadow-mode.md",
+    "docs/adr/0013-authorize-the-model-for-paper-execution.md",
+    "docs/training/local-benchmark.md",
+    "infra/README.md",
+    "infra/environments/prod/delivery.tf",
+    "infra/environments/prod/ecs.tf",
+    "infra/environments/prod/outputs.tf",
+    "src/catalyst_router/adapters/alpaca.py",
+    "src/catalyst_router/challenger.py",
+    "src/catalyst_router/cli.py",
+    "src/catalyst_router/container.py",
+    "src/catalyst_router/domain.py",
+    "src/catalyst_router/execution.py",
+    "src/catalyst_router/settings.py",
+    "src/catalyst_router/worker.py",
+    "tests/unit/test_alpaca.py",
+    "tests/unit/test_challenger.py",
+    "tests/unit/test_execution.py",
+    "tests/unit/test_settings.py",
+    "tests/unit/test_worker.py"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-sol",
+  "turn_id": "f4e430d47f6f",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 168,
+    "cache_creation_tokens": 257976,
+    "cache_read_tokens": 15160095,
+    "output_tokens": 34286,
+    "api_call_count": 84
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-31T06:31:53.747276Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 386,
+    "human_removed": 2278,
+    "total_committed": 1257,
+    "total_lines_changed": 2664,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 1381,
+      "user_lines_removed": 287,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "dashboard/app/globals.css": 61,
+        "dashboard/components.json": 25,
+        "dashboard/components/dashboard.tsx": 155,
+        "dashboard/components/ui/badge.tsx": 52,
+        "dashboard/components/ui/button.tsx": 56,
+        "dashboard/components/ui/card.tsx": 100,
+        "dashboard/lib/api.ts": 54,
+        "dashboard/lib/utils.ts": 6,
+        "dashboard/package-lock.json": 837,
+        "dashboard/package.json": 8,
+        "dashboard/postcss.config.mjs": 5,
+        "dashboard/tsconfig.json": 5,
+        "scripts/deploy-dashboard": 17
+      },
+      "user_removed_per_file": {
+        "dashboard/app/globals.css": 139,
+        "dashboard/components/dashboard.tsx": 137,
+        "dashboard/lib/api.ts": 2,
+        "dashboard/package-lock.json": 8,
+        "dashboard/package.json": 1
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1381,
+      "agent_lines_removed": 287
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2024,
+      "agent_lines_removed": 337
+    }
+  ]
+}

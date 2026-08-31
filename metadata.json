@@ -1,0 +1,53 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1B88SNVBWHA7A98Q6YBZ0QK",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "CONTEXT.md",
+    "README.md",
+    "dashboard/app/globals.css",
+    "dashboard/components/dashboard.tsx",
+    "dashboard/lib/api.ts",
+    "dashboard/package-lock.json",
+    "dashboard/package.json",
+    "dashboard/tsconfig.json",
+    "docs/adr/0005-keep-trained-models-in-shadow-mode.md",
+    "docs/adr/0013-authorize-the-model-for-paper-execution.md",
+    "docs/training/local-benchmark.md",
+    "infra/README.md",
+    "infra/environments/prod/delivery.tf",
+    "infra/environments/prod/ecs.tf",
+    "infra/environments/prod/outputs.tf",
+    "src/catalyst_router/adapters/alpaca.py",
+    "src/catalyst_router/challenger.py",
+    "src/catalyst_router/cli.py",
+    "src/catalyst_router/container.py",
+    "src/catalyst_router/domain.py",
+    "src/catalyst_router/execution.py",
+    "src/catalyst_router/settings.py",
+    "src/catalyst_router/worker.py",
+    "tests/unit/test_alpaca.py",
+    "tests/unit/test_challenger.py",
+    "tests/unit/test_execution.py",
+    "tests/unit/test_settings.py",
+    "tests/unit/test_worker.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 168,
+    "cache_creation_tokens": 257976,
+    "cache_read_tokens": 15160095,
+    "output_tokens": 34286,
+    "api_call_count": 84
+  }
+}
