@@ -1,0 +1,274 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1B88Q7WB0DPJWE1TAEW606A",
+  "session_id": "ses_fb3b029ebffeUOBUymLCxtF9wV",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-31T06:31:51.969042Z",
+  "branch": "main",
+  "checkpoints_count": 15,
+  "save_step_count": 15,
+  "files_touched": [
+    "CONTEXT.md",
+    "README.md",
+    "dashboard/.env.development",
+    "dashboard/app/globals.css",
+    "dashboard/components/dashboard.tsx",
+    "dashboard/components/ui/table.tsx",
+    "dashboard/lib/api.ts",
+    "dashboard/next-env.d.ts",
+    "dashboard/package-lock.json",
+    "dashboard/package.json",
+    "dashboard/tsconfig.json",
+    "deployed-flight-recorder.png",
+    "docs/adr/0005-keep-trained-models-in-shadow-mode.md",
+    "docs/training/local-benchmark.md",
+    "infra/README.md",
+    "infra/deployments/dashboard/.terraform.lock.hcl",
+    "infra/deployments/dashboard/main.tf",
+    "infra/environments/prod/delivery.tf",
+    "infra/environments/prod/ecs.tf",
+    "infra/environments/prod/outputs.tf",
+    "scripts/deploy-dashboard",
+    "src/catalyst_router/adapters/alpaca.py",
+    "src/catalyst_router/adapters/dynamodb.py",
+    "src/catalyst_router/adapters/memory.py",
+    "src/catalyst_router/api.py",
+    "src/catalyst_router/challenger.py",
+    "src/catalyst_router/cli.py",
+    "src/catalyst_router/container.py",
+    "src/catalyst_router/domain.py",
+    "src/catalyst_router/execution.py",
+    "src/catalyst_router/ports.py",
+    "src/catalyst_router/settings.py",
+    "src/catalyst_router/worker.py",
+    "tests/integration/test_api.py",
+    "tests/unit/test_alpaca.py",
+    "tests/unit/test_challenger.py",
+    "tests/unit/test_execution.py",
+    "tests/unit/test_settings.py",
+    "tests/unit/test_worker.py"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-terra",
+  "turn_id": "8ffd628ab1cc",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 26910,
+    "cache_creation_tokens": 599292,
+    "cache_read_tokens": 8453353,
+    "output_tokens": 40406,
+    "api_call_count": 157
+  },
+  "session_metrics": {
+    "turn_count": 15
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-31T06:31:51.8531Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 396,
+    "human_removed": 2837,
+    "total_committed": 1118,
+    "total_lines_changed": 3233,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 2047,
+      "user_lines_removed": 337,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "CONTEXT.md": 4,
+        "README.md": 5,
+        "dashboard/app/globals.css": 61,
+        "dashboard/components.json": 25,
+        "dashboard/components/dashboard.tsx": 157,
+        "dashboard/components/ui/badge.tsx": 52,
+        "dashboard/components/ui/button.tsx": 56,
+        "dashboard/components/ui/card.tsx": 100,
+        "dashboard/lib/api.ts": 55,
+        "dashboard/lib/utils.ts": 6,
+        "dashboard/package-lock.json": 837,
+        "dashboard/package.json": 8,
+        "dashboard/postcss.config.mjs": 5,
+        "dashboard/tsconfig.json": 5,
+        "docs/adr/0005-keep-trained-models-in-shadow-mode.md": 4,
+        "docs/adr/0013-authorize-the-model-for-paper-execution.md": 37,
+        "docs/training/local-benchmark.md": 6,
+        "infra/README.md": 2,
+        "infra/environments/prod/delivery.tf": 2,
+        "infra/environments/prod/ecs.tf": 4,
+        "infra/environments/prod/outputs.tf": 3,
+        "scripts/deploy-dashboard": 17,
+        "src/catalyst_router/adapters/alpaca.py": 1,
+        "src/catalyst_router/challenger.py": 9,
+        "src/catalyst_router/cli.py": 1,
+        "src/catalyst_router/container.py": 11,
+        "src/catalyst_router/domain.py": 9,
+        "src/catalyst_router/execution.py": 156,
+        "src/catalyst_router/settings.py": 23,
+        "src/catalyst_router/worker.py": 20,
+        "tests/unit/test_alpaca.py": 48,
+        "tests/unit/test_challenger.py": 28,
+        "tests/unit/test_execution.py": 171,
+        "tests/unit/test_settings.py": 50,
+        "tests/unit/test_worker.py": 69
+      },
+      "user_removed_per_file": {
+        "CONTEXT.md": 2,
+        "README.md": 4,
+        "dashboard/app/globals.css": 139,
+        "dashboard/components/dashboard.tsx": 137,
+        "dashboard/lib/api.ts": 2,
+        "dashboard/package-lock.json": 8,
+        "dashboard/package.json": 1,
+        "docs/adr/0005-keep-trained-models-in-shadow-mode.md": 1,
+        "docs/training/local-benchmark.md": 4,
+        "infra/README.md": 2,
+        "infra/environments/prod/ecs.tf": 1,
+        "src/catalyst_router/adapters/alpaca.py": 1,
+        "src/catalyst_router/challenger.py": 1,
+        "src/catalyst_router/cli.py": 1,
+        "src/catalyst_router/container.py": 1,
+        "src/catalyst_router/domain.py": 4,
+        "src/catalyst_router/execution.py": 15,
+        "src/catalyst_router/settings.py": 2,
+        "src/catalyst_router/worker.py": 6,
+        "tests/unit/test_execution.py": 2,
+        "tests/unit/test_worker.py": 3
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2086,
+      "agent_lines_removed": 338
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2086,
+      "agent_lines_removed": 338
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2086,
+      "agent_lines_removed": 338
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 2,
+      "user_lines_removed": 2,
+      "agent_lines_added": 2489,
+      "agent_lines_removed": 341,
+      "user_added_per_file": {
+        "dashboard/next-env.d.ts": 2
+      },
+      "user_removed_per_file": {
+        "dashboard/next-env.d.ts": 2
+      }
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2491,
+      "agent_lines_removed": 343
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 1,
+      "user_lines_removed": 1,
+      "agent_lines_added": 2496,
+      "agent_lines_removed": 343,
+      "user_added_per_file": {
+        "dashboard/.env.development": 1
+      },
+      "user_removed_per_file": {
+        "dashboard/.env.development": 1
+      }
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 1,
+      "user_lines_removed": 1,
+      "agent_lines_added": 2496,
+      "agent_lines_removed": 343,
+      "user_added_per_file": {
+        "dashboard/.env.development": 1
+      },
+      "user_removed_per_file": {
+        "dashboard/.env.development": 1
+      }
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 1,
+      "user_lines_removed": 1,
+      "agent_lines_added": 2494,
+      "agent_lines_removed": 341,
+      "user_added_per_file": {
+        "dashboard/.env.development": 1
+      },
+      "user_removed_per_file": {
+        "dashboard/.env.development": 1
+      }
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 1,
+      "user_lines_removed": 1,
+      "agent_lines_added": 2494,
+      "agent_lines_removed": 341,
+      "user_added_per_file": {
+        "dashboard/.env.development": 1
+      },
+      "user_removed_per_file": {
+        "dashboard/.env.development": 1
+      }
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2615,
+      "agent_lines_removed": 342
+    },
+    {
+      "checkpoint_number": 12,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2615,
+      "agent_lines_removed": 342
+    },
+    {
+      "checkpoint_number": 13,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2607,
+      "agent_lines_removed": 350
+    },
+    {
+      "checkpoint_number": 14,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2606,
+      "agent_lines_removed": 350
+    },
+    {
+      "checkpoint_number": 15,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2605,
+      "agent_lines_removed": 350
+    }
+  ]
+}

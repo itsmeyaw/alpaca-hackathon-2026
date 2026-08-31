@@ -1,0 +1,1 @@
+Decrease records of flight recorder height size and make it more compact. Make the list to be paged with 25 entries per page.  [Image 1]
