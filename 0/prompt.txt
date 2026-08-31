@@ -1,0 +1,1 @@
+Start the AI trading in the remote server based on the current deployed mnodel.
