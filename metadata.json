@@ -3,7 +3,7 @@
   "checkpoint_id": "01M1EJHE71PAXMQD42A38HPFW8",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 19,
+  "checkpoints_count": 21,
   "files_touched": [
     "CONTEXT.md",
     "src/catalyst_router/adapters/bedrock.py",
@@ -80,6 +80,13 @@
       "compact_transcript": "/8/transcript.jsonl",
       "content_hash": "/8/content_hash.txt",
       "prompt": "/8/prompt.txt"
+    },
+    {
+      "metadata": "/9/metadata.json",
+      "transcript": "/9/full.jsonl",
+      "compact_transcript": "/9/transcript.jsonl",
+      "content_hash": "/9/content_hash.txt",
+      "prompt": "/9/prompt.txt"
     }
   ],
   "token_usage": {
