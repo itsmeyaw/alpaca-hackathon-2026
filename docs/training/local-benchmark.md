@@ -3,8 +3,28 @@
 ## Status
 
 The selected local price-only challenger is `xgboost_regularized` using feature schema
-`bar-features-v2`, a four-hour horizon, and a `0.60` directional probability gate. It is
-`SHADOW_ONLY` and has no path to `TradeIntent`, risk approval, or order execution.
+`bar-features-v2` and a four-hour horizon. Its artifact records a `0.60` shadow gate. ADR-0013
+authorizes it for Alpaca paper execution with a more aggressive `0.52` runtime gate while preserving
+the validation limitations below.
+
+This benchmark remains historical evidence for the deployed 15-minute artifact. ADR-0014 introduces
+the five-minute `bar-features-v3` pipeline in shadow mode; it requires a new benchmark and must not
+reuse the results below as promotion evidence.
+
+## Five-Minute Shadow Run
+
+Run `20260829T092122Z` trained on 2,157,716 five-minute bars for 20 symbols from January 2021
+through August 29, 2026. After rejecting missing-bar and cross-session feature windows and requiring
+same-session four-hour labels, the sample contained 131,294 examples: 107,385 development and
+23,841 diagnostic holdout examples.
+
+The best runtime-compatible candidate was `xgboost_return_shallow` at an 8 basis-point edge gate.
+Its four validation folds produced mean return `-3.57%`, mean Sharpe `-0.36`, mean maximum drawdown
+`14.64%`, and selection score `-1.46`; only one fold had positive cumulative return. The diagnostic
+holdout returned `-17.21%` with Sharpe `-4.01`, maximum drawdown `17.54%`, and 75 trades.
+
+The artifact remains `SHADOW_ONLY`, `promotion_eligible=false`, and failed its numeric shadow gate.
+It must not replace or inherit authority from the ADR-0013 model.
 
 ## Protocol
 
@@ -62,5 +82,6 @@ SHA-256, feature schema, package versions, model parameters, model hash, folds, 
 - The sample has no point-in-time news/event features and cannot compare the full catalyst incumbent.
 - Fold instability and 76 diagnostic holdout trades are insufficient for promotion confidence.
 
-The next valid test is forward shadow collection with quotes, Alpaca News, incumbent decisions,
-and realized executable prices. Promotion remains a separate versioned decision under ADR-0005.
+The next valid test is forward collection with quotes, Alpaca News, incumbent decisions, and
+realized executable prices. ADR-0013 records the operator's explicit paper-live override; it does not
+claim the original promotion criteria were met.

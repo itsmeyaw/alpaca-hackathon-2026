@@ -40,10 +40,12 @@ from catalyst_router.training import (
     build_training_examples,
     evaluate_predictions,
     evaluate_return_forecasts,
+    economically_labeled_examples,
     purged_walk_forward_splits,
     sha256_file,
     validate_bar_cache,
 )
+from catalyst_router.datasets import validate_bar_dataset, write_bar_dataset
 
 DEFAULT_SYMBOLS = (
     "SPY",
@@ -58,6 +60,14 @@ DEFAULT_SYMBOLS = (
     "AMD",
     "JPM",
     "XOM",
+    "AVGO",
+    "COST",
+    "WMT",
+    "LLY",
+    "UNH",
+    "XLK",
+    "XLF",
+    "XLE",
 )
 PROBABILITY_THRESHOLDS = (0.50, 0.55, 0.60)
 RETURN_EDGE_GATES_BPS = (0.0, 4.0, 8.0, 12.0)
@@ -86,16 +96,17 @@ def parse_args() -> argparse.Namespace:
             "Train and compare local shadow challengers with purged walk-forward validation."
         )
     )
-    parser.add_argument("--start", default="2025-01-01")
+    parser.add_argument("--start", default="2021-01-01")
     parser.add_argument("--end", default=datetime.now(UTC).date().isoformat())
     parser.add_argument("--symbols", default=",".join(DEFAULT_SYMBOLS))
-    parser.add_argument("--timeframe-minutes", type=int, default=15)
-    parser.add_argument("--horizon-bars", type=int, default=16)
+    parser.add_argument("--timeframe-minutes", type=int, default=5)
+    parser.add_argument("--horizon-bars", type=int, default=48)
     parser.add_argument("--cost-bps", type=float, default=12.0)
     parser.add_argument("--folds", type=int, default=4)
     parser.add_argument("--holdout-fraction", type=float, default=0.15)
     parser.add_argument("--cache-dir", type=Path, default=Path(".local/training/data"))
     parser.add_argument("--artifact-dir", type=Path, default=Path(".local/training/artifacts"))
+    parser.add_argument("--dataset-dir", type=Path, default=Path(".local/training/datasets"))
     parser.add_argument("--refresh", action="store_true")
     return parser.parse_args()
 
@@ -103,8 +114,8 @@ def parse_args() -> argparse.Namespace:
 def candidates() -> tuple[Candidate, ...]:
     return (
         Candidate("always_long", "return", baseline="long"),
-        Candidate("momentum_4", "return", baseline="momentum"),
-        Candidate("reversion_4", "return", baseline="reversion"),
+        Candidate("momentum_1h", "return", baseline="momentum"),
+        Candidate("reversion_1h", "return", baseline="reversion"),
         Candidate(
             "logistic_l2",
             "probability",
@@ -217,6 +228,8 @@ def main() -> int:
     args = parse_args()
     if not 0 < args.holdout_fraction < 0.5:
         raise ValueError("holdout-fraction must be between 0 and 0.5")
+    if args.timeframe_minutes != 5 or args.horizon_bars != 48:
+        raise ValueError("runtime-compatible training requires 5-minute bars and 48-bar horizon")
     symbols = tuple(dict.fromkeys(value.strip().upper() for value in args.symbols.split(",")))
     if "SPY" not in symbols:
         raise ValueError("SPY is required as the market reference")
@@ -230,11 +243,20 @@ def main() -> int:
             BarCacheSpecification(args.start, args.end, symbols, args.timeframe_minutes),
         )
     frame = pd.read_csv(cache_path, parse_dates=["timestamp"])
+    dataset_path = args.dataset_dir / sha256_file(cache_path)[:16]
+    dataset_manifest_path = dataset_path / "manifest.json"
+    if dataset_manifest_path.exists():
+        validate_bar_dataset(dataset_manifest_path)
+    else:
+        write_bar_dataset(
+            frame,
+            dataset_path,
+            BarCacheSpecification(args.start, args.end, symbols, args.timeframe_minutes),
+        )
     market_bars = frame_to_bars(frame, timeframe_minutes=args.timeframe_minutes)
     examples = build_training_examples(
         market_bars,
         horizon_bars=args.horizon_bars,
-        min_history=20,
     )
     development, holdout, holdout_start = chronological_holdout(
         examples,
@@ -260,9 +282,11 @@ def main() -> int:
         cost_bps=args.cost_bps,
         periods_per_year=periods_per_year,
     )
-    winner = rankings[0]
+    winner = next(item for item in rankings if item.name.startswith("xgboost_"))
     candidate = next(item for item in candidates() if item.name == winner.name)
-    model, holdout_probabilities = fit_and_predict(candidate, development, holdout)
+    model, holdout_probabilities = fit_and_predict(
+        candidate, development, holdout, cost_bps=args.cost_bps
+    )
     holdout_result = evaluate_candidate(
         candidate,
         holdout,
@@ -289,6 +313,7 @@ def main() -> int:
         candidate=candidate,
         model=model,
         model_path=model_path,
+        dataset_manifest_path=dataset_manifest_path,
         run_id=run_id,
     )
     manifest_path = run_dir / "manifest.json"
@@ -425,7 +450,7 @@ def evaluate_candidate(
             values,
             confidence_threshold=decision_gate,
             cost_bps=cost_bps,
-            max_positions=3,
+            max_positions=1,
             periods_per_year=periods_per_year,
         )
     return evaluate_return_forecasts(
@@ -433,7 +458,7 @@ def evaluate_candidate(
         values,
         minimum_edge_bps=decision_gate,
         cost_bps=cost_bps,
-        max_positions=3,
+        max_positions=1,
         periods_per_year=periods_per_year,
     )
 
@@ -452,7 +477,9 @@ def rank_candidates(
         for fold_number, fold in enumerate(folds, start=1):
             train = tuple(examples[index] for index in fold.train_indices)
             validation = tuple(examples[index] for index in fold.validation_indices)
-            _, probabilities = fit_and_predict(candidate, train, validation)
+            _, probabilities = fit_and_predict(
+                candidate, train, validation, cost_bps=cost_bps
+            )
             fold_examples.append(validation)
             fold_probabilities.append(probabilities)
             print(f"Fitted {candidate.name} fold {fold_number}/{len(folds)}")
@@ -508,6 +535,8 @@ def fit_and_predict(
     candidate: Candidate,
     train: tuple[TrainingExample, ...],
     evaluation: tuple[TrainingExample, ...],
+    *,
+    cost_bps: float,
 ) -> tuple[ClassifierMixin | RegressorMixin | None, np.ndarray[Any, np.dtype[np.float64]]]:
     evaluation_features = feature_matrix(evaluation)
     if candidate.baseline:
@@ -515,16 +544,16 @@ def fit_and_predict(
     if candidate.factory is None:
         raise ValueError(f"candidate {candidate.name} has no implementation")
     model = candidate.factory()
-    labels = np.asarray(
-        [
-            item.forward_return > 0
-            if candidate.prediction_kind == "probability"
-            else item.forward_return
-            for item in train
-        ],
-        dtype=np.float64,
-    )
-    model.fit(feature_matrix(train), labels)
+    training_examples = train
+    if candidate.prediction_kind == "probability":
+        economic_labels = economically_labeled_examples(train, cost_bps=cost_bps)
+        if not economic_labels:
+            raise ValueError("classifier training fold has no returns that clear costs")
+        training_examples = tuple(item for item, _ in economic_labels)
+        labels = np.asarray([label for _, label in economic_labels], dtype=np.float64)
+    else:
+        labels = np.asarray([item.forward_return for item in train], dtype=np.float64)
+    model.fit(feature_matrix(training_examples), labels)
     if candidate.prediction_kind == "probability":
         if not hasattr(model, "predict_proba"):
             raise TypeError(f"{candidate.name} must be a classifier")
@@ -545,7 +574,7 @@ def baseline_probabilities(
 ) -> np.ndarray[Any, np.dtype[np.float64]]:
     if baseline == "long":
         return np.full(len(features), 0.01, dtype=np.float64)
-    momentum = features[:, FEATURE_NAMES.index("return_4")]
+    momentum = features[:, FEATURE_NAMES.index("return_1h")]
     if baseline == "momentum":
         return momentum
     if baseline == "reversion":
@@ -581,6 +610,7 @@ def build_manifest(
     candidate: Candidate,
     model: ClassifierMixin | RegressorMixin | None,
     model_path: Path | None,
+    dataset_manifest_path: Path,
     run_id: str,
 ) -> dict[str, Any]:
     numeric_shadow_gate_passed = (
@@ -594,7 +624,7 @@ def build_manifest(
         "authority": "SHADOW_ONLY",
         "run_id": run_id,
         "created_at": datetime.now(UTC).isoformat(),
-        "feature_schema": "bar-features-v2",
+        "feature_schema": "bar-features-v3",
         "feature_names": FEATURE_NAMES,
         "candidate": winner.name,
         "prediction_kind": winner.prediction_kind,
@@ -626,6 +656,8 @@ def build_manifest(
             "feed": "iex",
             "adjustment": "raw",
             "cache_sha256": sha256_file(cache_path),
+            "dataset_manifest": str(dataset_manifest_path),
+            "dataset_manifest_sha256": sha256_file(dataset_manifest_path),
         },
         "arguments": {
             "cost_bps": args.cost_bps,

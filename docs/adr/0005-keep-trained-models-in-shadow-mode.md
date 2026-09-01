@@ -1,6 +1,6 @@
 # ADR-0005: Keep Trained Models in Shadow Mode
 
-- Status: Accepted
+- Status: Superseded by ADR-0013
 - Date: 2026-08-27
 
 ## Context
@@ -19,3 +19,6 @@ Train LightGBM or XGBoost only as a Challenger Model. Record its predictions bes
 - The decision schema must store incumbent and challenger outputs separately.
 - The dashboard can demonstrate AI/ML comparison without presenting shadow returns as traded P&L.
 - Promotion is a deliberate versioned decision, not an automatic response to a few competition outcomes.
+
+ADR-0013 records the competition operator's explicit decision to authorize the selected model for
+bounded Alpaca paper execution despite the promotion evidence remaining incomplete.

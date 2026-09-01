@@ -12,8 +12,12 @@ from pathlib import Path
 from statistics import fmean, pstdev
 from zoneinfo import ZoneInfo
 
-FEATURE_SCHEMA = "bar-features-v2"
-FEATURE_NAMES = (
+TIMEFRAME_MINUTES = 5
+HORIZON_BARS = 48
+FEATURE_HISTORY_BARS = 25
+FEATURE_SCHEMA = "bar-features-v3"
+FEATURE_SCHEMA_V2 = "bar-features-v2"
+FEATURE_NAMES_V2 = (
     "return_1",
     "return_4",
     "return_12",
@@ -28,6 +32,24 @@ FEATURE_NAMES = (
     "market_realized_vol_8",
     "close_location_20",
     "cross_sectional_return_rank_4",
+    "minute_sin",
+    "minute_cos",
+)
+FEATURE_NAMES = (
+    "return_15m",
+    "return_1h",
+    "return_2h",
+    "bar_range",
+    "vwap_distance",
+    "volume_ratio",
+    "realized_vol_1h",
+    "relative_return_1h",
+    "relative_return_2h",
+    "market_return_1h",
+    "market_return_2h",
+    "market_realized_vol_1h",
+    "close_location_2h",
+    "cross_sectional_return_rank_1h",
     "minute_sin",
     "minute_cos",
 )
@@ -150,21 +172,51 @@ class _PartialExample:
     observed_at: datetime
     label_end_at: datetime
     features: tuple[float, ...]
-    return_4: float
-    return_12: float
-    realized_vol_8: float
+    return_1h: float
+    return_2h: float
+    realized_vol_1h: float
     forward_return: float
+
+
+def economically_labeled_examples(
+    examples: tuple[TrainingExample, ...], *, cost_bps: float
+) -> tuple[tuple[TrainingExample, bool], ...]:
+    """Return directional labels only where realized movement cleared round-trip costs."""
+    if cost_bps < 0:
+        raise ValueError("cost_bps must be nonnegative")
+    minimum_return = cost_bps / 10_000
+    return tuple(
+        (item, item.forward_return > 0)
+        for item in examples
+        if abs(item.forward_return) > minimum_return
+    )
 
 
 def build_feature_vectors(
     bars: list[MarketBar],
     *,
-    min_history: int = 20,
+    min_history: int | None = None,
     market_symbol: str = "SPY",
+    feature_schema: str = FEATURE_SCHEMA,
 ) -> tuple[FeatureVector, ...]:
     """Build point-in-time features without requiring future labels."""
-    if min_history < 13:
-        raise ValueError("min_history must be at least 13 bars")
+    if feature_schema == FEATURE_SCHEMA:
+        names = FEATURE_NAMES
+        return_short_bars, return_medium_bars, return_long_bars = 3, 12, 24
+        volatility_bars, required_history = 12, FEATURE_HISTORY_BARS
+        timeframe_minutes = 5
+        allow_session_boundary = False
+    elif feature_schema == FEATURE_SCHEMA_V2:
+        names = FEATURE_NAMES_V2
+        return_short_bars, return_medium_bars, return_long_bars = 1, 4, 12
+        volatility_bars, required_history = 8, 20
+        timeframe_minutes = 15
+        allow_session_boundary = True
+    else:
+        raise ValueError(f"unsupported feature schema: {feature_schema}")
+    min_history = min_history or required_history
+    if min_history < required_history:
+        raise ValueError(f"min_history must be at least {required_history} bars")
 
     by_symbol: dict[str, list[MarketBar]] = defaultdict(list)
     for bar in bars:
@@ -181,16 +233,26 @@ def build_feature_vectors(
         )
         for index in range(min_history - 1, len(ordered)):
             current = ordered[index]
-            return_1 = current.close / ordered[index - 1].close - 1
-            return_4 = current.close / ordered[index - 4].close - 1
-            return_12 = current.close / ordered[index - 12].close - 1
+            history = ordered[index - min_history + 1 : index + 1]
+            if not _has_contiguous_intraday_bars(
+                history,
+                timeframe_minutes,
+                allow_session_boundary=allow_session_boundary,
+            ):
+                continue
+            return_15m = current.close / ordered[index - return_short_bars].close - 1
+            return_1h = current.close / ordered[index - return_medium_bars].close - 1
+            return_2h = current.close / ordered[index - return_long_bars].close - 1
             volume_window = ordered[index - min_history + 1 : index + 1]
             mean_volume = fmean(bar.volume for bar in volume_window)
             window_low = min(bar.low for bar in volume_window)
             window_high = max(bar.high for bar in volume_window)
             window_span = window_high - window_low
             realized_volatility = sqrt(
-                fmean(value * value for value in one_bar_returns[index - 7 : index + 1])
+                fmean(
+                    value * value
+                    for value in one_bar_returns[index - volatility_bars + 1 : index + 1]
+                )
             )
             local_timestamp = current.timestamp.astimezone(_NEW_YORK)
             minute = local_timestamp.hour * 60 + local_timestamp.minute
@@ -201,9 +263,9 @@ def build_feature_vectors(
                     observed_at=current.timestamp,
                     label_end_at=current.timestamp,
                     features=(
-                        return_1,
-                        return_4,
-                        return_12,
+                        return_15m,
+                        return_1h,
+                        return_2h,
                         (current.high - current.low) / current.close,
                         current.close / current.vwap - 1,
                         current.volume / mean_volume - 1 if mean_volume else 0.0,
@@ -218,15 +280,15 @@ def build_feature_vectors(
                         sin(angle),
                         cos(angle),
                     ),
-                    return_4=return_4,
-                    return_12=return_12,
-                    realized_vol_8=realized_volatility,
+                    return_1h=return_1h,
+                    return_2h=return_2h,
+                    realized_vol_1h=realized_volatility,
                     forward_return=0.0,
                 )
             )
 
     market_context = {
-        item.observed_at: (item.return_4, item.return_12, item.realized_vol_8)
+        item.observed_at: (item.return_1h, item.return_2h, item.realized_vol_1h)
         for item in partials
         if item.symbol == market_symbol
     }
@@ -235,7 +297,7 @@ def build_feature_vectors(
         by_timestamp[item.observed_at].append(item)
     cross_sectional_rank = {}
     for timestamp, items in by_timestamp.items():
-        ranked_items = sorted(items, key=lambda item: item.return_4)
+        ranked_items = sorted(items, key=lambda item: item.return_1h)
         denominator = max(1, len(ranked_items) - 1)
         for rank, item in enumerate(ranked_items):
             cross_sectional_rank[(timestamp, item.symbol)] = rank / denominator - 0.5
@@ -245,20 +307,20 @@ def build_feature_vectors(
         context = market_context.get(item.observed_at)
         if context is None:
             continue
-        market_return_4, market_return_12, market_volatility = context
+        market_return_1h, market_return_2h, market_volatility = context
         features = list(item.features)
-        features[7] = item.return_4 - market_return_4
-        features[8] = item.return_12 - market_return_12
-        features[9] = market_return_4
-        features[10] = market_return_12
+        features[7] = item.return_1h - market_return_1h
+        features[8] = item.return_2h - market_return_2h
+        features[9] = market_return_1h
+        features[10] = market_return_2h
         features[11] = market_volatility
         features[13] = cross_sectional_rank[(item.observed_at, item.symbol)]
         vectors.append(
             FeatureVector(
                 symbol=item.symbol,
                 observed_at=item.observed_at,
-                schema=FEATURE_SCHEMA,
-                names=FEATURE_NAMES,
+                schema=feature_schema,
+                names=names,
                 values=tuple(features),
             )
         )
@@ -268,15 +330,15 @@ def build_feature_vectors(
 def build_training_examples(
     bars: list[MarketBar],
     *,
-    horizon_bars: int = 4,
-    min_history: int = 20,
+    horizon_bars: int = HORIZON_BARS,
+    min_history: int = FEATURE_HISTORY_BARS,
     market_symbol: str = "SPY",
 ) -> tuple[TrainingExample, ...]:
     """Build close-of-bar features whose labels remain in the same trading session."""
     if horizon_bars < 1:
         raise ValueError("horizon_bars must be positive")
-    if min_history < 13:
-        raise ValueError("min_history must be at least 13 bars")
+    if min_history < FEATURE_HISTORY_BARS:
+        raise ValueError(f"min_history must be at least {FEATURE_HISTORY_BARS} bars")
 
     by_symbol: dict[str, list[MarketBar]] = defaultdict(list)
     for bar in bars:
@@ -295,19 +357,28 @@ def build_training_examples(
         for index in range(min_history - 1, len(ordered) - horizon_bars):
             current = ordered[index]
             future = ordered[index + horizon_bars]
+            history = ordered[index - min_history + 1 : index + 1]
+            if not _has_contiguous_intraday_bars(
+                history, TIMEFRAME_MINUTES, allow_session_boundary=False
+            ):
+                continue
             if _session_date(current.timestamp) != _session_date(future.timestamp):
                 continue
+            if future.timestamp - current.timestamp != timedelta(
+                minutes=TIMEFRAME_MINUTES * horizon_bars
+            ):
+                continue
 
-            return_1 = current.close / ordered[index - 1].close - 1
-            return_4 = current.close / ordered[index - 4].close - 1
-            return_12 = current.close / ordered[index - 12].close - 1
+            return_15m = current.close / ordered[index - 3].close - 1
+            return_1h = current.close / ordered[index - 12].close - 1
+            return_2h = current.close / ordered[index - 24].close - 1
             volume_window = ordered[index - min_history + 1 : index + 1]
             mean_volume = fmean(bar.volume for bar in volume_window)
             window_low = min(bar.low for bar in volume_window)
             window_high = max(bar.high for bar in volume_window)
             window_span = window_high - window_low
             realized_volatility = sqrt(
-                fmean(value * value for value in one_bar_returns[index - 7 : index + 1])
+                fmean(value * value for value in one_bar_returns[index - 11 : index + 1])
             )
             local_timestamp = current.timestamp.astimezone(_NEW_YORK)
             minute = local_timestamp.hour * 60 + local_timestamp.minute
@@ -318,9 +389,9 @@ def build_training_examples(
                     observed_at=current.timestamp,
                     label_end_at=future.timestamp,
                     features=(
-                        return_1,
-                        return_4,
-                        return_12,
+                        return_15m,
+                        return_1h,
+                        return_2h,
                         (current.high - current.low) / current.close,
                         current.close / current.vwap - 1,
                         current.volume / mean_volume - 1 if mean_volume else 0.0,
@@ -335,15 +406,15 @@ def build_training_examples(
                         sin(angle),
                         cos(angle),
                     ),
-                    return_4=return_4,
-                    return_12=return_12,
-                    realized_vol_8=realized_volatility,
+                    return_1h=return_1h,
+                    return_2h=return_2h,
+                    realized_vol_1h=realized_volatility,
                     forward_return=future.close / current.close - 1,
                 )
             )
 
     market_context = {
-        item.observed_at: (item.return_4, item.return_12, item.realized_vol_8)
+        item.observed_at: (item.return_1h, item.return_2h, item.realized_vol_1h)
         for item in partials
         if item.symbol == market_symbol
     }
@@ -352,7 +423,7 @@ def build_training_examples(
         by_timestamp[item.observed_at].append(item)
     cross_sectional_rank = {}
     for timestamp, items in by_timestamp.items():
-        ranked_items = sorted(items, key=lambda item: item.return_4)
+        ranked_items = sorted(items, key=lambda item: item.return_1h)
         denominator = max(1, len(ranked_items) - 1)
         for rank, item in enumerate(ranked_items):
             cross_sectional_rank[(timestamp, item.symbol)] = rank / denominator - 0.5
@@ -362,12 +433,12 @@ def build_training_examples(
         context = market_context.get(item.observed_at)
         if context is None:
             continue
-        market_return_4, market_return_12, market_volatility = context
+        market_return_1h, market_return_2h, market_volatility = context
         features = list(item.features)
-        features[7] = item.return_4 - market_return_4
-        features[8] = item.return_12 - market_return_12
-        features[9] = market_return_4
-        features[10] = market_return_12
+        features[7] = item.return_1h - market_return_1h
+        features[8] = item.return_2h - market_return_2h
+        features[9] = market_return_1h
+        features[10] = market_return_2h
         features[11] = market_volatility
         features[13] = cross_sectional_rank[(item.observed_at, item.symbol)]
         examples.append(
@@ -544,3 +615,20 @@ def _evaluate_ranked_scores(
 
 def _session_date(timestamp: datetime) -> object:
     return timestamp.astimezone(_NEW_YORK).date()
+
+
+def _has_contiguous_intraday_bars(
+    bars: list[MarketBar], timeframe_minutes: int, *, allow_session_boundary: bool
+) -> bool:
+    expected = timedelta(minutes=timeframe_minutes)
+    return all(
+        (
+            allow_session_boundary
+            and _session_date(previous.timestamp) != _session_date(current.timestamp)
+        )
+        or (
+            _session_date(previous.timestamp) == _session_date(current.timestamp)
+            and current.timestamp - previous.timestamp == expected
+        )
+        for previous, current in pairwise(bars)
+    )
