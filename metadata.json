@@ -3,7 +3,7 @@
   "checkpoint_id": "01M1EJJZZ83FP9PPX1XADC2BFX",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 46,
+  "checkpoints_count": 55,
   "files_touched": [
     "catalyst-router-dashboard.png",
     "dashboard/.env.development",
@@ -226,13 +226,20 @@
       "compact_transcript": "/27/transcript.jsonl",
       "content_hash": "/27/content_hash.txt",
       "prompt": "/27/prompt.txt"
+    },
+    {
+      "metadata": "/28/metadata.json",
+      "transcript": "/28/full.jsonl",
+      "compact_transcript": "/28/transcript.jsonl",
+      "content_hash": "/28/content_hash.txt",
+      "prompt": "/28/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 5814,
+    "input_tokens": 1021134,
     "cache_creation_tokens": 324045,
-    "cache_read_tokens": 2998324,
-    "output_tokens": 16397,
-    "api_call_count": 70
+    "cache_read_tokens": 44448984,
+    "output_tokens": 149447,
+    "api_call_count": 426
   }
 }
