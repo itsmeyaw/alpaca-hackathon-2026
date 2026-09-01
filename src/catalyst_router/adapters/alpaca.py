@@ -27,9 +27,15 @@ from catalyst_router.domain import (
 
 ALPACA_PAPER_BASE_URL = "https://paper-api.alpaca.markets"
 ALPACA_PAPER_API_ROOT = f"{ALPACA_PAPER_BASE_URL}/v2"
+# Alpaca reports a filled bracket's exits as an OCO pair: the working leg is
+# "new" while its resting sibling is "held". A held leg is live server-side
+# protection, so excluding it would read every protected position as unprotected.
 _ACTIVE_PROTECTIVE_STATUSES = {
+    "accepted",
+    "held",
     "new",
     "partially_filled",
+    "pending_new",
 }
 
 

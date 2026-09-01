@@ -159,9 +159,84 @@ def test_broker_reports_active_nested_protective_legs(monkeypatch: pytest.Monkey
     assert order.has_active_stop_loss
 
 
+def test_broker_reports_a_held_oco_sibling_as_active_protection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A filled bracket leaves the working exit "new" and its OCO sibling "held"."""
+
+    class FakeTradingClient:
+        def __init__(self, key: str, secret: str, **kwargs: Any) -> None:
+            del key, secret, kwargs
+
+        def get_order_by_client_id(self, client_order_id: str) -> object:
+            return SimpleNamespace(
+                id=UUID("00000000-0000-0000-0000-000000000005"),
+                client_order_id=client_order_id,
+                symbol="AMZN",
+                side=OrderSide.BUY,
+                qty="39",
+                status="filled",
+                legs=[
+                    SimpleNamespace(type="limit", status="new"),
+                    SimpleNamespace(type="stop", status="held"),
+                ],
+            )
+
+    monkeypatch.setattr(alpaca, "TradingClient", FakeTradingClient)
+
+    order = alpaca.AlpacaPaperBroker("paper-key", "paper-secret").get_order_by_client_id(
+        "cr-held-stop"
+    )
+
+    assert order is not None
+    assert order.has_active_take_profit
+    assert order.has_active_stop_loss
+
+
+@pytest.mark.parametrize("status", ["accepted", "pending_new", "held", "new", "partially_filled"])
+def test_broker_accepts_live_protective_leg_statuses(
+    monkeypatch: pytest.MonkeyPatch, status: str
+) -> None:
+    class FakeTradingClient:
+        def __init__(self, key: str, secret: str, **kwargs: Any) -> None:
+            del key, secret, kwargs
+
+        def get_order_by_client_id(self, client_order_id: str) -> object:
+            return SimpleNamespace(
+                id=UUID("00000000-0000-0000-0000-000000000006"),
+                client_order_id=client_order_id,
+                symbol="AAPL",
+                side=OrderSide.BUY,
+                qty="10",
+                status="filled",
+                legs=[
+                    SimpleNamespace(type="limit", status=status),
+                    SimpleNamespace(type="stop", status="new"),
+                ],
+            )
+
+    monkeypatch.setattr(alpaca, "TradingClient", FakeTradingClient)
+
+    order = alpaca.AlpacaPaperBroker("paper-key", "paper-secret").get_order_by_client_id(
+        "cr-protected"
+    )
+
+    assert order is not None
+    assert order.has_active_take_profit
+    assert order.has_active_stop_loss
+
+
 @pytest.mark.parametrize(
     "status",
-    ["accepted", "pending_new", "held", "pending_cancel", "done_for_day", "suspended", "unknown"],
+    [
+        "canceled",
+        "expired",
+        "rejected",
+        "pending_cancel",
+        "done_for_day",
+        "suspended",
+        "unknown",
+    ],
 )
 def test_broker_rejects_inactive_or_unknown_protective_leg_statuses(
     monkeypatch: pytest.MonkeyPatch, status: str
