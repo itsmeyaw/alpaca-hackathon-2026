@@ -71,3 +71,29 @@ variable "challenger_manifest_sha256" {
     error_message = "challenger_manifest_sha256 must be a lowercase SHA-256 digest."
   }
 }
+
+variable "bedrock_model_id" {
+  type        = string
+  description = "Bedrock model or inference-profile ID used for shadow Event extraction."
+
+  validation {
+    condition     = length(var.bedrock_model_id) > 0
+    error_message = "bedrock_model_id must not be empty."
+  }
+}
+
+variable "bedrock_model_arn" {
+  type        = string
+  description = "Exact Bedrock foundation-model or inference-profile ARN allowed to receive Events."
+
+  validation {
+    condition     = startswith(var.bedrock_model_arn, "arn:aws:bedrock:")
+    error_message = "bedrock_model_arn must be a Bedrock ARN."
+  }
+}
+
+variable "model_paper_execution_enabled" {
+  type        = bool
+  description = "Explicitly authorize the selected ADR-0013 15-minute model for paper execution."
+  default     = false
+}

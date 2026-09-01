@@ -27,6 +27,10 @@ from catalyst_router.domain import (
 
 ALPACA_PAPER_BASE_URL = "https://paper-api.alpaca.markets"
 ALPACA_PAPER_API_ROOT = f"{ALPACA_PAPER_BASE_URL}/v2"
+_ACTIVE_PROTECTIVE_STATUSES = {
+    "new",
+    "partially_filled",
+}
 
 
 class AlpacaPaperBroker:
@@ -106,7 +110,7 @@ class AlpacaPaperBroker:
                 LimitOrderRequest(
                     symbol=plan.symbol,
                     qty=plan.quantity,
-                    side=OrderSide.BUY,
+                    side=OrderSide.BUY if plan.side is Side.BUY else OrderSide.SELL,
                     time_in_force=TimeInForce.DAY,
                     order_class=OrderClass.BRACKET,
                     extended_hours=False,
@@ -126,6 +130,11 @@ class AlpacaPaperBroker:
     def _order_snapshot(order: Order) -> BrokerOrderSnapshot:
         if order.symbol is None or order.side is None or order.qty is None:
             raise RuntimeError("Alpaca order response is incomplete")
+        active_legs = [
+            leg
+            for leg in getattr(order, "legs", None) or []
+            if str(leg.status).rsplit(".", 1)[-1].lower() in _ACTIVE_PROTECTIVE_STATUSES
+        ]
         return BrokerOrderSnapshot(
             order_id=str(order.id),
             client_order_id=order.client_order_id,
@@ -133,4 +142,11 @@ class AlpacaPaperBroker:
             side=Side.BUY if order.side == OrderSide.BUY else Side.SELL,
             quantity=int(Decimal(str(order.qty))),
             status=str(order.status),
+            has_active_take_profit=any(
+                str(leg.type).rsplit(".", 1)[-1].lower() == "limit" for leg in active_legs
+            ),
+            has_active_stop_loss=any(
+                str(leg.type).rsplit(".", 1)[-1].lower() in {"stop", "stop_limit"}
+                for leg in active_legs
+            ),
         )

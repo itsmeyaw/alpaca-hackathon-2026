@@ -133,7 +133,7 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("check-alpaca", help="read and sanitize Alpaca paper account state")
     subparsers.add_parser("reconcile", help="persist a fenced paper-account reconciliation")
-    subparsers.add_parser("worker", help="run the always-on shadow inference worker")
+    subparsers.add_parser("worker", help="run the always-on inference and trading worker")
     for command in ("resume", "pause", "flatten", "kill"):
         control = subparsers.add_parser(command, help=f"{command} paper execution")
         control.add_argument("--reason", required=True)

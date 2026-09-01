@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
+from decimal import Decimal
 from pathlib import PurePosixPath
 from typing import Literal, Protocol, cast
 from urllib.parse import urlparse
@@ -11,7 +12,15 @@ import boto3
 from pydantic import BaseModel, ConfigDict, model_validator
 from xgboost import DMatrix
 
-from catalyst_router.training import FEATURE_NAMES, FEATURE_SCHEMA, FeatureVector
+from catalyst_router.training import (
+    FEATURE_NAMES,
+    FEATURE_NAMES_V2,
+    FEATURE_SCHEMA,
+    FEATURE_SCHEMA_V2,
+    FeatureVector,
+)
+
+PAPER_LIVE_RUN_ID = "20260828T175917Z"
 
 
 class _ModelArtifact(BaseModel):
@@ -74,10 +83,15 @@ class _ChallengerManifest(BaseModel):
 
     @model_validator(mode="after")
     def validate_runtime_contract(self) -> _ChallengerManifest:
-        if self.feature_schema != FEATURE_SCHEMA or tuple(self.feature_names) != FEATURE_NAMES:
+        contracts = {
+            (FEATURE_SCHEMA_V2, 15, 16): FEATURE_NAMES_V2,
+            (FEATURE_SCHEMA, 5, 48): FEATURE_NAMES,
+        }
+        expected_names = contracts.get(
+            (self.feature_schema, self.timeframe_minutes, self.horizon_bars)
+        )
+        if expected_names is None or tuple(self.feature_names) != expected_names:
             raise ValueError("challenger feature schema does not match runtime schema")
-        if self.timeframe_minutes != 15:
-            raise ValueError("challenger timeframe must be 15 minutes")
         if "SPY" not in self.symbols or len(self.symbols) != len(set(self.symbols)):
             raise ValueError("challenger symbols must be unique and include SPY")
         if self.prediction_kind == "probability" and not 0.5 <= self.decision_gate <= 1:
@@ -92,7 +106,7 @@ class PublicChallengerStatus(BaseModel):
 
     deployed: bool
     loaded: bool
-    authority: Literal["SHADOW_ONLY"] | None = None
+    authority: Literal["SHADOW_ONLY", "PAPER_LIVE"] | None = None
     run_id: str | None = None
     created_at: str | None = None
     candidate: str | None = None
@@ -144,10 +158,24 @@ class ShadowChallenger:
     symbols: tuple[str, ...]
     _model: _PredictiveModel = field(repr=False)
 
+    def authorize_paper_execution(self, decision_gate: Decimal) -> None:
+        if not Decimal("0.5") < decision_gate <= Decimal("1"):
+            raise ValueError("paper execution gate must be greater than 0.5 and at most 1")
+        if (
+            self.status.run_id != PAPER_LIVE_RUN_ID
+            or self.status.feature_schema != FEATURE_SCHEMA_V2
+            or self.status.timeframe_minutes != 15
+            or self.status.horizon_bars != 16
+        ):
+            raise ValueError("paper execution is authorized only for the ADR-0013 model contract")
+        self.status = self.status.model_copy(
+            update={"authority": "PAPER_LIVE", "decision_gate": float(decision_gate)}
+        )
+
     def predict(self, vector: FeatureVector) -> ShadowPrediction:
         if vector.schema != self.status.feature_schema:
             raise ValueError("feature schema does not match deployed challenger")
-        if vector.names != self.feature_names or vector.names != FEATURE_NAMES:
+        if vector.names != self.feature_names:
             raise ValueError("feature names do not match deployed challenger")
         value = float(
             self._model.predict(DMatrix([vector.values], feature_names=list(self.feature_names)))[0]

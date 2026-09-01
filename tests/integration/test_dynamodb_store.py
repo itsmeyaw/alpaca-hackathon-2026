@@ -122,6 +122,18 @@ def test_dynamodb_store_fences_restart_and_keeps_decisions_immutable(
     epoch = dynamodb_store.get_agent_state().execution_epoch
     assert dynamodb_store.append_decision_once(once, expected_epoch=epoch)
     assert not dynamodb_store.append_decision_once(once, expected_epoch=epoch)
+    assert dynamodb_store.claim_event_extraction(
+        "alpaca:42", "model-1", "event-v1", expected_epoch=epoch
+    )
+    assert not dynamodb_store.claim_event_extraction(
+        "alpaca:42", "model-1", "event-v1", expected_epoch=epoch
+    )
+    dynamodb_store.release_event_extraction(
+        "alpaca:42", "model-1", "event-v1", expected_epoch=epoch
+    )
+    assert dynamodb_store.claim_event_extraction(
+        "alpaca:42", "model-1", "event-v1", expected_epoch=epoch
+    )
     dynamodb_store.begin_execution()
     with pytest.raises(RuntimeError, match="lost execution epoch"):
         dynamodb_store.append_decision_once(

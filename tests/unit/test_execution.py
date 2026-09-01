@@ -1,7 +1,9 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Literal
 
 from catalyst_router.adapters.memory import InMemoryOperationalStore
+from catalyst_router.challenger import PublicChallengerStatus, ShadowPrediction
 from catalyst_router.domain import (
     AccountSnapshot,
     AgentMode,
@@ -18,8 +20,19 @@ from catalyst_router.domain import (
     Route,
     Side,
 )
-from catalyst_router.execution import ExecutionGateway, IncumbentStrategy, LiveTradingCycle
-from catalyst_router.training import FEATURE_NAMES, FEATURE_SCHEMA, FeatureVector
+from catalyst_router.execution import (
+    ExecutionGateway,
+    IncumbentStrategy,
+    LiveTradingCycle,
+    ModelStrategy,
+)
+from catalyst_router.training import (
+    FEATURE_NAMES,
+    FEATURE_NAMES_V2,
+    FEATURE_SCHEMA,
+    FEATURE_SCHEMA_V2,
+    FeatureVector,
+)
 
 
 class FakeBroker:
@@ -94,6 +107,60 @@ class FakeQuotes:
         return quote(symbol=symbol)
 
 
+class FakePredictor:
+    def __init__(
+        self,
+        value: float,
+        *,
+        authority: Literal["SHADOW_ONLY", "PAPER_LIVE"] = "PAPER_LIVE",
+        prediction_kind: Literal["probability", "return"] = "probability",
+        feature_schema: str = FEATURE_SCHEMA,
+    ) -> None:
+        self.value = value
+        self.status = PublicChallengerStatus(
+            deployed=True,
+            loaded=True,
+            authority=authority,
+            run_id="run-live",
+            feature_schema=feature_schema,
+            decision_gate=0.55,
+        )
+        self.prediction_kind: Literal["probability", "return"] = prediction_kind
+
+    def predict(self, vector: FeatureVector) -> ShadowPrediction:
+        return ShadowPrediction(
+            symbol=vector.symbol,
+            observed_at=vector.observed_at,
+            run_id="run-live",
+            value=self.value,
+            signal="ABSTAIN",
+        )
+
+
+class SymbolPredictor:
+    def __init__(self, values: dict[str, float]) -> None:
+        self.values = values
+        self.status = PublicChallengerStatus(
+            deployed=True,
+            loaded=True,
+            authority="PAPER_LIVE",
+            run_id="run-live",
+            feature_schema=FEATURE_SCHEMA,
+            decision_gate=0.55,
+        )
+        self.prediction_kind: Literal["probability", "return"] = "probability"
+
+    def predict(self, vector: FeatureVector) -> ShadowPrediction:
+        value = self.values[vector.symbol]
+        return ShadowPrediction(
+            symbol=vector.symbol,
+            observed_at=vector.observed_at,
+            run_id="run-live",
+            value=value,
+            signal="ABSTAIN",
+        )
+
+
 class MissingOrderBroker(FakeBroker):
     def submit_order(self, plan: OrderPlan) -> BrokerOrderSnapshot:
         del plan
@@ -120,6 +187,25 @@ class UnprotectedPositionBroker(FakeBroker):
         )
 
 
+class ProtectedPositionBroker(UnprotectedPositionBroker):
+    def __init__(self) -> None:
+        super().__init__()
+        self.orders["active-order"] = BrokerOrderSnapshot(
+            order_id="alpaca-order-1",
+            client_order_id="active-order",
+            symbol="AAPL",
+            side=Side.BUY,
+            quantity=10,
+            status="filled",
+            has_active_take_profit=True,
+            has_active_stop_loss=True,
+        )
+
+    def reconciliation_snapshot(self) -> ReconciliationSnapshot:
+        snapshot = super().reconciliation_snapshot()
+        return snapshot.model_copy(update={"open_orders": ()})
+
+
 def reconciled_store(*, running: bool = True) -> InMemoryOperationalStore:
     store = InMemoryOperationalStore()
     started = store.begin_execution()
@@ -140,12 +226,12 @@ def vector(symbol: str = "AAPL", **updates: float) -> FeatureVector:
     values: dict[str, float] = dict.fromkeys(FEATURE_NAMES, 0.0)
     values.update(
         {
-            "return_1": 0.001,
-            "return_4": -0.012,
-            "relative_return_4": -0.013,
+            "return_15m": 0.001,
+            "return_1h": -0.012,
+            "relative_return_1h": -0.013,
             "vwap_distance": 0.001,
-            "close_location_20": -0.4,
-            "cross_sectional_return_rank_4": -0.5,
+            "close_location_2h": -0.4,
+            "cross_sectional_return_rank_1h": -0.5,
         }
     )
     values.update(updates)
@@ -194,7 +280,86 @@ def test_incumbent_rejects_stale_quote_and_unconfirmed_reversion() -> None:
     stale = quote(timestamp=datetime.now(UTC) - timedelta(seconds=6))
 
     assert IncumbentStrategy().create_intent(vector(), stale) is None
-    assert IncumbentStrategy().create_intent(vector(return_1=-0.001), quote()) is None
+    assert IncumbentStrategy().create_intent(vector(return_15m=-0.001), quote()) is None
+
+
+def test_model_strategy_authorizes_long_and_short_predictions_at_live_gate() -> None:
+    long_intent = ModelStrategy(FakePredictor(0.56), decision_gate=Decimal("0.55")).create_intent(
+        vector(), quote()
+    )
+    short_intent = ModelStrategy(FakePredictor(0.44), decision_gate=Decimal("0.55")).create_intent(
+        vector(), quote()
+    )
+
+    assert long_intent is not None
+    assert long_intent.route is Route.MODEL_DIRECTIONAL
+    assert long_intent.side is Side.BUY
+    assert long_intent.confidence == Decimal("0.56")
+    assert long_intent.entry_price == Decimal("100.00")
+    assert long_intent.stop_price == Decimal("98.00")
+    assert short_intent is not None
+    assert short_intent.route is Route.MODEL_DIRECTIONAL
+    assert short_intent.side is Side.SELL
+    assert short_intent.confidence == Decimal("0.56")
+    assert short_intent.entry_price == Decimal("99.98")
+    assert short_intent.stop_price == Decimal("101.98")
+
+
+def test_authorized_fifteen_minute_model_contract_reaches_paper_intent() -> None:
+    legacy_vector = FeatureVector(
+        symbol="AAPL",
+        observed_at=datetime.now(UTC) - timedelta(minutes=2),
+        schema=FEATURE_SCHEMA_V2,
+        names=FEATURE_NAMES_V2,
+        values=(0.0,) * len(FEATURE_NAMES_V2),
+    )
+    strategy = ModelStrategy(
+        FakePredictor(0.56, feature_schema=FEATURE_SCHEMA_V2),
+        decision_gate=Decimal("0.55"),
+    )
+
+    intent = strategy.create_intent(legacy_vector, quote())
+
+    assert intent is not None
+    assert intent.route is Route.MODEL_DIRECTIONAL
+
+
+def test_model_strategy_abstains_inside_live_gate() -> None:
+    strategy = ModelStrategy(FakePredictor(0.54), decision_gate=Decimal("0.55"))
+
+    assert strategy.create_intent(vector(), quote()) is None
+
+
+def test_model_strategy_requires_live_probability_authority() -> None:
+    try:
+        ModelStrategy(
+            FakePredictor(0.60, authority="SHADOW_ONLY"),
+            decision_gate=Decimal("0.55"),
+        )
+    except ValueError as exc:
+        assert str(exc) == "model must have PAPER_LIVE authority"
+    else:
+        raise AssertionError("shadow authority must not create a live model strategy")
+
+    try:
+        ModelStrategy(
+            FakePredictor(0.60, prediction_kind="return"),
+            decision_gate=Decimal("0.55"),
+        )
+    except ValueError as exc:
+        assert str(exc) == "live model execution requires probability predictions"
+    else:
+        raise AssertionError("return predictions must not use probability execution gates")
+
+
+def test_model_strategy_includes_exact_directional_gate_boundaries() -> None:
+    long_signal = ModelStrategy(FakePredictor(0.55), decision_gate=Decimal("0.55")).signal(vector())
+    short_signal = ModelStrategy(FakePredictor(0.45), decision_gate=Decimal("0.55")).signal(
+        vector()
+    )
+
+    assert long_signal is not None and long_signal.side is Side.BUY
+    assert short_signal is not None and short_signal.side is Side.SELL
 
 
 def test_gateway_claims_and_submits_the_same_order_only_once() -> None:
@@ -366,7 +531,7 @@ def test_live_cycle_persists_peak_and_kills_at_competition_drawdown() -> None:
     assert broker.flattened
 
 
-def test_flattened_expired_entry_releases_lease_on_next_cycle() -> None:
+def test_expired_entry_closes_only_its_symbol_and_releases_the_lease() -> None:
     store = reconciled_store()
     broker = FakeBroker()
     cycle = LiveTradingCycle(store=store, broker=broker, quotes=FakeQuotes())

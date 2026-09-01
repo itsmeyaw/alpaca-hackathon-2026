@@ -11,8 +11,10 @@ from catalyst_router.domain import (
     OrderExecution,
     OrderExecutionStatus,
     OrderPlan,
+    PublicDecisionPage,
     PublicDecisionRecord,
     ReconciliationSnapshot,
+    Route,
 )
 
 
@@ -63,3 +65,13 @@ class OperationalStore(Protocol):
     ) -> OrderExecution: ...
 
     def list_public_decisions(self, limit: int = 50) -> list[PublicDecisionRecord]: ...
+
+    def list_public_decision_page(
+        self,
+        *,
+        limit: int = 25,
+        cursor: str | None = None,
+        search: str | None = None,
+        route: Route | None = None,
+        decision_type: str | None = None,
+    ) -> PublicDecisionPage: ...

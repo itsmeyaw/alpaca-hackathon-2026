@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import base64
+import hashlib
+import json
+from binascii import Error as BinasciiError
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 import boto3
@@ -16,7 +20,9 @@ from catalyst_router.domain import (
     DecisionRecord,
     OrderExecution,
     OrderExecutionStatus,
+    PublicDecisionPage,
     PublicDecisionRecord,
+    Route,
 )
 
 if TYPE_CHECKING:
@@ -249,6 +255,77 @@ class DynamoOperationalStore:
                 return False
             raise
 
+    def claim_event_extraction(
+        self,
+        source_id: str,
+        model_id: str,
+        prompt_version: str,
+        *,
+        expected_epoch: str,
+    ) -> bool:
+        serializer = TypeSerializer()
+        claim_hash = hashlib.sha256(
+            f"{source_id}\0{model_id}\0{prompt_version}".encode()
+        ).hexdigest()
+        operations: list[TransactWriteItemTypeDef] = [
+            {
+                "ConditionCheck": {
+                    "TableName": self._table.name,
+                    "Key": {
+                        key: serializer.serialize(value) for key, value in self._control_key.items()
+                    },
+                    "ConditionExpression": (
+                        "execution_epoch = :epoch AND reconciled_epoch = :epoch"
+                    ),
+                    "ExpressionAttributeValues": {":epoch": serializer.serialize(expected_epoch)},
+                }
+            },
+            {
+                "Put": {
+                    "TableName": self._table.name,
+                    "Item": {
+                        key: serializer.serialize(value)
+                        for key, value in {
+                            "PK": f"COMP#{self._competition_id}",
+                            "SK": f"EVENT_CLAIM#{claim_hash}",
+                            "source_id": source_id,
+                            "model_id": model_id,
+                            "prompt_version": prompt_version,
+                        }.items()
+                    },
+                    "ConditionExpression": "attribute_not_exists(PK) AND attribute_not_exists(SK)",
+                }
+            },
+        ]
+        try:
+            self._client.transact_write_items(TransactItems=operations)
+            return True
+        except ClientError as exc:
+            reasons = exc.response.get("CancellationReasons", [])
+            if reasons and reasons[0].get("Code") == "ConditionalCheckFailed":
+                raise RuntimeError("worker lost execution epoch ownership") from exc
+            if len(reasons) > 1 and reasons[1].get("Code") == "ConditionalCheckFailed":
+                return False
+            raise
+
+    def release_event_extraction(
+        self,
+        source_id: str,
+        model_id: str,
+        prompt_version: str,
+        *,
+        expected_epoch: str,
+    ) -> None:
+        state = self.get_agent_state()
+        if state.execution_epoch != expected_epoch or not state.is_reconciled:
+            raise RuntimeError("worker lost execution epoch ownership")
+        claim_hash = hashlib.sha256(
+            f"{source_id}\0{model_id}\0{prompt_version}".encode()
+        ).hexdigest()
+        self._table.delete_item(
+            Key={"PK": f"COMP#{self._competition_id}", "SK": f"EVENT_CLAIM#{claim_hash}"}
+        )
+
     @property
     def _order_partition_key(self) -> str:
         return f"COMP#{self._competition_id}"
@@ -458,3 +535,95 @@ class DynamoOperationalStore:
                 raise RuntimeError("decision payload is missing or invalid")
             records.append(PublicDecisionRecord.model_validate_json(payload))
         return records
+
+    def list_public_decision_page(
+        self,
+        *,
+        limit: int = 25,
+        cursor: str | None = None,
+        search: str | None = None,
+        route: Route | None = None,
+        decision_type: str | None = None,
+    ) -> PublicDecisionPage:
+        now = datetime.now(UTC).isoformat(timespec="microseconds")
+        cursor_key = self._decode_public_cursor(cursor) if cursor else None
+        normalized_search = search.casefold().strip() if search else None
+        normalized_type = decision_type.casefold() if decision_type else None
+        records: list[PublicDecisionRecord] = []
+
+        while len(records) < limit:
+            query_arguments: dict[str, Any] = {
+                "KeyConditionExpression": Key("PK").eq(f"PUBLIC#COMP#{self._competition_id}")
+                & Key("SK").between("VISIBLE#", f"VISIBLE#{now}#~"),
+                "ScanIndexForward": False,
+                "Limit": limit,
+                "ConsistentRead": True,
+            }
+            if cursor_key:
+                query_arguments["ExclusiveStartKey"] = cursor_key
+            response = self._table.query(**cast(Any, query_arguments))
+            for item in response["Items"]:
+                payload = item.get("payload")
+                if not isinstance(payload, (str, bytes, bytearray)):
+                    raise RuntimeError("decision payload is missing or invalid")
+                record = PublicDecisionRecord.model_validate_json(payload)
+                if self._matches_public_decision(
+                    record,
+                    search=normalized_search,
+                    route=route,
+                    decision_type=normalized_type,
+                ):
+                    records.append(record)
+            cursor_key = response.get("LastEvaluatedKey")
+            if cursor_key is None:
+                break
+
+        return PublicDecisionPage(
+            records=records,
+            next_cursor=self._encode_public_cursor(cursor_key) if cursor_key else None,
+        )
+
+    @staticmethod
+    def _matches_public_decision(
+        record: PublicDecisionRecord,
+        *,
+        search: str | None,
+        route: Route | None,
+        decision_type: str | None,
+    ) -> bool:
+        if route is not None and record.route is not route:
+            return False
+        if decision_type is not None and record.decision_type.casefold() != decision_type:
+            return False
+        if search is None:
+            return True
+        return (
+            search
+            in " ".join(
+                value
+                for value in (
+                    record.symbol,
+                    record.decision_type,
+                    record.route,
+                    record.summary,
+                )
+                if value
+            ).casefold()
+        )
+
+    @staticmethod
+    def _decode_public_cursor(cursor: str) -> dict[str, Any]:
+        try:
+            padded = cursor + "=" * (-len(cursor) % 4)
+            decoded = json.loads(base64.urlsafe_b64decode(padded).decode())
+        except (BinasciiError, UnicodeDecodeError, ValueError, json.JSONDecodeError) as error:
+            raise ValueError("invalid cursor") from error
+        if not isinstance(decoded, dict) or not all(
+            isinstance(value, str) for value in decoded.values()
+        ):
+            raise ValueError("invalid cursor")
+        return decoded
+
+    @staticmethod
+    def _encode_public_cursor(cursor_key: dict[str, Any]) -> str:
+        return base64.urlsafe_b64encode(json.dumps(cursor_key).encode()).decode().rstrip("=")

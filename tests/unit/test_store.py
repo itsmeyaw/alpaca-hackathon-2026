@@ -93,6 +93,34 @@ def test_idempotent_decision_write_is_fenced_by_execution_epoch() -> None:
         )
 
 
+def test_event_extraction_claim_survives_router_instances_and_is_epoch_fenced() -> None:
+    store = InMemoryOperationalStore()
+    started = store.begin_execution()
+    store.commit_reconciliation(
+        started.execution_epoch,
+        DecisionRecord.create(decision_type="RECONCILIATION_COMPLETED", summary="ok"),
+    )
+
+    assert store.claim_event_extraction(
+        "alpaca:42", "model-1", "event-v1", expected_epoch=started.execution_epoch
+    )
+    assert not store.claim_event_extraction(
+        "alpaca:42", "model-1", "event-v1", expected_epoch=started.execution_epoch
+    )
+    store.release_event_extraction(
+        "alpaca:42", "model-1", "event-v1", expected_epoch=started.execution_epoch
+    )
+    assert store.claim_event_extraction(
+        "alpaca:42", "model-1", "event-v1", expected_epoch=started.execution_epoch
+    )
+    store.begin_execution()
+
+    with pytest.raises(RuntimeError, match="lost execution epoch"):
+        store.claim_event_extraction(
+            "alpaca:43", "model-1", "event-v1", expected_epoch=started.execution_epoch
+        )
+
+
 def test_mode_transitions_are_reconciled_audited_and_kill_is_terminal() -> None:
     store = InMemoryOperationalStore()
 

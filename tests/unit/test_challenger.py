@@ -1,11 +1,18 @@
 import hashlib
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 
 import pytest
 
 from catalyst_router import challenger
-from catalyst_router.training import FEATURE_NAMES, FEATURE_SCHEMA, FeatureVector
+from catalyst_router.training import (
+    FEATURE_NAMES,
+    FEATURE_NAMES_V2,
+    FEATURE_SCHEMA,
+    FEATURE_SCHEMA_V2,
+    FeatureVector,
+)
 
 
 class _Body:
@@ -52,9 +59,11 @@ def test_predicts_only_exact_deployed_feature_schema(monkeypatch: pytest.MonkeyP
             deployed=True,
             loaded=True,
             authority="SHADOW_ONLY",
-            run_id="run-1",
+            run_id=challenger.PAPER_LIVE_RUN_ID,
             feature_schema=FEATURE_SCHEMA,
             decision_gate=0.6,
+            horizon_bars=48,
+            timeframe_minutes=5,
             model_sha256="a" * 64,
         ),
         feature_names=FEATURE_NAMES,
@@ -89,3 +98,86 @@ def test_predicts_only_exact_deployed_feature_schema(monkeypatch: pytest.MonkeyP
                 values=vector.values,
             )
         )
+
+
+def test_paper_execution_override_updates_runtime_authority_and_gate() -> None:
+    class FakeModel:
+        def predict(self, _matrix: object) -> list[float]:
+            return [0.56]
+
+    deployed = challenger.ShadowChallenger(
+        status=challenger.PublicChallengerStatus(
+            deployed=True,
+            loaded=True,
+            authority="SHADOW_ONLY",
+            run_id=challenger.PAPER_LIVE_RUN_ID,
+            feature_schema=FEATURE_SCHEMA_V2,
+            decision_gate=0.6,
+            horizon_bars=16,
+            timeframe_minutes=15,
+            model_sha256="a" * 64,
+        ),
+        feature_names=FEATURE_NAMES_V2,
+        prediction_kind="probability",
+        symbols=("SPY",),
+        _model=FakeModel(),
+    )
+
+    deployed.authorize_paper_execution(Decimal("0.55"))
+
+    assert deployed.status.authority == "PAPER_LIVE"
+    assert deployed.status.decision_gate == 0.55
+
+
+def test_unapproved_fifteen_minute_run_cannot_receive_paper_authority() -> None:
+    class FakeModel:
+        def predict(self, _matrix: object) -> list[float]:
+            return [0.56]
+
+    deployed = challenger.ShadowChallenger(
+        status=challenger.PublicChallengerStatus(
+            deployed=True,
+            loaded=True,
+            authority="SHADOW_ONLY",
+            run_id="different-15m-run",
+            feature_schema=FEATURE_SCHEMA_V2,
+            decision_gate=0.6,
+            horizon_bars=16,
+            timeframe_minutes=15,
+            model_sha256="a" * 64,
+        ),
+        feature_names=FEATURE_NAMES_V2,
+        prediction_kind="probability",
+        symbols=("SPY",),
+        _model=FakeModel(),
+    )
+
+    with pytest.raises(ValueError, match="ADR-0013"):
+        deployed.authorize_paper_execution(Decimal("0.55"))
+
+
+def test_five_minute_challenger_cannot_receive_paper_authority() -> None:
+    class FakeModel:
+        def predict(self, _matrix: object) -> list[float]:
+            return [0.56]
+
+    deployed = challenger.ShadowChallenger(
+        status=challenger.PublicChallengerStatus(
+            deployed=True,
+            loaded=True,
+            authority="SHADOW_ONLY",
+            run_id="run-5m",
+            feature_schema=FEATURE_SCHEMA,
+            decision_gate=0.6,
+            horizon_bars=48,
+            timeframe_minutes=5,
+            model_sha256="a" * 64,
+        ),
+        feature_names=FEATURE_NAMES,
+        prediction_kind="probability",
+        symbols=("SPY",),
+        _model=FakeModel(),
+    )
+
+    with pytest.raises(ValueError, match="ADR-0013"):
+        deployed.authorize_paper_execution(Decimal("0.55"))

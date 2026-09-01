@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
-from typing import Protocol
+from typing import Literal, Protocol
 from uuid import NAMESPACE_URL, uuid5
 
+from catalyst_router.challenger import PublicChallengerStatus, ShadowPrediction
 from catalyst_router.domain import (
     AgentMode,
+    AgentState,
     BrokerOrderSnapshot,
     DecisionRecord,
     InstrumentType,
@@ -31,11 +34,32 @@ from catalyst_router.training import FEATURE_SCHEMA, FeatureVector
 _CENT = Decimal("0.01")
 
 
+@dataclass(frozen=True, slots=True)
+class EntrySignal:
+    route: Route
+    side: Side
+    confidence: Decimal
+    source: str
+
+
+class EntryStrategy(Protocol):
+    def signal(self, vector: FeatureVector) -> EntrySignal | None: ...
+
+    def create_intent(
+        self,
+        vector: FeatureVector,
+        quote: QuoteSnapshot,
+        *,
+        signal: EntrySignal | None = None,
+        now: datetime | None = None,
+    ) -> TradeIntent | None: ...
+
+
 class IncumbentStrategy:
     """Conservative deterministic policy authorized for the first paper execution slice."""
 
     MAX_QUOTE_AGE = timedelta(seconds=5)
-    MAX_FEATURE_AGE = timedelta(minutes=20)
+    MAX_FEATURE_AGE = timedelta(minutes=7)
     MAX_SPREAD_BPS = Decimal("15")
 
     def create_intent(
@@ -43,6 +67,7 @@ class IncumbentStrategy:
         vector: FeatureVector,
         quote: QuoteSnapshot,
         *,
+        signal: EntrySignal | None = None,
         now: datetime | None = None,
     ) -> TradeIntent | None:
         observed_now = now or datetime.now(UTC)
@@ -57,32 +82,42 @@ class IncumbentStrategy:
         if quote.spread_bps > self.MAX_SPREAD_BPS:
             return None
 
-        route = self.route(vector)
-        if route is None:
+        selected = signal or self.signal(vector)
+        if selected is None:
             return None
 
-        confidence = Decimal("0.85") if route is Route.REGIME_TREND else Decimal("0.80")
         entry_price = quote.ask_price.quantize(_CENT, rounding=ROUND_CEILING)
         stop_price = (entry_price * Decimal("0.98")).quantize(_CENT, rounding=ROUND_FLOOR)
         intent_id = str(
             uuid5(
                 NAMESPACE_URL,
-                f"incumbent-v1:{route}:{vector.symbol}:{vector.observed_at.isoformat()}",
+                f"{selected.source}:{selected.route}:{vector.symbol}:{vector.observed_at.isoformat()}",
             )
         )
         return TradeIntent(
             intent_id=intent_id,
-            route=route,
+            route=selected.route,
             symbol=vector.symbol,
             instrument_type=InstrumentType.EQUITY,
-            side=Side.BUY,
-            confidence=confidence,
+            side=selected.side,
+            confidence=selected.confidence,
             entry_price=entry_price,
             stop_price=stop_price,
-            expected_horizon_minutes=60 if route is Route.LIQUIDITY_REVERSION else 240,
+            expected_horizon_minutes=(60 if selected.route is Route.LIQUIDITY_REVERSION else 240),
             exposure_group="us-equity:long",
             quote_age_seconds=Decimal(str(quote_age.total_seconds())),
             data_quality_passed=True,
+        )
+
+    def signal(self, vector: FeatureVector) -> EntrySignal | None:
+        route = self.route(vector)
+        if route is None:
+            return None
+        return EntrySignal(
+            route=route,
+            side=Side.BUY,
+            confidence=(Decimal("0.85") if route is Route.REGIME_TREND else Decimal("0.80")),
+            source="incumbent-v1",
         )
 
     @staticmethod
@@ -91,21 +126,119 @@ class IncumbentStrategy:
             return None
         features = dict(zip(vector.names, vector.values, strict=True))
         if vector.symbol in {"SPY", "QQQ"} and (
-            features["return_1"] > 0
-            and features["return_4"] >= 0.002
-            and features["return_12"] >= 0.005
-            and features["close_location_20"] >= 0.2
+            features["return_15m"] > 0
+            and features["return_1h"] >= 0.002
+            and features["return_2h"] >= 0.005
+            and features["close_location_2h"] >= 0.2
         ):
             return Route.REGIME_TREND
         elif vector.symbol not in {"SPY", "QQQ"} and (
-            features["return_1"] >= 0.0005
-            and features["relative_return_4"] <= -0.005
+            features["return_15m"] >= 0.0005
+            and features["relative_return_1h"] <= -0.005
             and features["vwap_distance"] >= 0
-            and features["close_location_20"] <= -0.3
-            and features["cross_sectional_return_rank_4"] <= -0.35
+            and features["close_location_2h"] <= -0.3
+            and features["cross_sectional_return_rank_1h"] <= -0.35
         ):
             return Route.LIQUIDITY_REVERSION
         return None
+
+
+class ModelPredictor(Protocol):
+    status: PublicChallengerStatus
+    prediction_kind: Literal["probability", "return"]
+
+    def predict(self, vector: FeatureVector) -> ShadowPrediction: ...
+
+
+class ModelStrategy:
+    """Turns sufficiently directional model predictions into paper trade intents."""
+
+    MAX_QUOTE_AGE = timedelta(seconds=5)
+    MAX_FEATURE_AGE = timedelta(minutes=7)
+    MAX_SPREAD_BPS = Decimal("15")
+
+    def __init__(self, predictor: ModelPredictor, *, decision_gate: Decimal) -> None:
+        if predictor.status.authority != "PAPER_LIVE":
+            raise ValueError("model must have PAPER_LIVE authority")
+        if predictor.prediction_kind != "probability":
+            raise ValueError("live model execution requires probability predictions")
+        if not Decimal("0.5") < decision_gate <= Decimal("1"):
+            raise ValueError("model decision gate must be greater than 0.5 and at most 1")
+        self._predictor = predictor
+        self._decision_gate = decision_gate
+
+    def signal(self, vector: FeatureVector) -> EntrySignal | None:
+        prediction = self._predictor.predict(vector)
+        value = Decimal(str(prediction.value))
+        if value >= self._decision_gate:
+            side = Side.BUY
+            confidence = value
+        elif value <= Decimal("1") - self._decision_gate:
+            side = Side.SELL
+            confidence = Decimal("1") - value
+        else:
+            return None
+        return EntrySignal(
+            route=Route.MODEL_DIRECTIONAL,
+            side=side,
+            confidence=confidence,
+            source=f"model-paper-v1:{prediction.run_id}:gate-{self._decision_gate}",
+        )
+
+    def create_intent(
+        self,
+        vector: FeatureVector,
+        quote: QuoteSnapshot,
+        *,
+        signal: EntrySignal | None = None,
+        now: datetime | None = None,
+    ) -> TradeIntent | None:
+        observed_now = now or datetime.now(UTC)
+        if vector.schema != self._predictor.status.feature_schema or quote.symbol != vector.symbol:
+            return None
+        feature_age = observed_now - vector.observed_at
+        quote_age = observed_now - quote.timestamp
+        if not timedelta(0) <= feature_age <= self.MAX_FEATURE_AGE:
+            return None
+        if not timedelta(0) <= quote_age <= self.MAX_QUOTE_AGE:
+            return None
+        if quote.spread_bps > self.MAX_SPREAD_BPS:
+            return None
+
+        selected = signal or self.signal(vector)
+        if selected is None:
+            return None
+        if selected.side is Side.BUY:
+            entry_price = quote.ask_price.quantize(_CENT, rounding=ROUND_CEILING)
+            stop_price = (entry_price * Decimal("0.98")).quantize(_CENT, rounding=ROUND_FLOOR)
+            exposure_group = "us-equity:long"
+        else:
+            entry_price = quote.bid_price.quantize(_CENT, rounding=ROUND_FLOOR)
+            stop_price = (entry_price * Decimal("1.02")).quantize(_CENT, rounding=ROUND_CEILING)
+            exposure_group = "us-equity:short"
+        intent_id = str(
+            uuid5(
+                NAMESPACE_URL,
+                (
+                    f"{selected.source}:{selected.side}:{vector.symbol}:"
+                    f"{vector.observed_at.isoformat()}"
+                ),
+            )
+        )
+        return TradeIntent(
+            intent_id=intent_id,
+            route=selected.route,
+            symbol=vector.symbol,
+            instrument_type=InstrumentType.EQUITY,
+            side=selected.side,
+            confidence=selected.confidence,
+            entry_price=entry_price,
+            stop_price=stop_price,
+            expected_horizon_minutes=240,
+            exposure_group=exposure_group,
+            quote_age_seconds=Decimal(str(quote_age.total_seconds())),
+            data_quality_passed=True,
+        )
 
 
 class QuoteSource(Protocol):
@@ -123,7 +256,7 @@ class LiveTradingCycle:
         store: OperationalStore,
         broker: PaperBroker,
         quotes: QuoteSource,
-        strategy: IncumbentStrategy | None = None,
+        strategy: EntryStrategy | None = None,
         risk_governor: RiskGovernor | None = None,
     ) -> None:
         self._store = store
@@ -180,10 +313,10 @@ class LiveTradingCycle:
                 snapshot.account.buying_power,
                 snapshot.account.equity * self.MAX_ENTRY_NOTIONAL_RATE,
             ),
-            position_count=0,
-            total_open_risk=Decimal("0"),
+            position_count=max(len(snapshot.positions), len(tracked)),
+            total_open_risk=sum(group_open_risk.values(), Decimal("0")),
             overnight_open_risk=Decimal("0"),
-            group_open_risk={},
+            group_open_risk=group_open_risk,
             daily_pnl=snapshot.account.equity - last_equity,
             competition_drawdown=max(
                 Decimal("0"),
@@ -238,7 +371,7 @@ class LiveTradingCycle:
         client_order_id: str,
         snapshot: ReconciliationSnapshot,
         execution: OrderExecution,
-    ) -> None:
+    ) -> bool:
         broker_order = self._broker.get_order_by_client_id(client_order_id)
         status = (
             broker_order.status.rsplit(".", 1)[-1].lower()
@@ -249,12 +382,14 @@ class LiveTradingCycle:
         expired_and_missing = (
             status == "missing" and snapshot.clock.timestamp >= execution.plan.expires_at
         )
-        if (
-            (terminal or expired_and_missing)
-            and not snapshot.positions
-            and not snapshot.open_orders
-        ):
+        symbol = execution.plan.symbol
+        symbol_is_flat = not any(
+            position.symbol == symbol for position in snapshot.positions
+        ) and not any(order.symbol == symbol for order in snapshot.open_orders)
+        if (terminal or expired_and_missing) and symbol_is_flat:
             self._store.clear_active_order(client_order_id)
+            return True
+        return False
 
     def _halt_and_flatten(self, mode: AgentMode, reason: str) -> None:
         self._store.transition_agent_mode(
@@ -402,7 +537,11 @@ class ExecutionGateway:
     @staticmethod
     def _plan(intent: TradeIntent, risk: RiskDecision) -> OrderPlan:
         client_order_id = "cr-" + uuid5(NAMESPACE_URL, f"paper-order-v1:{intent.intent_id}").hex
-        take_profit = (intent.entry_price * Decimal("1.04")).quantize(_CENT, rounding=ROUND_CEILING)
+        take_profit = (
+            (intent.entry_price * Decimal("1.04")).quantize(_CENT, rounding=ROUND_CEILING)
+            if intent.side is Side.BUY
+            else (intent.entry_price * Decimal("0.96")).quantize(_CENT, rounding=ROUND_FLOOR)
+        )
         created_at = datetime.now(UTC)
         return OrderPlan(
             client_order_id=client_order_id,

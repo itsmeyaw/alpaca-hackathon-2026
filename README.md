@@ -1,6 +1,6 @@
 # Catalyst Router
 
-Catalyst Router is an autonomous Alpaca paper-trading agent. Its first execution slice trades at most one long equity position at a time from deterministic incumbent signals. Every entry is risk-sized, idempotently claimed in DynamoDB, and submitted to Alpaca paper trading as a day bracket with server-hosted stop-loss and take-profit orders. Challenger models remain shadow-only.
+Catalyst Router is an autonomous Alpaca paper-trading agent. It holds up to six long or short equity positions at a time from completed-bar model signals, entering at most one per cycle. Every entry is risk-sized, idempotently claimed in DynamoDB, and submitted to Alpaca paper trading as a day bracket with server-hosted stop-loss and take-profit orders.
 
 ## Setup
 
@@ -39,6 +39,10 @@ curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/api/public/status
 ```
 
+To run the dashboard locally, start the API first, then run `npm --prefix dashboard run dev`.
+Its development configuration calls the local API at `http://127.0.0.1:8000`; production keeps
+same-origin `/api/*` requests, which CloudFront proxies to the reporting API.
+
 ## Alpaca CLI
 
 Install the alpha CLI and use the paper-only wrapper, which maps this repository's environment-variable names without creating a credential profile:
@@ -63,7 +67,15 @@ DYNAMODB_ENDPOINT_URL=http://localhost:8001
 AWS_REGION=us-east-1
 ```
 
-Set `PAPER_EXECUTION_ENABLED=true` only on the private worker. `RUNNING` mode, a current reconciliation epoch, an empty paper account, a fresh incumbent signal, and deterministic Risk Governor approval are all required before submission.
+Set `MODEL_AUTHORITY=PAPER_LIVE` and `MODEL_DECISION_GATE=0.52` on both runtimes so reporting matches execution. Set `PAPER_EXECUTION_ENABLED=true` and `MODEL_EXECUTION_ENABLED=true` only on the private worker. The gate authorizes long predictions at or above 0.52 and short predictions at or below 0.48. `RUNNING` mode, a current reconciliation epoch, an empty paper account, a fresh signal and quote, and deterministic Risk Governor approval are all required before submission. The worker polls every 15 seconds but the authorized model evaluates each completed 15-minute bar once with a four-hour horizon.
+
+Set `LLM_EVENTS_ENABLED=true`, `BEDROCK_MODEL_ID`, and `BEDROCK_PROMPT_VERSION=event-v1`
+on the private worker to enable shadow Event routing. Bedrock is forced through a typed Event tool
+schema. Its output can provide evidence to the deterministic `DecisionEngine`, but it cannot create
+an Order Plan, choose quantity, or bypass the Risk Governor. Invalid output records `NO_TRADE`.
+Production Terraform additionally requires the exact `bedrock_model_arn` for least-privilege IAM.
+`model_paper_execution_enabled` defaults to `false`; runtime rejects paper authorization unless the
+artifact matches the ADR-0013 15-minute contract.
 
 ## Local Challenger Training
 
@@ -74,9 +86,11 @@ make train-local
 ```
 
 The runner compares deterministic baselines, linear models, histogram boosting, and XGBoost
-with purged chronological walk-forward validation and a diagnostic holdout. Data and model
-artifacts stay under the ignored `.local/training/` directory. Every resulting manifest has
-`authority=SHADOW_ONLY`; numeric results cannot promote a model or affect a `TradeIntent`.
+with purged chronological walk-forward validation and a diagnostic holdout. It uses five-minute
+bars, a 48-bar horizon, cost-aware directional labels, and one-position evaluation. Source bars are
+also materialized as checksummed, symbol/year-partitioned Parquet datasets. Data and model artifacts
+stay under the ignored `.local/training/` directory. New artifacts remain `SHADOW_ONLY`; ADR-0013
+authorizes only the existing 15-minute deployment.
 
 See `docs/training/local-benchmark.md` for the current winner, experiment history, and limits.
 

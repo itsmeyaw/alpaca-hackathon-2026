@@ -110,6 +110,8 @@ resource "aws_apprunner_service" "api" {
           RUNTIME_ROLE               = "reporting"
           AUTO_RECONCILE             = "false"
           PUBLIC_DELAY_SECONDS       = "900"
+          MODEL_AUTHORITY            = var.model_paper_execution_enabled ? "PAPER_LIVE" : "SHADOW_ONLY"
+          MODEL_DECISION_GATE        = "0.52"
           CHALLENGER_MANIFEST_URI    = "s3://${aws_s3_bucket.archive.id}/models/${var.challenger_run_id}/manifest.json"
           CHALLENGER_MANIFEST_SHA256 = var.challenger_manifest_sha256
         }

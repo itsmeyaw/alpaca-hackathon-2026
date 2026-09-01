@@ -73,8 +73,14 @@ resource "aws_ecs_task_definition" "trader" {
         { name = "RUNTIME_ROLE", value = "worker" },
         { name = "AUTO_RECONCILE", value = "false" },
         { name = "PUBLIC_DELAY_SECONDS", value = "900" },
-        { name = "WORKER_POLL_SECONDS", value = "60" },
+        { name = "WORKER_POLL_SECONDS", value = "15" },
         { name = "PAPER_EXECUTION_ENABLED", value = "true" },
+        { name = "MODEL_EXECUTION_ENABLED", value = tostring(var.model_paper_execution_enabled) },
+        { name = "MODEL_AUTHORITY", value = var.model_paper_execution_enabled ? "PAPER_LIVE" : "SHADOW_ONLY" },
+        { name = "MODEL_DECISION_GATE", value = "0.52" },
+        { name = "LLM_EVENTS_ENABLED", value = "true" },
+        { name = "BEDROCK_MODEL_ID", value = var.bedrock_model_id },
+        { name = "BEDROCK_PROMPT_VERSION", value = "event-v1" },
         {
           name  = "CHALLENGER_MANIFEST_URI"
           value = "s3://${aws_s3_bucket.archive.id}/models/${var.challenger_run_id}/manifest.json"

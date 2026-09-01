@@ -52,13 +52,13 @@ class ReconciliationService:
         execution = self._store.get_order(client_order_id)
         if execution is None:
             raise RuntimeError("active order has no durable execution record")
+        symbol = execution.plan.symbol
+        symbol_is_flat = not any(
+            position.symbol == symbol for position in snapshot.positions
+        ) and not any(order.symbol == symbol for order in snapshot.open_orders)
         broker_order = self._broker.get_order_by_client_id(client_order_id)
         if broker_order is None:
-            if (
-                not snapshot.positions
-                and not snapshot.open_orders
-                and snapshot.clock.timestamp >= execution.plan.expires_at
-            ):
+            if symbol_is_flat and snapshot.clock.timestamp >= execution.plan.expires_at:
                 self._store.clear_active_order(client_order_id)
                 return
             if state.mode is AgentMode.RUNNING and execution.status in {
@@ -96,7 +96,7 @@ class ReconciliationService:
                 }
             )
             self._store.update_order(execution, expected_status=previous_status)
-        if not snapshot.positions and not snapshot.open_orders and (rejected or status == "filled"):
+        if symbol_is_flat and (rejected or status == "filled"):
             self._store.clear_active_order(client_order_id)
 
     @staticmethod

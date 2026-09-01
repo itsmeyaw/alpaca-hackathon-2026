@@ -3,11 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from catalyst_router.adapters.alpaca import AlpacaPaperBroker
+from catalyst_router.adapters.bedrock import BedrockEventExtractor
 from catalyst_router.adapters.dynamodb import DynamoOperationalStore
 from catalyst_router.adapters.market_data import AlpacaIEXMarketData
 from catalyst_router.adapters.memory import InMemoryOperationalStore
+from catalyst_router.adapters.news import AlpacaNewsSource
 from catalyst_router.challenger import ShadowChallenger
-from catalyst_router.execution import LiveTradingCycle
+from catalyst_router.events import ShadowEventRouter
+from catalyst_router.execution import LiveTradingCycle, ModelStrategy
 from catalyst_router.ports import OperationalStore, PaperBroker
 from catalyst_router.service import ReconciliationService
 from catalyst_router.settings import Settings
@@ -58,6 +61,8 @@ class Container:
                 settings.aws_region,
                 settings.challenger_manifest_sha256,
             )
+            if settings.model_authority == "PAPER_LIVE":
+                challenger.authorize_paper_execution(settings.model_decision_gate)
         return cls(
             settings=settings,
             store=store,
@@ -77,6 +82,21 @@ class Container:
         if self.challenger is None:
             raise RuntimeError("a challenger model is not configured")
         live_trader = None
+        event_router = None
+        if self.settings.llm_events_enabled:
+            if not self.settings.bedrock_model_id:
+                raise RuntimeError("Bedrock model is not configured")
+            key, secret = self.settings.require_alpaca()
+            event_router = ShadowEventRouter(
+                store=self.store,
+                news=AlpacaNewsSource(key, secret),
+                extractor=BedrockEventExtractor(
+                    model_id=self.settings.bedrock_model_id,
+                    prompt_version=self.settings.bedrock_prompt_version,
+                    region=self.settings.aws_region,
+                ),
+                quotes=self.market_data,
+            )
         if self.settings.paper_execution_enabled:
             if self.broker is None:
                 raise RuntimeError("paper execution requires Alpaca trading credentials")
@@ -84,10 +104,19 @@ class Container:
                 store=self.store,
                 broker=self.broker,
                 quotes=self.market_data,
+                strategy=(
+                    ModelStrategy(
+                        self.challenger,
+                        decision_gate=self.settings.model_decision_gate,
+                    )
+                    if self.settings.model_execution_enabled
+                    else None
+                ),
             )
         return TradingWorker(
             store=self.store,
             market_data=self.market_data,
             challenger=self.challenger,
             live_trader=live_trader,
+            event_router=event_router,
         )

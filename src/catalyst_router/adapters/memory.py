@@ -11,7 +11,9 @@ from catalyst_router.domain import (
     DecisionRecord,
     OrderExecution,
     OrderExecutionStatus,
+    PublicDecisionPage,
     PublicDecisionRecord,
+    Route,
 )
 
 
@@ -21,6 +23,7 @@ class InMemoryOperationalStore:
         self._state: AgentState | None = None
         self._decisions: dict[str, DecisionRecord] = {}
         self._orders: dict[str, OrderExecution] = {}
+        self._event_extractions: set[tuple[str, str, str]] = set()
         self._public_delay = timedelta(seconds=public_delay_seconds)
 
     def initialize(self) -> AgentState:
@@ -200,3 +203,59 @@ class InMemoryOperationalStore:
             ]
             selected = sorted(records, key=lambda record: record.occurred_at, reverse=True)[:limit]
             return [record.public_projection() for record in selected]
+
+    def list_public_decision_page(
+        self,
+        *,
+        limit: int = 25,
+        cursor: str | None = None,
+        search: str | None = None,
+        route: Route | None = None,
+        decision_type: str | None = None,
+    ) -> PublicDecisionPage:
+        try:
+            offset = int(cursor) if cursor is not None else 0
+        except ValueError as error:
+            raise ValueError("invalid cursor") from error
+        if offset < 0:
+            raise ValueError("invalid cursor")
+
+        normalized_search = search.casefold().strip() if search else None
+        normalized_type = decision_type.casefold() if decision_type else None
+        with self._lock:
+            now = datetime.now(UTC)
+            records = sorted(
+                (
+                    record.public_projection()
+                    for record in self._decisions.values()
+                    if record.public and record.occurred_at + self._public_delay <= now
+                ),
+                key=lambda record: record.occurred_at,
+                reverse=True,
+            )
+        filtered = [
+            record
+            for record in records
+            if (route is None or record.route is route)
+            and (normalized_type is None or record.decision_type.casefold() == normalized_type)
+            and (
+                normalized_search is None
+                or normalized_search
+                in " ".join(
+                    value
+                    for value in (
+                        record.symbol,
+                        record.decision_type,
+                        record.route,
+                        record.summary,
+                    )
+                    if value
+                ).casefold()
+            )
+        ]
+        page = filtered[offset : offset + limit]
+        next_offset = offset + len(page)
+        return PublicDecisionPage(
+            records=page,
+            next_cursor=str(next_offset) if next_offset < len(filtered) else None,
+        )
