@@ -3,17 +3,30 @@
   "checkpoint_id": "01M1EJJZZ83FP9PPX1XADC2BFX",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 12,
+  "checkpoints_count": 14,
   "files_touched": [
+    "catalyst-router-dashboard.png",
+    "dashboard/.env.development",
     "dashboard/app/globals.css",
+    "dashboard/components.json",
     "dashboard/components/dashboard.tsx",
+    "dashboard/components/ui/badge.tsx",
+    "dashboard/components/ui/button.tsx",
+    "dashboard/components/ui/card.tsx",
+    "dashboard/components/ui/table.tsx",
     "dashboard/lib/api.ts",
+    "dashboard/lib/utils.ts",
     "dashboard/package-lock.json",
     "dashboard/package.json",
+    "dashboard/postcss.config.mjs",
     "dashboard/tsconfig.json",
+    "deployed-flight-recorder.png",
     "infra/README.md",
+    "infra/deployments/dashboard/.terraform.lock.hcl",
+    "infra/deployments/dashboard/main.tf",
     "infra/environments/prod/iam.tf",
     "infra/environments/prod/outputs.tf",
+    "scripts/deploy-dashboard",
     "src/catalyst_router/api.py",
     "tests/integration/test_api.py"
   ],
@@ -52,13 +65,20 @@
       "compact_transcript": "/4/transcript.jsonl",
       "content_hash": "/4/content_hash.txt",
       "prompt": "/4/prompt.txt"
+    },
+    {
+      "metadata": "/5/metadata.json",
+      "transcript": "/5/full.jsonl",
+      "compact_transcript": "/5/transcript.jsonl",
+      "content_hash": "/5/content_hash.txt",
+      "prompt": "/5/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 18,
-    "cache_creation_tokens": 62148,
-    "cache_read_tokens": 290900,
-    "output_tokens": 1962,
-    "api_call_count": 10
+    "input_tokens": 48,
+    "cache_creation_tokens": 186572,
+    "cache_read_tokens": 767616,
+    "output_tokens": 4798,
+    "api_call_count": 21
   }
 }
