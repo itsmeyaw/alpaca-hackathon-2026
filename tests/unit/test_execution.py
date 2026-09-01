@@ -43,6 +43,7 @@ class FakeBroker:
         submit_status: str = "accepted",
         equity: Decimal = Decimal("100000"),
         last_equity: Decimal = Decimal("100000"),
+        track_positions: bool = False,
     ) -> None:
         self.orders: dict[str, BrokerOrderSnapshot] = {}
         self.submissions = 0
@@ -51,6 +52,8 @@ class FakeBroker:
         self.equity = equity
         self.last_equity = last_equity
         self.flattened = False
+        self.track_positions = track_positions
+        self.closed: list[str] = []
 
     def get_order_by_client_id(self, client_order_id: str) -> BrokerOrderSnapshot | None:
         return self.orders.get(client_order_id)
@@ -61,9 +64,11 @@ class FakeBroker:
             order_id="alpaca-order-1",
             client_order_id=client_order_id,
             symbol=plan.symbol,
-            side=Side.BUY,
+            side=plan.side,
             quantity=plan.quantity,
             status=self.submit_status,
+            has_active_take_profit=self.track_positions,
+            has_active_stop_loss=self.track_positions,
         )
         self.submissions += 1
         self.orders[client_order_id] = order
@@ -71,6 +76,21 @@ class FakeBroker:
             self.lose_first_response = False
             raise TimeoutError("response lost after acceptance")
         return order
+
+    def _held_positions(self) -> tuple[PositionSnapshot, ...]:
+        if not self.track_positions:
+            return ()
+        return tuple(
+            PositionSnapshot(
+                symbol=order.symbol,
+                asset_class="us_equity",
+                quantity=Decimal(order.quantity),
+                market_value=Decimal(order.quantity) * Decimal("100"),
+                unrealized_pl=Decimal("0"),
+            )
+            for order in self.orders.values()
+            if order.symbol not in self.closed and order.status != "canceled"
+        )
 
     def reconciliation_snapshot(self) -> ReconciliationSnapshot:
         now = datetime.now(UTC)
@@ -90,14 +110,38 @@ class FakeBroker:
                 next_open=now + timedelta(days=1),
                 next_close=now + timedelta(hours=1),
             ),
-            positions=(),
+            positions=self._held_positions(),
             open_orders=(),
         )
 
+    def close_position(self, symbol: str) -> None:
+        self.closed.append(symbol)
+        self.orders = {
+            client_order_id: (
+                order.model_copy(
+                    update={
+                        "status": "canceled",
+                        "has_active_take_profit": False,
+                        "has_active_stop_loss": False,
+                    }
+                )
+                if order.symbol == symbol
+                else order
+            )
+            for client_order_id, order in self.orders.items()
+        }
+
     def flatten(self) -> None:
         self.flattened = True
+        self.closed.extend(order.symbol for order in self.orders.values())
         self.orders = {
-            client_order_id: order.model_copy(update={"status": "canceled"})
+            client_order_id: order.model_copy(
+                update={
+                    "status": "canceled",
+                    "has_active_take_profit": False,
+                    "has_active_stop_loss": False,
+                }
+            )
             for client_order_id, order in self.orders.items()
         }
 
@@ -370,8 +414,12 @@ def test_gateway_claims_and_submits_the_same_order_only_once() -> None:
     gateway = ExecutionGateway(store=store, broker=broker)
     epoch = store.get_agent_state().execution_epoch
 
-    first = gateway.execute(intent, approved(intent.intent_id), expected_epoch=epoch)
-    second = gateway.execute(intent, approved(intent.intent_id), expected_epoch=epoch)
+    first = gateway.execute(
+        intent, approved(intent.intent_id), expected_epoch=epoch, max_active_orders=1
+    )
+    second = gateway.execute(
+        intent, approved(intent.intent_id), expected_epoch=epoch, max_active_orders=1
+    )
 
     assert first.status is OrderExecutionStatus.ACKNOWLEDGED
     assert second.status is OrderExecutionStatus.ACKNOWLEDGED
@@ -387,7 +435,9 @@ def test_gateway_recovers_response_lost_after_alpaca_acceptance() -> None:
     gateway = ExecutionGateway(store=store, broker=broker)
     epoch = store.get_agent_state().execution_epoch
 
-    execution = gateway.execute(intent, approved(intent.intent_id), expected_epoch=epoch)
+    execution = gateway.execute(
+        intent, approved(intent.intent_id), expected_epoch=epoch, max_active_orders=1
+    )
 
     assert execution.status is OrderExecutionStatus.ACKNOWLEDGED
     assert execution.alpaca_order_id == "alpaca-order-1"
@@ -404,10 +454,11 @@ def test_gateway_records_broker_rejection_and_releases_entry_lease() -> None:
         intent,
         approved(intent.intent_id),
         expected_epoch=store.get_agent_state().execution_epoch,
+        max_active_orders=1,
     )
 
     assert execution.status is OrderExecutionStatus.REJECTED
-    assert store.get_agent_state().active_order_id is None
+    assert store.get_agent_state().active_order_ids == ()
 
 
 def test_gateway_refuses_to_claim_orders_while_paused() -> None:
@@ -421,6 +472,7 @@ def test_gateway_refuses_to_claim_orders_while_paused() -> None:
             intent,
             approved(intent.intent_id),
             expected_epoch=store.get_agent_state().execution_epoch,
+            max_active_orders=1,
         )
     except RuntimeError as exc:
         assert str(exc) == "agent is not authorized for new exposure"
@@ -437,7 +489,9 @@ def test_gateway_refuses_ambiguous_order_recovery_after_pause() -> None:
     gateway = ExecutionGateway(store=store, broker=broker)
     epoch = store.get_agent_state().execution_epoch
     assert (
-        gateway.execute(intent, approved(intent.intent_id), expected_epoch=epoch).status
+        gateway.execute(
+            intent, approved(intent.intent_id), expected_epoch=epoch, max_active_orders=1
+        ).status
         is OrderExecutionStatus.UNKNOWN
     )
     store.transition_agent_mode(
@@ -447,7 +501,9 @@ def test_gateway_refuses_ambiguous_order_recovery_after_pause() -> None:
     )
 
     try:
-        gateway.execute(intent, approved(intent.intent_id), expected_epoch=epoch)
+        gateway.execute(
+            intent, approved(intent.intent_id), expected_epoch=epoch, max_active_orders=1
+        )
     except RuntimeError as exc:
         assert str(exc) == "agent is not authorized for new exposure"
     else:
@@ -474,18 +530,92 @@ def test_live_cycle_submits_one_risk_sized_protected_order() -> None:
     assert execution.plan.take_profit_price == Decimal("104.00")
 
 
-def test_live_cycle_persists_a_single_active_entry_lease() -> None:
+def test_live_cycle_submits_protected_short_model_order() -> None:
     store = reconciled_store()
-    first_broker = FakeBroker()
+    broker = FakeBroker()
+    cycle = LiveTradingCycle(
+        store=store,
+        broker=broker,
+        quotes=FakeQuotes(),
+        strategy=ModelStrategy(FakePredictor(0.44), decision_gate=Decimal("0.55")),
+    )
+
+    records = cycle.run((vector(),), expected_epoch=store.get_agent_state().execution_epoch)
+
+    assert broker.submissions == 1
+    assert {record.decision_type for record in records} == {
+        "RISK_APPROVAL",
+        "ORDER_EXECUTION",
+    }
+    execution = store.get_order(next(iter(broker.orders)))
+    assert execution is not None
+    assert execution.plan.side is Side.SELL
+    assert execution.plan.limit_price == Decimal("99.98")
+    assert execution.plan.stop_price == Decimal("101.98")
+    assert execution.plan.take_profit_price == Decimal("95.98")
+
+
+def test_live_cycle_selects_the_strongest_model_prediction() -> None:
+    store = reconciled_store()
+    broker = FakeBroker()
+    strategy = ModelStrategy(
+        SymbolPredictor({"AAPL": 0.56, "MSFT": 0.70}),
+        decision_gate=Decimal("0.55"),
+    )
+    cycle = LiveTradingCycle(
+        store=store,
+        broker=broker,
+        quotes=FakeQuotes(),
+        strategy=strategy,
+    )
+
+    cycle.run(
+        (vector(), vector(symbol="MSFT")),
+        expected_epoch=store.get_agent_state().execution_epoch,
+    )
+
+    execution = store.get_order(next(iter(broker.orders)))
+    assert execution is not None
+    assert execution.plan.symbol == "MSFT"
+
+
+def test_gateway_leases_up_to_the_concurrent_order_bound() -> None:
+    store = reconciled_store()
+    broker = FakeBroker()
+    first = IncumbentStrategy().create_intent(vector(), quote())
+    second = IncumbentStrategy().create_intent(vector(symbol="MSFT"), quote(symbol="MSFT"))
+    third = IncumbentStrategy().create_intent(vector(symbol="NVDA"), quote(symbol="NVDA"))
+    assert first is not None and second is not None and third is not None
+    gateway = ExecutionGateway(store=store, broker=broker)
+    epoch = store.get_agent_state().execution_epoch
+
+    gateway.execute(first, approved(first.intent_id), expected_epoch=epoch, max_active_orders=2)
+    gateway.execute(second, approved(second.intent_id), expected_epoch=epoch, max_active_orders=2)
+
+    assert len(store.get_agent_state().active_order_ids) == 2
+    try:
+        gateway.execute(third, approved(third.intent_id), expected_epoch=epoch, max_active_orders=2)
+    except RuntimeError as exc:
+        assert str(exc) == "agent is not authorized for new exposure"
+    else:
+        raise AssertionError("an entry beyond the bound should be transactionally rejected")
+    assert broker.submissions == 2
+
+
+def test_gateway_rejects_a_second_entry_when_the_bound_is_one() -> None:
+    store = reconciled_store()
+    broker = FakeBroker()
     first = IncumbentStrategy().create_intent(vector(), quote())
     second = IncumbentStrategy().create_intent(vector(symbol="MSFT"), quote(symbol="MSFT"))
     assert first is not None and second is not None
-    gateway = ExecutionGateway(store=store, broker=first_broker)
+    gateway = ExecutionGateway(store=store, broker=broker)
     epoch = store.get_agent_state().execution_epoch
-    gateway.execute(first, approved(first.intent_id), expected_epoch=epoch)
+    gateway.execute(first, approved(first.intent_id), expected_epoch=epoch, max_active_orders=1)
 
     try:
-        gateway.execute(second, approved(second.intent_id), expected_epoch=epoch)
+        gateway.execute(
+            second, approved(second.intent_id), expected_epoch=epoch, max_active_orders=1
+        )
     except RuntimeError as exc:
         assert str(exc) == "agent is not authorized for new exposure"
     else:
@@ -517,6 +647,29 @@ def test_live_cycle_flattens_a_position_without_bracket_exits() -> None:
     assert broker.flattened
 
 
+def test_live_cycle_accepts_nested_protective_legs_when_open_order_list_is_empty() -> None:
+    store = reconciled_store()
+    broker = ProtectedPositionBroker()
+    intent = IncumbentStrategy().create_intent(vector(), quote())
+    assert intent is not None
+    gateway = ExecutionGateway(store=store, broker=broker)
+    epoch = store.get_agent_state().execution_epoch
+    gateway.execute(intent, approved(intent.intent_id), expected_epoch=epoch, max_active_orders=1)
+    state = store.get_agent_state()
+    assert len(state.active_order_ids) == 1
+    leased = state.active_order_ids[0]
+    broker.orders[leased] = broker.orders.pop("active-order").model_copy(
+        update={"client_order_id": leased}
+    )
+
+    LiveTradingCycle(store=store, broker=broker, quotes=FakeQuotes()).run(
+        (vector(),), expected_epoch=epoch
+    )
+
+    assert store.get_agent_state().mode is AgentMode.RUNNING
+    assert not broker.flattened
+
+
 def test_live_cycle_persists_peak_and_kills_at_competition_drawdown() -> None:
     store = reconciled_store()
     store.update_equity_peak(Decimal("110000"))
@@ -538,8 +691,9 @@ def test_expired_entry_closes_only_its_symbol_and_releases_the_lease() -> None:
     epoch = store.get_agent_state().execution_epoch
     signal = vector()
     cycle.run((signal,), expected_epoch=epoch)
-    client_order_id = store.get_agent_state().active_order_id
-    assert client_order_id is not None
+    active_order_ids = store.get_agent_state().active_order_ids
+    assert len(active_order_ids) == 1
+    client_order_id = active_order_ids[0]
     execution = store.get_order(client_order_id)
     assert execution is not None
     expired = execution.model_copy(
@@ -555,5 +709,140 @@ def test_expired_entry_closes_only_its_symbol_and_releases_the_lease() -> None:
     cycle.run((signal,), expected_epoch=epoch)
     cycle.run((signal,), expected_epoch=epoch)
 
+    assert broker.closed == ["AAPL"]
+    assert not broker.flattened
+    assert store.get_agent_state().active_order_ids == ()
+
+
+def test_live_cycle_fills_multiple_slots_across_cycles() -> None:
+    store = reconciled_store()
+    broker = FakeBroker(track_positions=True)
+    strategy = ModelStrategy(
+        SymbolPredictor({"AAPL": 0.90, "MSFT": 0.80, "NVDA": 0.70}),
+        decision_gate=Decimal("0.55"),
+    )
+    cycle = LiveTradingCycle(store=store, broker=broker, quotes=FakeQuotes(), strategy=strategy)
+    epoch = store.get_agent_state().execution_epoch
+    signals = (vector(), vector(symbol="MSFT"), vector(symbol="NVDA"))
+
+    for _ in range(3):
+        cycle.run(signals, expected_epoch=epoch)
+
+    assert broker.submissions == 3
+    active_order_ids = store.get_agent_state().active_order_ids
+    assert len(active_order_ids) == 3
+    held = {store.get_order(order_id).plan.symbol for order_id in active_order_ids}  # type: ignore[union-attr]
+    assert held == {"AAPL", "MSFT", "NVDA"}
+
+
+def test_live_cycle_enters_the_strongest_signal_first() -> None:
+    store = reconciled_store()
+    broker = FakeBroker(track_positions=True)
+    strategy = ModelStrategy(
+        SymbolPredictor({"AAPL": 0.60, "MSFT": 0.95}),
+        decision_gate=Decimal("0.55"),
+    )
+    cycle = LiveTradingCycle(store=store, broker=broker, quotes=FakeQuotes(), strategy=strategy)
+    epoch = store.get_agent_state().execution_epoch
+
+    cycle.run((vector(), vector(symbol="MSFT")), expected_epoch=epoch)
+
+    entered = store.get_agent_state().active_order_ids
+    assert len(entered) == 1
+    execution = store.get_order(entered[0])
+    assert execution is not None and execution.plan.symbol == "MSFT"
+
+
+def test_live_cycle_does_not_add_a_second_entry_for_a_held_symbol() -> None:
+    store = reconciled_store()
+    broker = FakeBroker(track_positions=True)
+    strategy = ModelStrategy(SymbolPredictor({"AAPL": 0.90}), decision_gate=Decimal("0.55"))
+    cycle = LiveTradingCycle(store=store, broker=broker, quotes=FakeQuotes(), strategy=strategy)
+    epoch = store.get_agent_state().execution_epoch
+    signals = (vector(),)
+
+    cycle.run(signals, expected_epoch=epoch)
+    cycle.run(signals, expected_epoch=epoch)
+    cycle.run(signals, expected_epoch=epoch)
+
+    assert broker.submissions == 1
+    assert len(store.get_agent_state().active_order_ids) == 1
+
+
+def test_live_cycle_stops_entering_at_the_concurrent_position_bound() -> None:
+    store = reconciled_store()
+    broker = FakeBroker(track_positions=True)
+    symbols = ("AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "TSLA", "AMD")
+    strategy = ModelStrategy(
+        SymbolPredictor(dict.fromkeys(symbols, 0.90)),
+        decision_gate=Decimal("0.55"),
+    )
+    cycle = LiveTradingCycle(store=store, broker=broker, quotes=FakeQuotes(), strategy=strategy)
+    epoch = store.get_agent_state().execution_epoch
+    signals = tuple(vector(symbol=symbol) for symbol in symbols)
+
+    for _ in range(len(symbols)):
+        cycle.run(signals, expected_epoch=epoch)
+
+    assert broker.submissions == LiveTradingCycle.MAX_CONCURRENT_POSITIONS
+    assert len(store.get_agent_state().active_order_ids) == (
+        LiveTradingCycle.MAX_CONCURRENT_POSITIONS
+    )
+
+
+def test_live_cycle_reports_open_risk_of_held_positions_to_the_risk_governor() -> None:
+    store = reconciled_store()
+    broker = FakeBroker(track_positions=True)
+    strategy = ModelStrategy(
+        SymbolPredictor({"AAPL": 0.90, "MSFT": 0.80}),
+        decision_gate=Decimal("0.55"),
+    )
+    cycle = LiveTradingCycle(store=store, broker=broker, quotes=FakeQuotes(), strategy=strategy)
+    epoch = store.get_agent_state().execution_epoch
+    signals = (vector(), vector(symbol="MSFT"))
+
+    cycle.run(signals, expected_epoch=epoch)
+    records = cycle.run(signals, expected_epoch=epoch)
+
+    approval = next(record for record in records if record.decision_type == "RISK_APPROVAL")
+    snapshot = approval.payload["account_snapshot"]
+    assert snapshot["position_count"] == 1
+    assert Decimal(snapshot["total_open_risk"]) > Decimal("0")
+
+
+def test_live_cycle_halts_when_any_held_position_loses_its_bracket() -> None:
+    store = reconciled_store()
+    broker = FakeBroker(track_positions=True)
+    strategy = ModelStrategy(
+        SymbolPredictor({"AAPL": 0.90, "MSFT": 0.80}),
+        decision_gate=Decimal("0.55"),
+    )
+    cycle = LiveTradingCycle(store=store, broker=broker, quotes=FakeQuotes(), strategy=strategy)
+    epoch = store.get_agent_state().execution_epoch
+    signals = (vector(), vector(symbol="MSFT"))
+    cycle.run(signals, expected_epoch=epoch)
+    cycle.run(signals, expected_epoch=epoch)
+    assert len(store.get_agent_state().active_order_ids) == 2
+    unprotected = next(
+        client_order_id
+        for client_order_id, order in broker.orders.items()
+        if order.symbol == "MSFT"
+    )
+    broker.orders[unprotected] = broker.orders[unprotected].model_copy(
+        update={"has_active_stop_loss": False}
+    )
+
+    cycle.run(signals, expected_epoch=epoch)
+
+    assert store.get_agent_state().mode is AgentMode.RISK_HALTED
     assert broker.flattened
-    assert store.get_agent_state().active_order_id is None
+
+
+def test_agent_state_migrates_a_legacy_single_active_order() -> None:
+    from catalyst_router.domain import AgentState
+
+    empty = AgentState.model_validate_json('{"active_order_id": null}')
+    populated = AgentState.model_validate_json('{"active_order_id": "cr-legacy"}')
+
+    assert empty.active_order_ids == ()
+    assert populated.active_order_ids == ("cr-legacy",)

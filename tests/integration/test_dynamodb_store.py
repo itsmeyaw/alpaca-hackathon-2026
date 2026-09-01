@@ -94,8 +94,12 @@ def test_dynamodb_store_fences_restart_and_keeps_decisions_immutable(
         expires_at=datetime.now(UTC) + timedelta(hours=1),
     )
     prepared = OrderExecution(plan=plan, request_hash="a" * 64)
-    assert dynamodb_store.claim_order(prepared, expected_epoch=running.execution_epoch)
-    assert not dynamodb_store.claim_order(prepared, expected_epoch=running.execution_epoch)
+    assert dynamodb_store.claim_order(
+        prepared, expected_epoch=running.execution_epoch, max_active_orders=1
+    )
+    assert not dynamodb_store.claim_order(
+        prepared, expected_epoch=running.execution_epoch, max_active_orders=1
+    )
     unknown = prepared.model_copy(update={"status": OrderExecutionStatus.UNKNOWN, "version": 1})
     assert (
         dynamodb_store.update_order(unknown, expected_status=OrderExecutionStatus.PREPARED).status
@@ -140,3 +144,52 @@ def test_dynamodb_store_fences_restart_and_keeps_decisions_immutable(
             DecisionRecord.create(decision_type="CHALLENGER_PREDICTION", summary="stale"),
             expected_epoch=epoch,
         )
+
+
+@pytest.mark.integration
+def test_dynamodb_store_leases_concurrent_orders_up_to_the_bound(
+    dynamodb_store: DynamoOperationalStore,
+) -> None:
+    dynamodb_store.initialize()
+    started = dynamodb_store.begin_execution()
+    dynamodb_store.commit_reconciliation(
+        started.execution_epoch,
+        DecisionRecord.create(decision_type="RECONCILIATION_COMPLETED", summary="ok"),
+    )
+    running = dynamodb_store.transition_agent_mode(
+        AgentMode.RUNNING,
+        reason="integration resume",
+        record=DecisionRecord.create(decision_type="OPERATOR_ACTION", summary="resume"),
+    )
+    epoch = running.execution_epoch
+
+    def prepared(symbol: str) -> OrderExecution:
+        return OrderExecution(
+            plan=OrderPlan(
+                client_order_id=f"cr-{symbol.lower()}",
+                intent_id=f"intent-{symbol.lower()}",
+                symbol=symbol,
+                side=Side.BUY,
+                quantity=1,
+                limit_price=Decimal("100"),
+                stop_price=Decimal("98"),
+                take_profit_price=Decimal("104"),
+                risk_amount=Decimal("2"),
+                exposure_group="us-equity:long",
+                created_at=datetime.now(UTC),
+                expires_at=datetime.now(UTC) + timedelta(hours=1),
+            ),
+            request_hash="b" * 64,
+        )
+
+    assert dynamodb_store.claim_order(prepared("AAPL"), expected_epoch=epoch, max_active_orders=2)
+    assert dynamodb_store.claim_order(prepared("MSFT"), expected_epoch=epoch, max_active_orders=2)
+    assert dynamodb_store.get_agent_state().active_order_ids == ("cr-aapl", "cr-msft")
+
+    with pytest.raises(RuntimeError, match="not authorized for new exposure"):
+        dynamodb_store.claim_order(prepared("NVDA"), expected_epoch=epoch, max_active_orders=2)
+
+    dynamodb_store.clear_active_order("cr-aapl")
+    assert dynamodb_store.get_agent_state().active_order_ids == ("cr-msft",)
+    assert dynamodb_store.claim_order(prepared("NVDA"), expected_epoch=epoch, max_active_orders=2)
+    assert dynamodb_store.get_agent_state().active_order_ids == ("cr-msft", "cr-nvda")

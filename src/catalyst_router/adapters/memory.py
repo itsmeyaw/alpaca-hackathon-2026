@@ -115,7 +115,41 @@ class InMemoryOperationalStore:
             self._decisions[record.decision_id] = record
             return True
 
-    def claim_order(self, execution: OrderExecution, *, expected_epoch: str) -> bool:
+    def claim_event_extraction(
+        self,
+        source_id: str,
+        model_id: str,
+        prompt_version: str,
+        *,
+        expected_epoch: str,
+    ) -> bool:
+        with self._lock:
+            state = self.initialize()
+            if state.execution_epoch != expected_epoch or not state.is_reconciled:
+                raise RuntimeError("worker lost execution epoch ownership")
+            key = (source_id, model_id, prompt_version)
+            if key in self._event_extractions:
+                return False
+            self._event_extractions.add(key)
+            return True
+
+    def release_event_extraction(
+        self,
+        source_id: str,
+        model_id: str,
+        prompt_version: str,
+        *,
+        expected_epoch: str,
+    ) -> None:
+        with self._lock:
+            state = self.initialize()
+            if state.execution_epoch != expected_epoch or not state.is_reconciled:
+                raise RuntimeError("worker lost execution epoch ownership")
+            self._event_extractions.discard((source_id, model_id, prompt_version))
+
+    def claim_order(
+        self, execution: OrderExecution, *, expected_epoch: str, max_active_orders: int
+    ) -> bool:
         with self._lock:
             state = self.initialize()
             client_order_id = execution.plan.client_order_id
@@ -129,15 +163,15 @@ class InMemoryOperationalStore:
             if existing is not None:
                 if (
                     existing.status in {OrderExecutionStatus.PREPARED, OrderExecutionStatus.UNKNOWN}
-                    and state.active_order_id != client_order_id
+                    and client_order_id not in state.active_order_ids
                 ):
                     raise RuntimeError("agent is not authorized for order recovery")
                 return False
-            if state.active_order_id is not None:
+            if len(state.active_order_ids) >= max_active_orders:
                 raise RuntimeError("agent is not authorized for new exposure")
             self._state = state.model_copy(
                 update={
-                    "active_order_id": client_order_id,
+                    "active_order_ids": (*state.active_order_ids, client_order_id),
                     "version": state.version + 1,
                     "updated_at": datetime.now(UTC),
                 }
@@ -152,11 +186,13 @@ class InMemoryOperationalStore:
     def clear_active_order(self, client_order_id: str) -> AgentState:
         with self._lock:
             state = self.initialize()
-            if state.active_order_id != client_order_id:
+            if client_order_id not in state.active_order_ids:
                 raise RuntimeError("active order changed concurrently")
             self._state = state.model_copy(
                 update={
-                    "active_order_id": None,
+                    "active_order_ids": tuple(
+                        tracked for tracked in state.active_order_ids if tracked != client_order_id
+                    ),
                     "version": state.version + 1,
                     "updated_at": datetime.now(UTC),
                 }

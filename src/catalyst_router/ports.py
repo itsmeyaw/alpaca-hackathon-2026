@@ -25,6 +25,8 @@ class PaperBroker(Protocol):
 
     def submit_order(self, plan: OrderPlan) -> BrokerOrderSnapshot: ...
 
+    def close_position(self, symbol: str) -> None: ...
+
     def flatten(self) -> None: ...
 
 
@@ -49,7 +51,27 @@ class OperationalStore(Protocol):
         self, record: DecisionRecord, *, expected_epoch: str | None = None
     ) -> bool: ...
 
-    def claim_order(self, execution: OrderExecution, *, expected_epoch: str) -> bool: ...
+    def claim_event_extraction(
+        self,
+        source_id: str,
+        model_id: str,
+        prompt_version: str,
+        *,
+        expected_epoch: str,
+    ) -> bool: ...
+
+    def release_event_extraction(
+        self,
+        source_id: str,
+        model_id: str,
+        prompt_version: str,
+        *,
+        expected_epoch: str,
+    ) -> None: ...
+
+    def claim_order(
+        self, execution: OrderExecution, *, expected_epoch: str, max_active_orders: int
+    ) -> bool: ...
 
     def get_order(self, client_order_id: str) -> OrderExecution | None: ...
 

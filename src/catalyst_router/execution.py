@@ -246,9 +246,10 @@ class QuoteSource(Protocol):
 
 
 class LiveTradingCycle:
-    """Evaluates the incumbent and submits at most one protected equity entry."""
+    """Evaluates the incumbent and submits at most one protected equity entry per cycle."""
 
     MAX_ENTRY_NOTIONAL_RATE = Decimal("0.10")
+    MAX_CONCURRENT_POSITIONS = RiskGovernor.MAX_POSITIONS
 
     def __init__(
         self,
@@ -277,36 +278,28 @@ class LiveTradingCycle:
 
         snapshot = self._broker.reconciliation_snapshot()
         agent = self._store.update_equity_peak(snapshot.account.equity)
-        active_execution = (
-            self._store.get_order(agent.active_order_id)
-            if agent.active_order_id is not None
-            else None
-        )
         until_close = snapshot.clock.next_close - snapshot.clock.timestamp
-        if active_execution is not None:
-            self._release_terminal_order(
-                agent.active_order_id or active_execution.plan.client_order_id,
-                snapshot,
-                active_execution,
-            )
-            agent = self._store.get_agent_state()
-            active_execution = (
-                self._store.get_order(agent.active_order_id)
-                if agent.active_order_id is not None
-                else None
-            )
-        horizon_expired = (
-            active_execution is not None
-            and snapshot.clock.timestamp >= active_execution.plan.expires_at
-        )
+        agent, tracked = self._release_terminal_orders(agent, snapshot)
+
         close_flatten_due = bool(
             snapshot.positions or snapshot.open_orders
         ) and until_close <= timedelta(minutes=10)
-        if horizon_expired or close_flatten_due:
+        if close_flatten_due:
             self._broker.flatten()
             return ()
+        expired = tuple(
+            execution
+            for execution in tracked.values()
+            if snapshot.clock.timestamp >= execution.plan.expires_at
+        )
+        if expired:
+            for execution in expired:
+                self._broker.close_position(execution.plan.symbol)
+            return ()
+
         last_equity = snapshot.account.last_equity or snapshot.account.equity
         equity_peak = agent.equity_peak or max(last_equity, snapshot.account.equity)
+        group_open_risk = self._group_open_risk(tracked)
         portfolio = PortfolioRiskState(
             equity=snapshot.account.equity,
             buying_power=min(
@@ -330,26 +323,33 @@ class LiveTradingCycle:
         if daily_loss >= portfolio.equity * RiskGovernor.MAX_DAILY_LOSS_RATE:
             self._halt_and_flatten(AgentMode.RISK_HALTED, "daily loss circuit breaker reached")
             return ()
-        if snapshot.positions and len(snapshot.open_orders) < 2:
+        if not self._every_position_is_protected(snapshot, tracked):
             self._halt_and_flatten(
                 AgentMode.RISK_HALTED,
                 "broker position is missing protective bracket exits",
             )
             return ()
         if (
-            agent.active_order_id is not None
-            or not snapshot.clock.is_open
+            not snapshot.clock.is_open
             or snapshot.account.trading_blocked
-            or snapshot.positions
-            or snapshot.open_orders
             or until_close <= timedelta(minutes=15)
+            or len(agent.active_order_ids) >= self.MAX_CONCURRENT_POSITIONS
         ):
             return ()
-        for vector in sorted(vectors, key=lambda item: item.symbol):
-            if self._strategy.route(vector) is None:
-                continue
+        committed = {execution.plan.symbol for execution in tracked.values()}
+        committed.update(position.symbol for position in snapshot.positions)
+        committed.update(order.symbol for order in snapshot.open_orders)
+        candidates = [
+            (signal, vector)
+            for vector in vectors
+            if vector.symbol not in committed
+            and (signal := self._strategy.signal(vector)) is not None
+        ]
+        for signal, vector in sorted(
+            candidates, key=lambda item: (-item[0].confidence, item[1].symbol)
+        ):
             quote = self._quotes.latest_quote(vector.symbol)
-            intent = self._strategy.create_intent(vector, quote)
+            intent = self._strategy.create_intent(vector, quote, signal=signal)
             if intent is None:
                 continue
             risk = self._risk.evaluate(
@@ -362,9 +362,53 @@ class LiveTradingCycle:
             if risk.status is RiskDecisionStatus.VETOED:
                 return self._persist_risk_veto(intent, risk, expected_epoch)
             approvals = self._persist_risk_approval(intent, risk, portfolio, expected_epoch)
-            execution = self._gateway.execute(intent, risk, expected_epoch=expected_epoch)
+            execution = self._gateway.execute(
+                intent,
+                risk,
+                expected_epoch=expected_epoch,
+                max_active_orders=self.MAX_CONCURRENT_POSITIONS,
+            )
             return approvals + self._persist_execution(intent, risk, execution, expected_epoch)
         return ()
+
+    @staticmethod
+    def _group_open_risk(tracked: dict[str, OrderExecution]) -> dict[str, Decimal]:
+        group_open_risk: dict[str, Decimal] = {}
+        for execution in tracked.values():
+            plan = execution.plan
+            group_open_risk[plan.exposure_group] = (
+                group_open_risk.get(plan.exposure_group, Decimal("0")) + plan.risk_amount
+            )
+        return group_open_risk
+
+    def _every_position_is_protected(
+        self, snapshot: ReconciliationSnapshot, tracked: dict[str, OrderExecution]
+    ) -> bool:
+        protected: set[str] = set()
+        for client_order_id, execution in tracked.items():
+            broker_order = self._broker.get_order_by_client_id(client_order_id)
+            if (
+                broker_order is not None
+                and broker_order.has_active_take_profit
+                and broker_order.has_active_stop_loss
+            ):
+                protected.add(execution.plan.symbol)
+        return all(position.symbol in protected for position in snapshot.positions)
+
+    def _release_terminal_orders(
+        self, agent: AgentState, snapshot: ReconciliationSnapshot
+    ) -> tuple[AgentState, dict[str, OrderExecution]]:
+        tracked: dict[str, OrderExecution] = {}
+        released = False
+        for client_order_id in agent.active_order_ids:
+            execution = self._store.get_order(client_order_id)
+            if execution is None:
+                raise RuntimeError("active order has no durable execution record")
+            if self._release_terminal_order(client_order_id, snapshot, execution):
+                released = True
+                continue
+            tracked[client_order_id] = execution
+        return (self._store.get_agent_state() if released else agent), tracked
 
     def _release_terminal_order(
         self,
@@ -505,12 +549,15 @@ class ExecutionGateway:
         risk: RiskDecision,
         *,
         expected_epoch: str,
+        max_active_orders: int,
     ) -> OrderExecution:
         if risk.intent_id != intent.intent_id or risk.status is RiskDecisionStatus.VETOED:
             raise ValueError("an approved risk decision matching the intent is required")
         plan = self._plan(intent, risk)
         prepared = OrderExecution(plan=plan, request_hash=self._request_hash(plan))
-        claimed = self._store.claim_order(prepared, expected_epoch=expected_epoch)
+        claimed = self._store.claim_order(
+            prepared, expected_epoch=expected_epoch, max_active_orders=max_active_orders
+        )
         execution = prepared if claimed else self._store.get_order(plan.client_order_id)
         if execution is None:
             raise RuntimeError("claimed order execution could not be loaded")

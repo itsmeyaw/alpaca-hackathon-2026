@@ -123,6 +123,26 @@ class AlpacaPaperBroker:
         )
         return self._order_snapshot(order)
 
+    def close_position(self, symbol: str) -> None:
+        """Cancels the symbol's resting bracket legs, then closes just that position."""
+        orders = cast(
+            list[Order],
+            self._client.get_orders(
+                filter=GetOrdersRequest(status=QueryOrderStatus.OPEN, symbols=[symbol], limit=500)
+            ),
+        )
+        for order in orders:
+            try:
+                self._client.cancel_order_by_id(str(order.id))
+            except APIError as exc:
+                if exc.status_code not in {404, 422}:
+                    raise
+        try:
+            self._client.close_position(symbol)
+        except APIError as exc:
+            if exc.status_code != 404:
+                raise
+
     def flatten(self) -> None:
         self._client.close_all_positions(cancel_orders=True)
 

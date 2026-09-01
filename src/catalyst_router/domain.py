@@ -75,10 +75,28 @@ class AgentState(FrozenModel):
     version: int = 0
     execution_epoch: str = "not-started"
     reconciled_epoch: str | None = None
-    active_order_id: str | None = None
+    active_order_ids: tuple[str, ...] = ()
     equity_peak: Decimal | None = None
     reason: str = "initialized safely in PAUSED"
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    @model_validator(mode="before")
+    @classmethod
+    def adopt_legacy_active_order(cls, data: Any) -> Any:
+        """Reads durable state written before concurrent positions were allowed."""
+        if not isinstance(data, dict) or "active_order_id" not in data:
+            return data
+        migrated = dict(data)
+        legacy = migrated.pop("active_order_id")
+        if legacy is not None and not migrated.get("active_order_ids"):
+            migrated["active_order_ids"] = (legacy,)
+        return migrated
+
+    @model_validator(mode="after")
+    def validate_active_order_ids(self) -> AgentState:
+        if len(set(self.active_order_ids)) != len(self.active_order_ids):
+            raise ValueError("active order ids must be unique")
+        return self
 
     @property
     def is_reconciled(self) -> bool:

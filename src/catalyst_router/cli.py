@@ -78,11 +78,11 @@ def _set_mode(settings: Settings, mode: AgentMode, reason: str, *, flatten: bool
         if snapshot.positions or snapshot.open_orders:
             raise RuntimeError("first-slice resume requires no positions or open orders")
         state = container.store.get_agent_state()
-        if state.active_order_id is not None:
-            execution = container.store.get_order(state.active_order_id)
+        for client_order_id in state.active_order_ids:
+            execution = container.store.get_order(client_order_id)
             if execution is None:
                 raise RuntimeError("active order has no durable execution record")
-            broker_order = container.broker.get_order_by_client_id(state.active_order_id)
+            broker_order = container.broker.get_order_by_client_id(client_order_id)
             status = (
                 broker_order.status.rsplit(".", 1)[-1].lower()
                 if broker_order is not None
@@ -100,7 +100,7 @@ def _set_mode(settings: Settings, mode: AgentMode, reason: str, *, flatten: bool
             )
             if not terminal and not expired_and_missing:
                 raise RuntimeError("active order is not terminal; refusing resume")
-            container.store.clear_active_order(state.active_order_id)
+            container.store.clear_active_order(client_order_id)
         if not container.store.get_agent_state().is_reconciled:
             container.reconciliation_service().reconcile()
     record = DecisionRecord.create(

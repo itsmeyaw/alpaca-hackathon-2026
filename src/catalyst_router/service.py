@@ -46,9 +46,11 @@ class ReconciliationService:
 
     def _reconcile_active_order(self, snapshot: ReconciliationSnapshot) -> None:
         state = self._store.get_agent_state()
-        client_order_id = state.active_order_id
-        if client_order_id is None:
-            return
+        for client_order_id in state.active_order_ids:
+            self._reconcile_one_order(client_order_id, snapshot)
+
+    def _reconcile_one_order(self, client_order_id: str, snapshot: ReconciliationSnapshot) -> None:
+        state = self._store.get_agent_state()
         execution = self._store.get_order(client_order_id)
         if execution is None:
             raise RuntimeError("active order has no durable execution record")

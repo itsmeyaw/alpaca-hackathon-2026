@@ -330,7 +330,9 @@ class DynamoOperationalStore:
     def _order_partition_key(self) -> str:
         return f"COMP#{self._competition_id}"
 
-    def claim_order(self, execution: OrderExecution, *, expected_epoch: str) -> bool:
+    def claim_order(
+        self, execution: OrderExecution, *, expected_epoch: str, max_active_orders: int
+    ) -> bool:
         client_order_id = execution.plan.client_order_id
         state = self.get_agent_state()
         if (
@@ -343,15 +345,15 @@ class DynamoOperationalStore:
         if existing is not None:
             if (
                 existing.status in {OrderExecutionStatus.PREPARED, OrderExecutionStatus.UNKNOWN}
-                and state.active_order_id != client_order_id
+                and client_order_id not in state.active_order_ids
             ):
                 raise RuntimeError("agent is not authorized for order recovery")
             return False
-        if state.active_order_id is not None:
+        if len(state.active_order_ids) >= max_active_orders:
             raise RuntimeError("agent is not authorized for new exposure")
         new_state = state.model_copy(
             update={
-                "active_order_id": client_order_id,
+                "active_order_ids": (*state.active_order_ids, client_order_id),
                 "version": state.version + 1,
                 "updated_at": datetime.now(UTC),
             }
@@ -425,11 +427,13 @@ class DynamoOperationalStore:
 
     def clear_active_order(self, client_order_id: str) -> AgentState:
         state = self.get_agent_state()
-        if state.active_order_id != client_order_id:
+        if client_order_id not in state.active_order_ids:
             raise RuntimeError("active order changed concurrently")
         new_state = state.model_copy(
             update={
-                "active_order_id": None,
+                "active_order_ids": tuple(
+                    tracked for tracked in state.active_order_ids if tracked != client_order_id
+                ),
                 "version": state.version + 1,
                 "updated_at": datetime.now(UTC),
             }

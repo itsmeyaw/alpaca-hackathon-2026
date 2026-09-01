@@ -50,6 +50,10 @@ class FakePaperBroker:
         del plan
         raise AssertionError("reconciliation must not submit orders")
 
+    def close_position(self, symbol: str) -> None:
+        del symbol
+        raise AssertionError("reconciliation must not close positions")
+
     def flatten(self) -> None:
         raise AssertionError("reconciliation must not flatten a healthy account")
 
