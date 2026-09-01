@@ -1,0 +1,1 @@
+For some reason there is no trade happening. The model seems to be too conservative for trading. This is for a week-long hackathon so the trading should be more frequent.
