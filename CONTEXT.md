@@ -28,7 +28,7 @@ The deterministic scoring and routing policy authorized to create live Trade Int
 
 ### Challenger Model
 
-A trained model evaluated against the Incumbent Strategy without authority to place orders. A challenger requires chronological walk-forward evidence after costs before it can be promoted outside the judged window.
+A trained model evaluated against the Incumbent Strategy. It normally begins without order authority; ADR-0013 explicitly authorizes the current classifier for bounded Alpaca paper execution at a 0.52 directional gate.
 
 ### Adaptive Policy
 
@@ -49,6 +49,7 @@ The selected interpretation of an opportunity:
 - `CATALYST_CONTINUATION`: new information and market confirmation imply continuation.
 - `LIQUIDITY_REVERSION`: an unexplained, market-relative displacement implies reversion.
 - `REGIME_TREND`: broad market conditions justify a small index position.
+- `MODEL_DIRECTIONAL`: the paper-live classifier exceeds its long or short probability gate.
 - `NO_TRADE`: evidence, liquidity, data quality, or risk is insufficient.
 
 ### Trade Intent
@@ -117,7 +118,7 @@ Any stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an 
 - The system uses Alpaca's free market-data plan initially: IEX equities and indicative options pricing.
 - Incomplete, stale, or contradictory data must produce `NO_TRADE` rather than an inferred price.
 - Execution is autonomous after deterministic approval, with an operator kill switch.
-- Trained return models begin as Challenger Models and cannot affect live orders without prior promotion.
+- Trained models begin as Challenger Models. The current classifier has explicit paper-live authority under ADR-0013; deterministic risk and execution retain final authority.
 - Every Adaptive Policy change is versioned, attributable to evidence, and reversible.
 - The Adaptive Policy learns only from Resolved Theses and starts the competition with the `BASE` Policy Profile.
 
@@ -127,11 +128,12 @@ Any stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an 
 - Reserve the remaining Basic-plan equity stream capacity for SPY, QQQ, and sector or regime references.
 - Dynamically subscribe only to option contracts under active evaluation and remain within the Basic-plan stream limit.
 - Use Alpaca News as the initial catalyst source.
-- Evaluate on news arrival and corrected one-minute bars; do not pursue sub-minute latency strategies on IEX and indicative option data.
+- Evaluate Event opportunities on news arrival and price challengers on corrected five-minute bars; do not pursue sub-minute latency strategies on IEX and indicative option data.
 
 ## Agent Authority
 
-- The Bedrock-hosted LLM emits typed Events and explanations only.
+- The Bedrock-hosted LLM emits typed Events and explanations only. Event output may influence the deterministic router in shadow mode, but has no order authority.
+- The deployed price classifier may emit long or short paper Trade Intents at its versioned runtime gate.
 - `alpaca-py` is the runtime integration for streams, account reconciliation, market data, and orders.
 - Alpaca MCP exposes read-oriented research and demonstration tools to the LLM; it does not grant the LLM an ungoverned order path.
 - The Alpaca CLI is an operator and judging demonstration surface, including dry runs and account inspection.

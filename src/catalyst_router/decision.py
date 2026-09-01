@@ -20,6 +20,7 @@ class DecisionEngine:
             and frame.event_confidence >= Decimal("0.72")
             and frame.event_novelty >= Decimal("0.60")
             and abs(frame.momentum_score) >= Decimal("0.55")
+            and frame.event_direction * frame.momentum_score > 0
         ):
             confidence = min(
                 Decimal("1"),

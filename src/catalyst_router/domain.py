@@ -24,7 +24,27 @@ class Route(StrEnum):
     CATALYST_CONTINUATION = "CATALYST_CONTINUATION"
     LIQUIDITY_REVERSION = "LIQUIDITY_REVERSION"
     REGIME_TREND = "REGIME_TREND"
+    MODEL_DIRECTIONAL = "MODEL_DIRECTIONAL"
     NO_TRADE = "NO_TRADE"
+
+
+class EventDirection(StrEnum):
+    BULLISH = "BULLISH"
+    BEARISH = "BEARISH"
+    NEUTRAL = "NEUTRAL"
+
+
+class EventType(StrEnum):
+    EARNINGS = "EARNINGS"
+    GUIDANCE = "GUIDANCE"
+    MERGER_ACQUISITION = "MERGER_ACQUISITION"
+    REGULATORY = "REGULATORY"
+    PRODUCT = "PRODUCT"
+    MANAGEMENT = "MANAGEMENT"
+    MACRO = "MACRO"
+    ANALYST = "ANALYST"
+    LEGAL = "LEGAL"
+    OTHER = "OTHER"
 
 
 class InstrumentType(StrEnum):
@@ -127,6 +147,64 @@ class QuoteSnapshot(FrozenModel):
         return (self.ask_price - self.bid_price) / midpoint * Decimal("10000")
 
 
+class NewsArticle(FrozenModel):
+    source_id: str = Field(min_length=1)
+    headline: str = Field(min_length=1, max_length=500)
+    summary: str = Field(max_length=5_000)
+    content: str = Field(max_length=50_000)
+    source: str = Field(min_length=1)
+    author: str
+    url: str | None = None
+    published_at: datetime
+    updated_at: datetime
+    symbols: tuple[str, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_article(self) -> NewsArticle:
+        if self.published_at.tzinfo is None or self.updated_at.tzinfo is None:
+            raise ValueError("news timestamps must be timezone-aware")
+        if self.updated_at < self.published_at:
+            raise ValueError("news update must not precede publication")
+        if any(not symbol or symbol != symbol.upper() for symbol in self.symbols):
+            raise ValueError("news symbols must be nonempty uppercase values")
+        if len(self.symbols) != len(set(self.symbols)):
+            raise ValueError("news symbols must be unique")
+        return self
+
+
+class Event(FrozenModel):
+    source_id: str = Field(min_length=1)
+    published_at: datetime
+    analyzed_at: datetime
+    event_type: EventType
+    direction: EventDirection
+    magnitude: Decimal = Field(ge=0, le=1)
+    novelty: Decimal = Field(ge=0, le=1)
+    surprise: Decimal = Field(ge=0, le=1)
+    confidence: Decimal = Field(ge=0, le=1)
+    expected_horizon_minutes: int = Field(gt=0, le=10_080)
+    affected_symbols: tuple[str, ...] = Field(min_length=1)
+    summary: str = Field(min_length=1, max_length=500)
+    invalidating_evidence: tuple[str, ...]
+    model_id: str = Field(min_length=1)
+    prompt_version: str = Field(min_length=1)
+    request_id: str | None = None
+    input_tokens: int = Field(default=0, ge=0)
+    output_tokens: int = Field(default=0, ge=0)
+
+    @model_validator(mode="after")
+    def validate_event(self) -> Event:
+        if self.published_at.tzinfo is None or self.analyzed_at.tzinfo is None:
+            raise ValueError("event timestamps must be timezone-aware")
+        if self.analyzed_at < self.published_at:
+            raise ValueError("event analysis must not precede publication")
+        if any(not symbol or symbol != symbol.upper() for symbol in self.affected_symbols):
+            raise ValueError("affected symbols must be nonempty uppercase values")
+        if len(self.affected_symbols) != len(set(self.affected_symbols)):
+            raise ValueError("affected symbols must be unique")
+        return self
+
+
 class SignalFrame(FrozenModel):
     symbol: str
     observed_at: datetime
@@ -134,6 +212,7 @@ class SignalFrame(FrozenModel):
     has_credible_event: bool
     event_confidence: Decimal = Field(ge=0, le=1)
     event_novelty: Decimal = Field(ge=0, le=1)
+    event_direction: Decimal = Field(ge=-1, le=1)
     momentum_score: Decimal = Field(ge=-1, le=1)
     reversion_score: Decimal = Field(ge=0, le=1)
     regime_score: Decimal = Field(ge=0, le=1)
@@ -223,11 +302,15 @@ class OrderPlan(FrozenModel):
     expires_at: datetime
 
     @model_validator(mode="after")
-    def validate_long_bracket(self) -> OrderPlan:
-        if self.side is not Side.BUY:
-            raise ValueError("the first execution slice supports long equity orders only")
-        if not self.stop_price < self.limit_price < self.take_profit_price:
+    def validate_bracket(self) -> OrderPlan:
+        if self.side is Side.BUY and not (
+            self.stop_price < self.limit_price < self.take_profit_price
+        ):
             raise ValueError("long bracket prices must be stop < entry < take profit")
+        if self.side is Side.SELL and not (
+            self.take_profit_price < self.limit_price < self.stop_price
+        ):
+            raise ValueError("short bracket prices must be take profit < entry < stop")
         if self.expires_at.tzinfo is None or self.expires_at <= self.created_at:
             raise ValueError("order plan expiry must be timezone-aware and after creation")
         return self
@@ -250,6 +333,8 @@ class BrokerOrderSnapshot(FrozenModel):
     side: Side
     quantity: int = Field(gt=0)
     status: str
+    has_active_take_profit: bool = False
+    has_active_stop_loss: bool = False
 
 
 class PublicDecisionRecord(FrozenModel):
@@ -259,6 +344,11 @@ class PublicDecisionRecord(FrozenModel):
     route: Route | None = None
     symbol: str | None = None
     summary: str
+
+
+class PublicDecisionPage(FrozenModel):
+    records: list[PublicDecisionRecord]
+    next_cursor: str | None = None
 
 
 class DecisionRecord(PublicDecisionRecord):

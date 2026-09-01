@@ -13,6 +13,7 @@ def frame(**updates: object) -> SignalFrame:
         "has_credible_event": True,
         "event_confidence": Decimal("0.90"),
         "event_novelty": Decimal("0.80"),
+        "event_direction": Decimal("1"),
         "momentum_score": Decimal("0.70"),
         "reversion_score": Decimal("0.10"),
         "regime_score": Decimal("0.40"),
@@ -57,3 +58,9 @@ def test_routes_bad_data_and_insufficient_edge_to_no_trade() -> None:
         ).route
         is Route.NO_TRADE
     )
+
+
+def test_routes_event_against_price_confirmation_to_no_trade() -> None:
+    decision = DecisionEngine().evaluate(frame(event_direction=Decimal("-1")))
+
+    assert decision.route is Route.NO_TRADE
