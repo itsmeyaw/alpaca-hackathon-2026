@@ -1,0 +1,49 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1EJJZZ83FP9PPX1XADC2BFX",
+  "session_id": "ses_fa39568afffeh0capDIRybfyqm",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-01T13:29:57.055246Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "dashboard/app/globals.css",
+    "dashboard/components/dashboard.tsx",
+    "dashboard/lib/api.ts",
+    "dashboard/package-lock.json",
+    "dashboard/package.json",
+    "dashboard/tsconfig.json",
+    "infra/README.md",
+    "infra/environments/prod/iam.tf",
+    "infra/environments/prod/outputs.tf",
+    "src/catalyst_router/api.py",
+    "tests/integration/test_api.py"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-luna",
+  "turn_id": "d6dae8e50afe",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 18,
+    "cache_creation_tokens": 62148,
+    "cache_read_tokens": 290900,
+    "output_tokens": 1962,
+    "api_call_count": 9
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-01T13:29:57.031194Z",
+    "agent_lines": 1369,
+    "agent_removed": 300,
+    "human_added": 501,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1870,
+    "total_lines_changed": 2170,
+    "agent_percentage": 76.91244239631337,
+    "metric_version": 2
+  }
+}

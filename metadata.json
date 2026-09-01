@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1EJJZZ83FP9PPX1XADC2BFX",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "dashboard/app/globals.css",
+    "dashboard/components/dashboard.tsx",
+    "dashboard/lib/api.ts",
+    "dashboard/package-lock.json",
+    "dashboard/package.json",
+    "dashboard/tsconfig.json",
+    "infra/README.md",
+    "infra/environments/prod/iam.tf",
+    "infra/environments/prod/outputs.tf",
+    "src/catalyst_router/api.py",
+    "tests/integration/test_api.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 18,
+    "cache_creation_tokens": 62148,
+    "cache_read_tokens": 290900,
+    "output_tokens": 1962,
+    "api_call_count": 9
+  }
+}
