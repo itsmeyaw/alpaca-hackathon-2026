@@ -1,1 +1,1 @@
-There is still no trade happening in the server. Why is this happening. Fix the remote. Make it aggresive if needed!
+For some reason there is no trade happening. The model seems to be too conservative for trading. This is for a week-long hackathon so the trading should be more frequent.
