@@ -1,0 +1,46 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1EJHE71PAXMQD42A38HPFW8",
+  "session_id": "ses_fa3988ee7ffeYX8jo8V1ZqW5Qf",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-01T13:29:07.85332Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "save_step_count": 1,
+  "files_touched": [
+    "CONTEXT.md",
+    "src/catalyst_router/decision.py",
+    "src/catalyst_router/domain.py",
+    "src/catalyst_router/events.py",
+    "src/catalyst_router/worker.py",
+    "tests/unit/test_decision.py",
+    "tests/unit/test_events.py",
+    "tests/unit/test_worker.py"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-sol",
+  "turn_id": "0c88788cffd7",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 324,
+    "cache_creation_tokens": 664937,
+    "cache_read_tokens": 21067029,
+    "output_tokens": 103216,
+    "api_call_count": 163
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-01T13:29:07.735877Z",
+    "agent_lines": 1068,
+    "agent_removed": 31,
+    "human_added": 271,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1339,
+    "total_lines_changed": 1370,
+    "agent_percentage": 80.21897810218978,
+    "metric_version": 2
+  }
+}

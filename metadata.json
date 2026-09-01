@@ -3,13 +3,15 @@
   "checkpoint_id": "01M1EJHE71PAXMQD42A38HPFW8",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 5,
   "files_touched": [
     "CONTEXT.md",
     "src/catalyst_router/decision.py",
     "src/catalyst_router/domain.py",
+    "src/catalyst_router/events.py",
     "src/catalyst_router/worker.py",
     "tests/unit/test_decision.py",
+    "tests/unit/test_events.py",
     "tests/unit/test_worker.py"
   ],
   "sessions": [
@@ -19,13 +21,20 @@
       "compact_transcript": "/0/transcript.jsonl",
       "content_hash": "/0/content_hash.txt",
       "prompt": "/0/prompt.txt"
+    },
+    {
+      "metadata": "/1/metadata.json",
+      "transcript": "/1/full.jsonl",
+      "compact_transcript": "/1/transcript.jsonl",
+      "content_hash": "/1/content_hash.txt",
+      "prompt": "/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 18,
-    "cache_creation_tokens": 62148,
-    "cache_read_tokens": 290900,
-    "output_tokens": 1962,
-    "api_call_count": 9
+    "input_tokens": 342,
+    "cache_creation_tokens": 727085,
+    "cache_read_tokens": 21357929,
+    "output_tokens": 105178,
+    "api_call_count": 172
   }
 }
