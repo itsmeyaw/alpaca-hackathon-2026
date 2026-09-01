@@ -1,0 +1,566 @@
+{
+  "info": {
+    "id": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+    "slug": "cosmic-star",
+    "projectID": "cdb1b2ca155067985326408a159253587dd4dc5a",
+    "directory": "/Users/itsmeyaw/projects/alpaca-hackathon",
+    "path": "",
+    "title": "Model performance check and iterative fixes",
+    "agent": "build",
+    "model": {
+      "id": "gpt-5.6-sol",
+      "providerID": "openai",
+      "variant": "high"
+    },
+    "version": "1.18.23",
+    "summary": {
+      "additions": 0,
+      "deletions": 0,
+      "files": 0
+    },
+    "cost": 0.0835178,
+    "tokens": {
+      "input": 6,
+      "output": 391,
+      "reasoning": 79,
+      "cache": {
+        "read": 13322,
+        "write": 13753
+      }
+    },
+    "time": {
+      "created": 1788208078327,
+      "updated": 1788208087421
+    }
+  },
+  "messages": [
+    {
+      "info": {
+        "role": "user",
+        "time": {
+          "created": 1788208078387
+        },
+        "agent": "build",
+        "model": {
+          "providerID": "openai",
+          "modelID": "gpt-5.6-sol",
+          "variant": "high"
+        },
+        "summary": {
+          "diffs": []
+        },
+        "id": "msg_05981de33001YVvE46igr05u8J",
+        "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb"
+      },
+      "parts": [
+        {
+          "type": "text",
+          "text": "CHeck the model performance. Currently there are no trade made. Analzye the cause and fix it. Iterative work. Repeat the process multiple times",
+          "id": "prt_05981de35001IXa6lJqUYoH3fQ",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981de33001YVvE46igr05u8J"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_05981de33001YVvE46igr05u8J",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.071562,
+        "tokens": {
+          "total": 13572,
+          "input": 3,
+          "output": 168,
+          "reasoning": 79,
+          "cache": {
+            "write": 13322,
+            "read": 0
+          }
+        },
+        "modelID": "gpt-5.6-sol",
+        "providerID": "openai",
+        "time": {
+          "created": 1788208078883,
+          "completed": 1788208084371
+        },
+        "finish": "tool-calls",
+        "id": "msg_05981e023001vjxr82tHGHQdMi",
+        "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb"
+      },
+      "parts": [
+        {
+          "snapshot": "b1853ebb97690a9e34619e5801c38629d7770299",
+          "type": "step-start",
+          "id": "prt_05981e901001FRmuL6YupfknFe",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981e023001vjxr82tHGHQdMi"
+        },
+        {
+          "type": "reasoning",
+          "text": "**Implementing updates**\n\nI need to start by inspecting the repository since the user mentioned iterative processes and repetition. It seems like we might benefit from using a todo approach. I'll begin by updating the context and reviewing the status of the files. I suspect we need a current model for the trading bot. It's essential to match the task with the implementation based on previous issues. I’ll look into the relevant domain documentation and consider using parallel commands for status updates.",
+          "time": {
+            "start": 1788208081157,
+            "end": 1788208082892
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_07d05ec7ab91e950016a95e3d115c487d2aff377d8bbc59e72",
+              "reasoningEncryptedContent": "REDACTED"
+            }
+          },
+          "id": "prt_05981e905001aoeuVbU4vqgovu",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981e023001vjxr82tHGHQdMi"
+        },
+        {
+          "type": "text",
+          "text": "I’ll trace the trading pipeline from model output through order submission, reproduce why signals never become trades, then iterate with targeted fixes and performance checks until the bottleneck is resolved.",
+          "time": {
+            "start": 1788208082912,
+            "end": 1788208083401
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "msg_07d05ec7ab91e950016a95e3d2966c87d28faaf94280988885",
+              "phase": "commentary"
+            }
+          },
+          "id": "prt_05981efe0001473f7XAdVhynxS",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981e023001vjxr82tHGHQdMi"
+        },
+        {
+          "type": "tool",
+          "tool": "todowrite",
+          "callID": "call_FZMi6vv0mzZPsxhz5ftt7Zoe",
+          "state": {
+            "status": "completed",
+            "input": {
+              "todos": [
+                {
+                  "content": "Inspect domain docs and locate model evaluation/trading pipeline",
+                  "status": "in_progress",
+                  "priority": "high"
+                },
+                {
+                  "content": "Reproduce the no-trade behavior and identify the first blocking condition",
+                  "status": "pending",
+                  "priority": "high"
+                },
+                {
+                  "content": "Implement and verify the first targeted fix",
+                  "status": "pending",
+                  "priority": "high"
+                },
+                {
+                  "content": "Rerun performance analysis and identify remaining bottlenecks",
+                  "status": "pending",
+                  "priority": "high"
+                },
+                {
+                  "content": "Apply additional iterations and run final verification",
+                  "status": "pending",
+                  "priority": "high"
+                }
+              ]
+            },
+            "output": "[\n  {\n    \"content\": \"Inspect domain docs and locate model evaluation/trading pipeline\",\n    \"status\": \"in_progress\",\n    \"priority\": \"high\"\n  },\n  {\n    \"content\": \"Reproduce the no-trade behavior and identify the first blocking condition\",\n    \"status\": \"pending\",\n    \"priority\": \"high\"\n  },\n  {\n    \"content\": \"Implement and verify the first targeted fix\",\n    \"status\": \"pending\",\n    \"priority\": \"high\"\n  },\n  {\n    \"content\": \"Rerun performance analysis and identify remaining bottlenecks\",\n    \"status\": \"pending\",\n    \"priority\": \"high\"\n  },\n  {\n    \"content\": \"Apply additional iterations and run final verification\",\n    \"status\": \"pending\",\n    \"priority\": \"high\"\n  }\n]",
+            "metadata": {
+              "todos": [
+                {
+                  "content": "Inspect domain docs and locate model evaluation/trading pipeline",
+                  "status": "in_progress",
+                  "priority": "high"
+                },
+                {
+                  "content": "Reproduce the no-trade behavior and identify the first blocking condition",
+                  "status": "pending",
+                  "priority": "high"
+                },
+                {
+                  "content": "Implement and verify the first targeted fix",
+                  "status": "pending",
+                  "priority": "high"
+                },
+                {
+                  "content": "Rerun performance analysis and identify remaining bottlenecks",
+                  "status": "pending",
+                  "priority": "high"
+                },
+                {
+                  "content": "Apply additional iterations and run final verification",
+                  "status": "pending",
+                  "priority": "high"
+                }
+              ],
+              "truncated": false
+            },
+            "title": "5 todos",
+            "time": {
+              "start": 1788208084159,
+              "end": 1788208084162
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_07d05ec7ab91e950016a95e3d2b31c87d2b52b365eb125cc06"
+            }
+          },
+          "id": "prt_05981f1cc001d6UEn7PGBalJ59",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981e023001vjxr82tHGHQdMi"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "b1853ebb97690a9e34619e5801c38629d7770299",
+          "type": "step-finish",
+          "tokens": {
+            "total": 13572,
+            "input": 3,
+            "output": 168,
+            "reasoning": 79,
+            "cache": {
+              "write": 13322,
+              "read": 0
+            }
+          },
+          "cost": 0.071562,
+          "id": "prt_05981f549001SArA1Waq1q842w",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981e023001vjxr82tHGHQdMi"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_05981de33001YVvE46igr05u8J",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.0119558,
+        "tokens": {
+          "total": 13979,
+          "input": 3,
+          "output": 223,
+          "reasoning": 0,
+          "cache": {
+            "write": 431,
+            "read": 13322
+          }
+        },
+        "modelID": "gpt-5.6-sol",
+        "providerID": "openai",
+        "time": {
+          "created": 1788208084373,
+          "completed": 1788208087417
+        },
+        "finish": "tool-calls",
+        "id": "msg_05981f5950017IfMg0rms8a8bM",
+        "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb"
+      },
+      "parts": [
+        {
+          "snapshot": "b1853ebb97690a9e34619e5801c38629d7770299",
+          "type": "step-start",
+          "id": "prt_05982002d001sEnRPw1v5bsApS",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981f5950017IfMg0rms8a8bM"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_7dbSWNftArTccTkv5GbmgDqz",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md</path>\n<type>file</type>\n<content>\n1: # Catalyst Router Domain\n2: \n3: ## Purpose\n4: \n5: Catalyst Router is an autonomous paper-trading agent competing for terminal P&L over a one-week Alpaca hackathon. It uses an LLM to classify new information and deterministic code to select trades, size risk, submit orders, and enforce portfolio limits.\n6: \n7: ## Core Concepts\n8: \n9: ### Market Observation\n10: \n11: A timestamped price, quote, bar, news item, market status, or account update. Every downstream decision records the observations and data feed that supported it.\n12: \n13: ### Opportunity\n14: \n15: A symbol and time horizon selected for evaluation because of a new Event, unusual market-relative movement, or regime evidence. An Opportunity can expire without producing a Trade Intent.\n16: \n17: ### Event\n18: \n19: A structured interpretation of news that includes type, direction, magnitude, novelty, surprise, expected horizon, confidence, affected symbols, and invalidating evidence. An Event is evidence, not permission to trade.\n20: \n21: ### Expert Assessment\n22: \n23: A deterministic or structured assessment produced by the catalyst, momentum, reversion, regime, or risk expert.\n24: \n25: ### Incumbent Strategy\n26: \n27: The deterministic scoring and routing policy authorized to create live Trade Intents. Its parameters are versioned so every decision can be reproduced.\n28: \n29: ### Challenger Model\n30: \n31: A trained model evaluated against the Incumbent Strategy. It normally begins without order authority; ADR-0013 explicitly authorizes the current classifier for bounded Alpaca paper execution at a 0.55 directional gate.\n32: \n33: ### Adaptive Policy\n34: \n35: A bounded policy that may change route-allocation weights and entry-confidence thresholds within prevalidated ranges. It cannot change risk limits, execution safeguards, data-quality requirements, event schemas, or the available strategies.\n36: \n37: ### Policy Profile\n38: \n39: One of the prevalidated `CONSERVATIVE`, `BASE`, or `AGGRESSIVE` combinations of route allocation and entry threshold. Profiles use fixed, versioned parameter values established before judging; the Adaptive Policy selects profiles but cannot synthesize parameters.\n40: \n41: ### Resolved Thesis\n42: \n43: A Position Thesis whose exit and after-cost outcome are known. Its clipped return in units of initial risk is the reward supplied to the Adaptive Policy.\n44: \n45: ### Route\n46: \n47: The selected interpretation of an opportunity:\n48: \n49: - `CATALYST_CONTINUATION`: new information and market confirmation imply continuation.\n50: - `LIQUIDITY_REVERSION`: an unexplained, market-relative displacement implies reversion.\n51: - `REGIME_TREND`: broad market conditions justify a small index position.\n52: - `MODEL_DIRECTIONAL`: the paper-live classifier exceeds its long or short probability gate.\n53: - `NO_TRADE`: evidence, liquidity, data quality, or risk is insufficient.\n54: \n55: ### Trade Intent\n56: \n57: A typed proposal containing the route, thesis, instrument, direction, entry constraints, invalidation, expected horizon, and supporting evidence. It has no authority to place an order until approved by the Risk Governor.\n58: \n59: ### Risk Decision\n60: \n61: The Risk Governor's immutable record of approving, reducing, or vetoing a Trade Intent, including every evaluated invariant and the account snapshot used for sizing.\n62: \n63: ### Order Plan\n64: \n65: The deterministic translation of an approved Trade Intent into idempotent Alpaca orders and exit instructions. Alpaca trade updates, followed by reconciliation, are authoritative for order state.\n66: \n67: ### Risk Governor\n68: \n69: The deterministic authority that sizes positions and either approves, reduces, or vetoes a Trade Intent. The LLM cannot bypass it or choose order quantity.\n70: \n71: ### Position Thesis\n72: \n73: The accepted Trade Intent and invalidation conditions attached to an open position. Price stops, elapsed horizon, contradictory evidence, and portfolio limits can invalidate it.\n74: \n75: ### Exposure Group\n76: \n77: Positions expected to lose together because they share a sector, underlying driver, or market direction. The Risk Governor budgets an Exposure Group as one correlated risk rather than counting its positions as independent trades.\n78: \n79: ### Decision Record\n80: \n81: An immutable, timestamped account of observations, expert assessments, route selection, risk checks, order lifecycle, and outcome, including decisions that result in `NO_TRADE`.\n82: \n83: ### Agent Mode\n84: \n85: The operational authority state: `RUNNING`, `PAUSED`, `RISK_HALTED`, or `KILLED`. Only `RUNNING` permits new exposure. Restarting the process does not clear a halt or kill state.\n86: \n87: ## Decision Lifecycle\n88: \n89: ```text\n90: Market Observation\n91:   -> Opportunity\n92:   -> Event and Expert Assessments\n93:   -> Route\n94:   -> Trade Intent\n95:   -> Risk Decision\n96:   -> Order Plan\n97:   -> Position Thesis\n98:   -> Resolved Thesis\n99:   -> Adaptive Policy update\n100: ```\n101: \n102: Any stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an error.\n103: \n104: ## Module Boundaries\n105: \n106: - **Market Intelligence** owns feed normalization, point-in-time features, Opportunities, and Events.\n107: - **Decision Engine** owns Expert Assessments, route selection, Trade Intents, and Challenger Model predictions.\n108: - **Risk and Execution** owns Risk Decisions, Agent Mode, sizing, Order Plans, reconciliation, and exits.\n109: - **Portfolio Ledger** owns positions, realized and unrealized P&L, exposure groups, and performance attribution.\n110: - **Adaptation** owns Policy Profiles, priors, rewards, and versioned Adaptive Policy changes.\n111: - **Reporting** projects sanitized Decision Records into the public dashboard without controlling trading.\n112: \n113: ## Trading Mandate\n114: \n115: - Strong catalyst-continuation opportunities may use defined-risk options.\n116: - Liquidity-reversion opportunities use equities.\n117: - Naked short options are prohibited.\n118: - The system uses Alpaca's free market-data plan initially: IEX equities and indicative options pricing.\n119: - Incomplete, stale, or contradictory data must produce `NO_TRADE` rather than an inferred price.\n120: - Execution is autonomous after deterministic approval, with an operator kill switch.\n121: - Trained models begin as Challenger Models. The current classifier has explicit paper-live authority under ADR-0013; deterministic risk and execution retain final authority.\n122: - Every Adaptive Policy change is versioned, attributable to evidence, and reversible.\n123: - The Adaptive Policy learns only from Resolved Theses and starts the competition with the `BASE` Policy Profile.\n124: \n125: ## Market Scope\n126: \n127: - Build a daily universe of approximately 20 liquid option-enabled underlyings from active stocks and movers.\n128: - Reserve the remaining Basic-plan equity stream capacity for SPY, QQQ, and sector or regime references.\n129: - Dynamically subscribe only to option contracts under active evaluation and remain within the Basic-plan stream limit.\n130: - Use Alpaca News as the initial catalyst source.\n131: - Evaluate Event opportunities on news arrival and price challengers on corrected five-minute bars; do not pursue sub-minute latency strategies on IEX and indicative option data.\n132: \n133: ## Agent Authority\n134: \n135: - The Bedrock-hosted LLM emits typed Events and explanations only. Event output may influence the deterministic router in shadow mode, but has no order authority.\n136: - The deployed price classifier may emit long or short paper Trade Intents at its versioned runtime gate.\n137: - `alpaca-py` is the runtime integration for streams, account reconciliation, market data, and orders.\n138: - Alpaca MCP exposes read-oriented research and demonstration tools to the LLM; it does not grant the LLM an ungoverned order path.\n139: - The Alpaca CLI is an operator and judging demonstration surface, including dry runs and account inspection.\n140: - Only Risk and Execution can create an Order Plan or submit an order.\n141: \n142: ## Current Risk Posture\n143: \n144: The accepted posture is competition-aggressive but survival-aware:\n145: \n146: - Risk at most 1% of equity on one trade.\n147: - Hold at most six positions concurrently.\n148: - Limit total open stop-risk to 4% of equity.\n149: - Limit overnight stop-risk to 2% of equity.\n150: - Limit one Exposure Group to 2% of equity.\n151: - At a 2% daily drawdown, reduce new-trade risk to 0.5% of equity.\n152: - Stop opening risk and begin flattening at a 4% daily loss.\n153: - Kill autonomous trading at a 12% competition drawdown.\n154: \n155: ## Holding Policy\n156: \n157: - A catalyst option position may remain open overnight only when the catalyst has already occurred, confidence is high, and the expected horizon extends beyond the close.\n158: - Liquidity-reversion equity positions must close during the entry session.\n159: - Do not hold an option through expiration.\n160: - Flatten all positions before the final judging cutoff.\n161: \n162: ## Option Contract Policy\n163: \n164: - Live option trades are long calls or long puts only.\n165: - Target 14 to 30 calendar days to expiration and approximately 0.55 to 0.70 absolute delta.\n166: - Prohibit 0DTE contracts and short option legs.\n167: - Require complete, fresh quotes and strict liquidity checks; otherwise route to `NO_TRADE`.\n168: - Evaluate debit spreads in shadow mode until consolidated option quotes are available and validated.\n169: \n170: ## Dashboard Policy\n171: \n172: - The public dashboard is read-only and shows delayed, sanitized decisions, P&L, drawdown, routes, vetoes, and policy changes.\n173: - Account identifiers, secrets, raw prompts, internal logs, and operator actions are private.\n174: - Pause, resume, flatten, and kill controls require operator authentication.\n175: \n176: ## Persistence Policy\n177: \n178: - DynamoDB is the authoritative operational store for agent mode, opportunities, decisions, orders, positions, risk state, policies, idempotency records, and dashboard projections.\n179: - Use conditional writes and transactions for state transitions that must not be applied twice.\n180: - Archive raw and high-volume market observations to S3 rather than making DynamoDB a tick store.\n181: - Alpaca remains authoritative for external account, order, and position state; startup reconciliation repairs local projections before trading resumes.\n182: \n183: ## Operating Cycle\n184: \n185: - **Premarket:** reconcile Alpaca state, check Agent Mode, select the universe, ingest news, and establish regime context.\n186: - **Regular session:** evaluate Opportunities on events and corrected minute bars, manage orders and Position Theses, and publish delayed reporting projections.\n187: - **Before close:** close liquidity-reversion positions, reevaluate every overnight candidate, and enforce overnight risk limits.\n188: - **After close:** reconcile outcomes, resolve completed theses, update the Adaptive Policy once per new reward, archive observations, and produce the daily report.\n189: - **Final session:** stop new entries early enough to flatten and reconcile every position before the judging cutoff.\n190: \n191: ## Validation Policy\n192: \n193: - Validate with chronological walk-forward splits and purged overlapping labels.\n194: - Include point-in-time universe construction, inference and order latency, bid/ask execution, slippage, and estimated costs.\n195: - Compare against cash, SPY, equal-weight, basic momentum, and an incumbent without LLM event routing.\n196: - Freeze Policy Profile definitions, safety limits, features, and strategy code before judging; only profile selection adapts live.\n\n(End of file - total 196 lines)\n</content>",
+            "metadata": {
+              "preview": "# Catalyst Router Domain\n\n## Purpose\n\nCatalyst Router is an autonomous paper-trading agent competing for terminal P&L over a one-week Alpaca hackathon. It uses an LLM to classify new information and deterministic code to select trades, size risk, submit orders, and enforce portfolio limits.\n\n## Core Concepts\n\n### Market Observation\n\nA timestamped price, quote, bar, news item, market status, or account update. Every downstream decision records the observations and data feed that supported it.\n\n### Opportunity\n\nA symbol and time horizon selected for evaluation because of a new Event, unusual market-relative movement, or regime evidence. An Opportunity can expire without producing a Trade Intent.\n\n### Event\n\nA structured interpretation of news that includes type, direction, magnitude, novelty, surprise, expected horizon, confidence, affected symbols, and invalidating evidence. An Event is evidence, not permission to trade.\n",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md",
+                "text": "# Catalyst Router Domain\n\n## Purpose\n\nCatalyst Router is an autonomous paper-trading agent competing for terminal P&L over a one-week Alpaca hackathon. It uses an LLM to classify new information and deterministic code to select trades, size risk, submit orders, and enforce portfolio limits.\n\n## Core Concepts\n\n### Market Observation\n\nA timestamped price, quote, bar, news item, market status, or account update. Every downstream decision records the observations and data feed that supported it.\n\n### Opportunity\n\nA symbol and time horizon selected for evaluation because of a new Event, unusual market-relative movement, or regime evidence. An Opportunity can expire without producing a Trade Intent.\n\n### Event\n\nA structured interpretation of news that includes type, direction, magnitude, novelty, surprise, expected horizon, confidence, affected symbols, and invalidating evidence. An Event is evidence, not permission to trade.\n\n### Expert Assessment\n\nA deterministic or structured assessment produced by the catalyst, momentum, reversion, regime, or risk expert.\n\n### Incumbent Strategy\n\nThe deterministic scoring and routing policy authorized to create live Trade Intents. Its parameters are versioned so every decision can be reproduced.\n\n### Challenger Model\n\nA trained model evaluated against the Incumbent Strategy. It normally begins without order authority; ADR-0013 explicitly authorizes the current classifier for bounded Alpaca paper execution at a 0.55 directional gate.\n\n### Adaptive Policy\n\nA bounded policy that may change route-allocation weights and entry-confidence thresholds within prevalidated ranges. It cannot change risk limits, execution safeguards, data-quality requirements, event schemas, or the available strategies.\n\n### Policy Profile\n\nOne of the prevalidated `CONSERVATIVE`, `BASE`, or `AGGRESSIVE` combinations of route allocation and entry threshold. Profiles use fixed, versioned parameter values established before judging; the Adaptive Policy selects profiles but cannot synthesize parameters.\n\n### Resolved Thesis\n\nA Position Thesis whose exit and after-cost outcome are known. Its clipped return in units of initial risk is the reward supplied to the Adaptive Policy.\n\n### Route\n\nThe selected interpretation of an opportunity:\n\n- `CATALYST_CONTINUATION`: new information and market confirmation imply continuation.\n- `LIQUIDITY_REVERSION`: an unexplained, market-relative displacement implies reversion.\n- `REGIME_TREND`: broad market conditions justify a small index position.\n- `MODEL_DIRECTIONAL`: the paper-live classifier exceeds its long or short probability gate.\n- `NO_TRADE`: evidence, liquidity, data quality, or risk is insufficient.\n\n### Trade Intent\n\nA typed proposal containing the route, thesis, instrument, direction, entry constraints, invalidation, expected horizon, and supporting evidence. It has no authority to place an order until approved by the Risk Governor.\n\n### Risk Decision\n\nThe Risk Governor's immutable record of approving, reducing, or vetoing a Trade Intent, including every evaluated invariant and the account snapshot used for sizing.\n\n### Order Plan\n\nThe deterministic translation of an approved Trade Intent into idempotent Alpaca orders and exit instructions. Alpaca trade updates, followed by reconciliation, are authoritative for order state.\n\n### Risk Governor\n\nThe deterministic authority that sizes positions and either approves, reduces, or vetoes a Trade Intent. The LLM cannot bypass it or choose order quantity.\n\n### Position Thesis\n\nThe accepted Trade Intent and invalidation conditions attached to an open position. Price stops, elapsed horizon, contradictory evidence, and portfolio limits can invalidate it.\n\n### Exposure Group\n\nPositions expected to lose together because they share a sector, underlying driver, or market direction. The Risk Governor budgets an Exposure Group as one correlated risk rather than counting its positions as independent trades.\n\n### Decision Record\n\nAn immutable, timestamped account of observations, expert assessments, route selection, risk checks, order lifecycle, and outcome, including decisions that result in `NO_TRADE`.\n\n### Agent Mode\n\nThe operational authority state: `RUNNING`, `PAUSED`, `RISK_HALTED`, or `KILLED`. Only `RUNNING` permits new exposure. Restarting the process does not clear a halt or kill state.\n\n## Decision Lifecycle\n\n```text\nMarket Observation\n  -> Opportunity\n  -> Event and Expert Assessments\n  -> Route\n  -> Trade Intent\n  -> Risk Decision\n  -> Order Plan\n  -> Position Thesis\n  -> Resolved Thesis\n  -> Adaptive Policy update\n```\n\nAny stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an error.\n\n## Module Boundaries\n\n- **Market Intelligence** owns feed normalization, point-in-time features, Opportunities, and Events.\n- **Decision Engine** owns Expert Assessments, route selection, Trade Intents, and Challenger Model predictions.\n- **Risk and Execution** owns Risk Decisions, Agent Mode, sizing, Order Plans, reconciliation, and exits.\n- **Portfolio Ledger** owns positions, realized and unrealized P&L, exposure groups, and performance attribution.\n- **Adaptation** owns Policy Profiles, priors, rewards, and versioned Adaptive Policy changes.\n- **Reporting** projects sanitized Decision Records into the public dashboard without controlling trading.\n\n## Trading Mandate\n\n- Strong catalyst-continuation opportunities may use defined-risk options.\n- Liquidity-reversion opportunities use equities.\n- Naked short options are prohibited.\n- The system uses Alpaca's free market-data plan initially: IEX equities and indicative options pricing.\n- Incomplete, stale, or contradictory data must produce `NO_TRADE` rather than an inferred price.\n- Execution is autonomous after deterministic approval, with an operator kill switch.\n- Trained models begin as Challenger Models. The current classifier has explicit paper-live authority under ADR-0013; deterministic risk and execution retain final authority.\n- Every Adaptive Policy change is versioned, attributable to evidence, and reversible.\n- The Adaptive Policy learns only from Resolved Theses and starts the competition with the `BASE` Policy Profile.\n\n## Market Scope\n\n- Build a daily universe of approximately 20 liquid option-enabled underlyings from active stocks and movers.\n- Reserve the remaining Basic-plan equity stream capacity for SPY, QQQ, and sector or regime references.\n- Dynamically subscribe only to option contracts under active evaluation and remain within the Basic-plan stream limit.\n- Use Alpaca News as the initial catalyst source.\n- Evaluate Event opportunities on news arrival and price challengers on corrected five-minute bars; do not pursue sub-minute latency strategies on IEX and indicative option data.\n\n## Agent Authority\n\n- The Bedrock-hosted LLM emits typed Events and explanations only. Event output may influence the deterministic router in shadow mode, but has no order authority.\n- The deployed price classifier may emit long or short paper Trade Intents at its versioned runtime gate.\n- `alpaca-py` is the runtime integration for streams, account reconciliation, market data, and orders.\n- Alpaca MCP exposes read-oriented research and demonstration tools to the LLM; it does not grant the LLM an ungoverned order path.\n- The Alpaca CLI is an operator and judging demonstration surface, including dry runs and account inspection.\n- Only Risk and Execution can create an Order Plan or submit an order.\n\n## Current Risk Posture\n\nThe accepted posture is competition-aggressive but survival-aware:\n\n- Risk at most 1% of equity on one trade.\n- Hold at most six positions concurrently.\n- Limit total open stop-risk to 4% of equity.\n- Limit overnight stop-risk to 2% of equity.\n- Limit one Exposure Group to 2% of equity.\n- At a 2% daily drawdown, reduce new-trade risk to 0.5% of equity.\n- Stop opening risk and begin flattening at a 4% daily loss.\n- Kill autonomous trading at a 12% competition drawdown.\n\n## Holding Policy\n\n- A catalyst option position may remain open overnight only when the catalyst has already occurred, confidence is high, and the expected horizon extends beyond the close.\n- Liquidity-reversion equity positions must close during the entry session.\n- Do not hold an option through expiration.\n- Flatten all positions before the final judging cutoff.\n\n## Option Contract Policy\n\n- Live option trades are long calls or long puts only.\n- Target 14 to 30 calendar days to expiration and approximately 0.55 to 0.70 absolute delta.\n- Prohibit 0DTE contracts and short option legs.\n- Require complete, fresh quotes and strict liquidity checks; otherwise route to `NO_TRADE`.\n- Evaluate debit spreads in shadow mode until consolidated option quotes are available and validated.\n\n## Dashboard Policy\n\n- The public dashboard is read-only and shows delayed, sanitized decisions, P&L, drawdown, routes, vetoes, and policy changes.\n- Account identifiers, secrets, raw prompts, internal logs, and operator actions are private.\n- Pause, resume, flatten, and kill controls require operator authentication.\n\n## Persistence Policy\n\n- DynamoDB is the authoritative operational store for agent mode, opportunities, decisions, orders, positions, risk state, policies, idempotency records, and dashboard projections.\n- Use conditional writes and transactions for state transitions that must not be applied twice.\n- Archive raw and high-volume market observations to S3 rather than making DynamoDB a tick store.\n- Alpaca remains authoritative for external account, order, and position state; startup reconciliation repairs local projections before trading resumes.\n\n## Operating Cycle\n\n- **Premarket:** reconcile Alpaca state, check Agent Mode, select the universe, ingest news, and establish regime context.\n- **Regular session:** evaluate Opportunities on events and corrected minute bars, manage orders and Position Theses, and publish delayed reporting projections.\n- **Before close:** close liquidity-reversion positions, reevaluate every overnight candidate, and enforce overnight risk limits.\n- **After close:** reconcile outcomes, resolve completed theses, update the Adaptive Policy once per new reward, archive observations, and produce the daily report.\n- **Final session:** stop new entries early enough to flatten and reconcile every position before the judging cutoff.\n\n## Validation Policy\n\n- Validate with chronological walk-forward splits and purged overlapping labels.\n- Include point-in-time universe construction, inference and order latency, bid/ask execution, slippage, and estimated costs.\n- Compare against cash, SPY, equal-weight, basic momentum, and an incumbent without LLM event routing.\n- Freeze Policy Profile definitions, safety limits, features, and strategy code before judging; only profile selection adapts live.",
+                "lineStart": 1,
+                "lineEnd": 196,
+                "totalLines": 196,
+                "truncated": false
+              }
+            },
+            "title": "CONTEXT.md",
+            "time": {
+              "start": 1788208087096,
+              "end": 1788208087122
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0a6f604058d2a21a016a95e3d6fa4487d2b04572f738a8e1b4"
+            }
+          },
+          "id": "prt_05982002f001y9Nj3rLjCh2qr1",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981f5950017IfMg0rms8a8bM"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_LNAcA09oF4remHlBahrncKiB",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon</path>\n<type>directory</type>\n<entries>\n.dockerignore\n.entire/\n.env\n.git/\n.gitignore\n.local/\n.mypy_cache/\n.opencode/\n.playwright-mcp/\n.pytest_cache/\n.ruff_cache/\n.venv/\nAGENTS.md\ncatalyst-router-dashboard.png\nCLAUDE.md\ncompose.yaml\nCONTEXT.md\ndashboard/\ndeployed-flight-recorder.png\nDockerfile\ndocs/\ninfra/\nMakefile\npyproject.toml\nREADME.md\nRESEARCH.md\nscripts/\nsrc/\ntests/\nuv.lock\n\n(30 entries)\n</entries>",
+            "metadata": {
+              "preview": ".dockerignore\n.entire/\n.env\n.git/\n.gitignore\n.local/\n.mypy_cache/\n.opencode/\n.playwright-mcp/\n.pytest_cache/\n.ruff_cache/\n.venv/\nAGENTS.md\ncatalyst-router-dashboard.png\nCLAUDE.md\ncompose.yaml\nCONTEXT.md\ndashboard/\ndeployed-flight-recorder.png\nDockerfile",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "directory",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon",
+                "entries": [
+                  ".dockerignore",
+                  ".entire/",
+                  ".env",
+                  ".git/",
+                  ".gitignore",
+                  ".local/",
+                  ".mypy_cache/",
+                  ".opencode/",
+                  ".playwright-mcp/",
+                  ".pytest_cache/",
+                  ".ruff_cache/",
+                  ".venv/",
+                  "AGENTS.md",
+                  "catalyst-router-dashboard.png",
+                  "CLAUDE.md",
+                  "compose.yaml",
+                  "CONTEXT.md",
+                  "dashboard/",
+                  "deployed-flight-recorder.png",
+                  "Dockerfile",
+                  "docs/",
+                  "infra/",
+                  "Makefile",
+                  "pyproject.toml",
+                  "README.md",
+                  "RESEARCH.md",
+                  "scripts/",
+                  "src/",
+                  "tests/",
+                  "uv.lock"
+                ],
+                "offset": 1,
+                "totalEntries": 30,
+                "truncated": false
+              }
+            },
+            "title": "",
+            "time": {
+              "start": 1788208087101,
+              "end": 1788208087107
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0a6f604058d2a21a016a95e3d6fa5887d2908bb79ed516e2ea"
+            }
+          },
+          "id": "prt_05982003a001sQfYGwPr65SBsU",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981f5950017IfMg0rms8a8bM"
+        },
+        {
+          "type": "tool",
+          "tool": "glob",
+          "callID": "call_PJiOSGq7JOIRJFXVhWp5wQ1f",
+          "state": {
+            "status": "completed",
+            "input": {
+              "path": "/Users/itsmeyaw/projects/alpaca-hackathon",
+              "pattern": "**/*.{py,ts,tsx,js,json,toml,yml,yaml,md}"
+            },
+            "output": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/training.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/challenger.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/risk.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/settings.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/cli.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/alpaca.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/bedrock.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/news.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/market_data.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/__init__.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/memory.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/dynamodb.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/api.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/container.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/decision.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__init__.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/datasets.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/ports.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/events.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/domain.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/execution.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/service.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/worker.py\n/Users/itsmeyaw/projects/alpaca-hackathon/AGENTS.md\n/Users/itsmeyaw/projects/alpaca-hackathon/compose.yaml\n/Users/itsmeyaw/projects/alpaca-hackathon/RESEARCH.md\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/next.config.ts\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/tsconfig.json\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/components.json\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/lib/api.ts\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/lib/utils.ts\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/package.json\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/package-lock.json\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/components/dashboard.tsx\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/components/ui/button.tsx\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/components/ui/table.tsx\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/components/ui/badge.tsx\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/components/ui/card.tsx\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/next-env.d.ts\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/app/page.tsx\n/Users/itsmeyaw/projects/alpaca-hackathon/dashboard/app/layout.tsx\n/Users/itsmeyaw/projects/alpaca-hackathon/README.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/agents/issue-tracker.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/agents/domain.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/training/five-minute-pipeline.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/training/local-benchmark.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0005-keep-trained-models-in-shadow-mode.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0004-budget-correlated-portfolio-risk.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0013-authorize-the-model-for-paper-execution.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0012-use-a-small-event-driven-market-universe.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0002-start-with-free-alpaca-market-data.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0011-separate-alpaca-runtime-and-agent-tool-authority.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0006-bound-live-strategy-adaptation.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0003-allow-controlled-overnight-catalyst-risk.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0014-shadow-five-minute-event-aware-challenger.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0001-use-a-hybrid-catalyst-router.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0010-use-dynamodb-for-operational-state.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0009-use-a-small-single-region-aws-deployment.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0007-limit-live-option-structures-with-indicative-data.md\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0008-separate-public-reporting-from-operator-control.md\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/integration/test_reconciliation.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/integration/test_api.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/integration/test_dynamodb_store.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_settings.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_news.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_events.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_training.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_execution.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_worker.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_risk.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_store.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_alpaca.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_decision.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_datasets.py\n/Users/itsmeyaw/projects/alpaca-hackathon/tests/unit/test_challenger.py\n/Users/itsmeyaw/projects/alpaca-hackathon/pyproject.toml\n/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md\n/Users/itsmeyaw/projects/alpaca-hackathon/infra/README.md",
+            "metadata": {
+              "count": 78,
+              "truncated": false
+            },
+            "title": "",
+            "time": {
+              "start": 1788208087180,
+              "end": 1788208087228
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0a6f604058d2a21a016a95e3d6fa6087d28b2835c070f6d29f"
+            }
+          },
+          "id": "prt_05982003e001GcKVdL4TwF9bn9",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981f5950017IfMg0rms8a8bM"
+        },
+        {
+          "type": "tool",
+          "tool": "grep",
+          "callID": "call_msjGud7DovOaugBAAEwM9dIs",
+          "state": {
+            "status": "completed",
+            "input": {
+              "path": "/Users/itsmeyaw/projects/alpaca-hackathon",
+              "pattern": "trade|signal|backtest|model|threshold|order",
+              "include": "*.{py,ts,tsx,js,md}"
+            },
+            "output": "Found 100 matches (more matches available)\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/training.py:\n  Line 124:     trades: int\n\n  Line 227:         ordered = sorted(symbol_bars, key=lambda item: item.timestamp)\n\n  Line 228:         if len({bar.timestamp for bar in ordered}) != len(ordered):\n\n  Line 232:             current.close / previous.close - 1 for previous, current in pairwise(ordered)\n\n  Line 234:         for index in range(min_history - 1, len(ordered)):\n\n  Line 235:             current = ordered[index]\n\n  Line 236:             history = ordered[index - min_history + 1 : index + 1]\n\n  Line 243:             return_15m = current.close / ordered[index - return_short_bars].close - 1\n\n  Line 244:             return_1h = current.close / ordered[index - return_medium_bars].close - 1\n\n  Line 245:             return_2h = current.close / ordered[index - return_long_bars].close - 1\n\n  Line 246:             volume_window = ordered[index - min_history + 1 : index + 1]\n\n  Line 349:         ordered = sorted(symbol_bars, key=lambda item: item.timestamp)\n\n  Line 350:         if len({bar.timestamp for bar in ordered}) != len(ordered):\n\n  Line 355:             current.close / previous.close - 1 for previous, current in pairwise(ordered)\n\n  Line 357:         for index in range(min_history - 1, len(ordered) - horizon_bars):\n\n  Line 358:             current = ordered[index]\n\n  Line 359:             future = ordered[index + horizon_bars]\n\n  Line 360:             history = ordered[index - min_history + 1 : index + 1]\n\n  Line 372:             return_15m = current.close / ordered[index - 3].close - 1\n\n  Line 373:             return_1h = current.close / ordered[index - 12].close - 1\n\n  Line 374:             return_2h = current.close / ordered[index - 24].close - 1\n\n  Line 375:             volume_window = ordered[index - min_history + 1 : index + 1]\n\n  Line 505:     confidence_threshold: float,\n\n  Line 513:     if not 0.5 <= confidence_threshold <= 1:\n\n  Line 514:         raise ValueError(\"confidence_threshold must be between 0.5 and 1\")\n\n  Line 523:         minimum_score=confidence_threshold - 0.5,\n\n  Line 574:     trade_returns = []\n\n  Line 589:         trade_returns.extend(returns)\n\n  Line 606:         trades=len(trade_returns),\n\n  Line 608:         hit_rate=sum(value > 0 for value in trade_returns) / len(trade_returns),\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/api.py:\n  Line 22:     model_config = ConfigDict(extra=\"forbid\")\n\n  Line 70:     @app.get(\"/api/public/status\", response_model=PublicStatus)\n\n  Line 78:     @app.get(\"/api/public/decisions\", response_model=list[PublicDecisionRecord])\n\n  Line 85:     @app.get(\"/api/public/decision-pages\", response_model=PublicDecisionPage)\n\n  Line 105:     @app.get(\"/api/public/challenger\", response_model=PublicChallengerStatus)\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/events.py:\n  Line 35:     model_id: str\n\n  Line 46:     \"\"\"Records LLM Event evidence and deterministic route decisions without order authority.\"\"\"\n\n  Line 81:                 self._extractor.model_id,\n\n  Line 96:                         self._extractor.model_id,\n\n  Line 114:                     self._signal_frame(event, vector, quote, now=evaluated_at)\n\n  Line 126:                     self._extractor.model_id,\n\n  Line 135:             or event.model_id != self._extractor.model_id\n\n  Line 141:     def _signal_frame(\n\n  Line 193:                         event.model_id,\n\n  Line 209:                 \"event\": event.model_dump(mode=\"json\"),\n\n  Line 233:                 \"model_id\": self._extractor.model_id,\n\n  Line 238:             public_summary=\"Event evidence unavailable; no trade\",\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/decision.py:\n  Line 14:             return self._no_trade(frame, \"market data failed quality gates\")\n\n  Line 16:             return self._no_trade(frame, \"expected edge does not clear estimated costs\")\n\n  Line 54:                 reasons=(\"broad regime evidence exceeds threshold\",),\n\n  Line 59:         return self._no_trade(frame, \"signals are ambiguous or below policy thresholds\")\n\n  Line 61:     def _no_trade(self, frame: SignalFrame, reason: str) -> RouteDecision:\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/settings.py:\n  Line 32:     model_execution_enabled: bool = False\n\n  Line 33:     model_authority: str = \"SHADOW_ONLY\"\n\n  Line 34:     model_decision_gate: Decimal = Decimal(\"0.55\")\n\n  Line 36:     bedrock_model_id: str | None = None\n\n  Line 48:         if not Decimal(\"0.5\") < self.model_decision_gate <= Decimal(\"1\"):\n\n  Line 50:         if self.model_authority not in {\"SHADOW_ONLY\", \"PAPER_LIVE\"}:\n\n  Line 52:         if self.model_execution_enabled and not self.paper_execution_enabled:\n\n  Line 54:         if self.model_execution_enabled and self.model_authority != \"PAPER_LIVE\":\n\n  Line 58:             and self.model_authority == \"PAPER_LIVE\"\n\n  Line 59:             and not self.model_execution_enabled\n\n  Line 62:         if self.llm_events_enabled and not self.bedrock_model_id:\n\n  Line 100:             model_execution_enabled=_as_bool(os.getenv(\"MODEL_EXECUTION_ENABLED\")),\n\n  Line 101:             model_authority=os.getenv(\"MODEL_AUTHORITY\", \"SHADOW_ONLY\"),\n\n  Line 102:             model_decision_gate=Decimal(os.getenv(\"MODEL_DECISION_GATE\", \"0.55\")),\n\n  Line 104:             bedrock_model_id=os.getenv(\"BEDROCK_MODEL_ID\"),\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/domain.py:\n  Line 9: from pydantic import BaseModel, ConfigDict, Field, model_validator\n\n  Line 13:     model_config = ConfigDict(frozen=True, extra=\"forbid\")\n\n  Line 78:     active_order_id: str | None = None\n\n  Line 114:     client_order_id: str\n\n  Line 125:     open_orders: tuple[OpenOrderSnapshot, ...]\n\n  Line 136:     @model_validator(mode=\"after\")\n\n  Line 162:     @model_validator(mode=\"after\")\n\n  Line 189:     model_id: str = Field(min_length=1)\n\n  Line 195:     @model_validator(mode=\"after\")\n\n  Line 250:     @model_validator(mode=\"after\")\n\n  Line 291:     client_order_id: str = Field(min_length=1, max_length=48)\n\n  Line 304:     @model_validator(mode=\"after\")\n\n  Line 315:             raise ValueError(\"order plan expiry must be timezone-aware and after creation\")\n\n  Line 324:     alpaca_order_id: str | None = None\n\n  Line 330:     order_id: str\n\n  Line 331:     client_order_id: str\n\n  Line 363:     @model_validator(mode=\"after\")\n\n  Line 382:         return self.public_projection().model_dump_json()\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/container.py:\n  Line 64:             if settings.model_authority == \"PAPER_LIVE\":\n\n  Line 65:                 challenger.authorize_paper_execution(settings.model_decision_gate)\n\n  Line 83:             raise RuntimeError(\"a challenger model is not configured\")\n\n  Line 84:         live_trader = None\n\n  Line 87:             if not self.settings.bedrock_model_id:\n\n  Line 88:                 raise RuntimeError(\"Bedrock model is not configured\")\n\n  Line 94:                     model_id=self.settings.bedrock_model_id,\n\n  Line 103:             live_trader = LiveTradingCycle(\n\n  Line 110:                         decision_gate=self.settings.model_decision_gate,\n\n  Line 112:                     if self.settings.model_execution_enabled\n\n  Line 120:             live_trader=live_trader,\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/challenger.py:\n  Line 12: from pydantic import BaseModel, ConfigDict, model_validator\n\n  Line 25:     model_config = ConfigDict(extra=\"ignore\")\n\n  Line 32:     model_config = ConfigDict(extra=\"ignore\")\n\n  Line 38:     model_config = ConfigDict(extra=\"ignore\")\n\n\n(Results truncated. Consider using a more specific path or pattern.)",
+            "metadata": {
+              "matches": 100,
+              "truncated": true
+            },
+            "title": "trade|signal|backtest|model|threshold|order",
+            "time": {
+              "start": 1788208087184,
+              "end": 1788208087233
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0a6f604058d2a21a016a95e3d6fa6887d2ad3e831ca5dd8561"
+            }
+          },
+          "id": "prt_05982008e001DXuuqflEERm6ur",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981f5950017IfMg0rms8a8bM"
+        },
+        {
+          "type": "tool",
+          "tool": "bash",
+          "callID": "call_LniiAsb3JTZcxYDQDHcWiMiz",
+          "state": {
+            "status": "completed",
+            "input": {
+              "command": "git status --short && git log --oneline -10",
+              "workdir": "/Users/itsmeyaw/projects/alpaca-hackathon"
+            },
+            "output": " M CONTEXT.md\n M README.md\n M dashboard/app/globals.css\n M dashboard/components/dashboard.tsx\n M dashboard/lib/api.ts\n M dashboard/package-lock.json\n M dashboard/package.json\n M dashboard/tsconfig.json\n M docs/adr/0005-keep-trained-models-in-shadow-mode.md\n M docs/training/local-benchmark.md\n M infra/README.md\n M infra/environments/prod/.terraform.lock.hcl\n M infra/environments/prod/delivery.tf\n M infra/environments/prod/ecs.tf\n M infra/environments/prod/iam.tf\n M infra/environments/prod/outputs.tf\n M infra/environments/prod/variables.tf\n M pyproject.toml\n M scripts/train-challengers\n M src/catalyst_router/adapters/alpaca.py\n M src/catalyst_router/adapters/dynamodb.py\n M src/catalyst_router/adapters/memory.py\n M src/catalyst_router/api.py\n M src/catalyst_router/challenger.py\n M src/catalyst_router/cli.py\n M src/catalyst_router/container.py\n M src/catalyst_router/decision.py\n M src/catalyst_router/domain.py\n M src/catalyst_router/execution.py\n M src/catalyst_router/ports.py\n M src/catalyst_router/settings.py\n M src/catalyst_router/training.py\n M src/catalyst_router/worker.py\n M tests/integration/test_api.py\n M tests/integration/test_dynamodb_store.py\n M tests/unit/test_alpaca.py\n M tests/unit/test_challenger.py\n M tests/unit/test_decision.py\n M tests/unit/test_execution.py\n M tests/unit/test_settings.py\n M tests/unit/test_store.py\n M tests/unit/test_training.py\n M tests/unit/test_worker.py\n M uv.lock\n?? catalyst-router-dashboard.png\n?? dashboard/.env.development\n?? dashboard/components.json\n?? dashboard/components/ui/\n?? dashboard/lib/utils.ts\n?? dashboard/postcss.config.mjs\n?? deployed-flight-recorder.png\n?? docs/adr/0013-authorize-the-model-for-paper-execution.md\n?? docs/adr/0014-shadow-five-minute-event-aware-challenger.md\n?? docs/training/five-minute-pipeline.md\n?? infra/deployments/\n?? scripts/deploy-dashboard\n?? src/catalyst_router/adapters/bedrock.py\n?? src/catalyst_router/adapters/news.py\n?? src/catalyst_router/datasets.py\n?? src/catalyst_router/events.py\n?? tests/unit/test_datasets.py\n?? tests/unit/test_events.py\n?? tests/unit/test_news.py\nec0dcd3 add: autonomous paper execution\n9060ecf add: local challenger training\n67858ec add: base code\n724e27e add: safe catalyst router foundation\n21a0d28 add: research docs\n",
+            "metadata": {
+              "output": " M CONTEXT.md\n M README.md\n M dashboard/app/globals.css\n M dashboard/components/dashboard.tsx\n M dashboard/lib/api.ts\n M dashboard/package-lock.json\n M dashboard/package.json\n M dashboard/tsconfig.json\n M docs/adr/0005-keep-trained-models-in-shadow-mode.md\n M docs/training/local-benchmark.md\n M infra/README.md\n M infra/environments/prod/.terraform.lock.hcl\n M infra/environments/prod/delivery.tf\n M infra/environments/prod/ecs.tf\n M infra/environments/prod/iam.tf\n M infra/environments/prod/outputs.tf\n M infra/environments/prod/variables.tf\n M pyproject.toml\n M scripts/train-challengers\n M src/catalyst_router/adapters/alpaca.py\n M src/catalyst_router/adapters/dynamodb.py\n M src/catalyst_router/adapters/memory.py\n M src/catalyst_router/api.py\n M src/catalyst_router/challenger.py\n M src/catalyst_router/cli.py\n M src/catalyst_router/container.py\n M src/catalyst_router/decision.py\n M src/catalyst_router/domain.py\n M src/catalyst_router/execution.py\n M src/catalyst_router/ports.py\n M src/catalyst_router/settings.py\n M src/catalyst_router/training.py\n M src/catalyst_router/worker.py\n M tests/integration/test_api.py\n M tests/integration/test_dynamodb_store.py\n M tests/unit/test_alpaca.py\n M tests/unit/test_challenger.py\n M tests/unit/test_decision.py\n M tests/unit/test_execution.py\n M tests/unit/test_settings.py\n M tests/unit/test_store.py\n M tests/unit/test_training.py\n M tests/unit/test_worker.py\n M uv.lock\n?? catalyst-router-dashboard.png\n?? dashboard/.env.development\n?? dashboard/components.json\n?? dashboard/components/ui/\n?? dashboard/lib/utils.ts\n?? dashboard/postcss.config.mjs\n?? deployed-flight-recorder.png\n?? docs/adr/0013-authorize-the-model-for-paper-execution.md\n?? docs/adr/0014-shadow-five-minute-event-aware-challenger.md\n?? docs/training/five-minute-pipeline.md\n?? infra/deployments/\n?? scripts/deploy-dashboard\n?? src/catalyst_router/adapters/bedrock.py\n?? src/catalyst_router/adapters/news.py\n?? src/catalyst_router/datasets.py\n?? src/catalyst_router/events.py\n?? tests/unit/test_datasets.py\n?? tests/unit/test_events.py\n?? tests/unit/test_news.py\nec0dcd3 add: autonomous paper execution\n9060ecf add: local challenger training\n67858ec add: base code\n724e27e add: safe catalyst router foundation\n21a0d28 add: research docs\n",
+              "exit": 0,
+              "truncated": false
+            },
+            "title": "git status --short && git log --oneline -10",
+            "time": {
+              "start": 1788208087289,
+              "end": 1788208087292
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0a6f604058d2a21a016a95e3d6fa7087d2965b2c5e850f18d3"
+            }
+          },
+          "id": "prt_059820093001oteSIfL2TsUnzG",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981f5950017IfMg0rms8a8bM"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "b1853ebb97690a9e34619e5801c38629d7770299",
+          "type": "step-finish",
+          "tokens": {
+            "total": 13979,
+            "input": 3,
+            "output": 223,
+            "reasoning": 0,
+            "cache": {
+              "write": 431,
+              "read": 13322
+            }
+          },
+          "cost": 0.0119558,
+          "id": "prt_05982013d001Y40fmPYT7KLF9h",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05981f5950017IfMg0rms8a8bM"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_05981de33001YVvE46igr05u8J",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0,
+        "tokens": {
+          "input": 0,
+          "output": 0,
+          "reasoning": 0,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        },
+        "modelID": "gpt-5.6-sol",
+        "providerID": "openai",
+        "time": {
+          "created": 1788208087420,
+          "completed": 1788208094314
+        },
+        "error": {
+          "name": "MessageAbortedError",
+          "data": {
+            "message": "Aborted"
+          }
+        },
+        "id": "msg_05982017c001FNTDAa7qpyNaIE",
+        "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb"
+      },
+      "parts": [
+        {
+          "snapshot": "b1853ebb97690a9e34619e5801c38629d7770299",
+          "type": "step-start",
+          "id": "prt_059820801001CeDZl7iagWyUap",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05982017c001FNTDAa7qpyNaIE"
+        },
+        {
+          "type": "reasoning",
+          "text": "",
+          "time": {
+            "start": 1788208089091,
+            "end": 1788208094312
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_0aa7969861824959016a95e3d908cc87d2988a0c62877207c2",
+              "reasoningEncryptedContent": "REDACTED"
+            }
+          },
+          "id": "prt_059820803001K6ldLfNnj16B2e",
+          "sessionID": "ses_fa67e2208ffecFZKqUL7XkbJjb",
+          "messageID": "msg_05982017c001FNTDAa7qpyNaIE"
+        }
+      ]
+    }
+  ]
+}
