@@ -3,7 +3,7 @@
   "checkpoint_id": "01M1EJGP1G13XEFGBV2DD9Y416",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 11,
+  "checkpoints_count": 12,
   "files_touched": [
     "docs/adr/0005-keep-trained-models-in-shadow-mode.md",
     "docs/training/local-benchmark.md",
@@ -41,13 +41,20 @@
       "compact_transcript": "/3/transcript.jsonl",
       "content_hash": "/3/content_hash.txt",
       "prompt": "/3/prompt.txt"
+    },
+    {
+      "metadata": "/4/metadata.json",
+      "transcript": "/4/full.jsonl",
+      "compact_transcript": "/4/transcript.jsonl",
+      "content_hash": "/4/content_hash.txt",
+      "prompt": "/4/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 396,
-    "cache_creation_tokens": 844429,
-    "cache_read_tokens": 22163789,
-    "output_tokens": 110663,
-    "api_call_count": 199
+    "input_tokens": 514,
+    "cache_creation_tokens": 1120905,
+    "cache_read_tokens": 32153712,
+    "output_tokens": 130791,
+    "api_call_count": 258
   }
 }
