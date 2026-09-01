@@ -3,7 +3,7 @@
   "checkpoint_id": "01M1EJGP1G13XEFGBV2DD9Y416",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 14,
+  "checkpoints_count": 15,
   "files_touched": [
     "docs/adr/0005-keep-trained-models-in-shadow-mode.md",
     "docs/adr/0014-shadow-five-minute-event-aware-challenger.md",
@@ -59,13 +59,20 @@
       "compact_transcript": "/5/transcript.jsonl",
       "content_hash": "/5/content_hash.txt",
       "prompt": "/5/prompt.txt"
+    },
+    {
+      "metadata": "/6/metadata.json",
+      "transcript": "/6/full.jsonl",
+      "compact_transcript": "/6/transcript.jsonl",
+      "content_hash": "/6/content_hash.txt",
+      "prompt": "/6/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 544,
-    "cache_creation_tokens": 1245329,
-    "cache_read_tokens": 32630428,
-    "output_tokens": 133627,
-    "api_call_count": 269
+    "input_tokens": 577,
+    "cache_creation_tokens": 1403006,
+    "cache_read_tokens": 33147291,
+    "output_tokens": 137146,
+    "api_call_count": 281
   }
 }
