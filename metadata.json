@@ -3,7 +3,7 @@
   "checkpoint_id": "01M1EJJZZ83FP9PPX1XADC2BFX",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 40,
+  "checkpoints_count": 41,
   "files_touched": [
     "catalyst-router-dashboard.png",
     "dashboard/.env.development",
@@ -191,6 +191,13 @@
       "compact_transcript": "/22/transcript.jsonl",
       "content_hash": "/22/content_hash.txt",
       "prompt": "/22/prompt.txt"
+    },
+    {
+      "metadata": "/23/metadata.json",
+      "transcript": "/23/full.jsonl",
+      "compact_transcript": "/23/transcript.jsonl",
+      "content_hash": "/23/content_hash.txt",
+      "prompt": "/23/prompt.txt"
     }
   ],
   "token_usage": {
