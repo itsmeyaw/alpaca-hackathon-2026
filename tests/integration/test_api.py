@@ -12,6 +12,7 @@ from catalyst_router.domain import (
     DecisionRecord,
     MarketClockSnapshot,
     ReconciliationSnapshot,
+    Route,
 )
 from catalyst_router.settings import Settings
 
@@ -85,6 +86,41 @@ def test_public_api_is_read_only_and_sanitized() -> None:
         "model_sha256": None,
     }
     assert hidden_operator.status_code == 404
+
+
+def test_public_decision_pages_filter_and_page_through_records() -> None:
+    store = InMemoryOperationalStore()
+    store.initialize()
+    occurred_at = datetime.now(UTC) - timedelta(minutes=1)
+    for decision_id, symbol, route in (
+        ("old", "SPY", Route.NO_TRADE),
+        ("new", "QQQ", Route.REGIME_TREND),
+    ):
+        store.append_decision(
+            DecisionRecord.create(
+                decision_id=decision_id,
+                decision_type="ROUTE_SELECTED",
+                summary="private detail",
+                symbol=symbol,
+                route=route,
+                public=True,
+                public_summary=f"{symbol} public decision",
+                occurred_at=occurred_at,
+            )
+        )
+        occurred_at += timedelta(seconds=1)
+    app = create_app(Container(settings=settings(), store=store, broker=None))
+
+    with TestClient(app) as client:
+        first_page = client.get("/api/public/decision-pages?limit=1")
+        next_cursor = first_page.json()["next_cursor"]
+        second_page = client.get(f"/api/public/decision-pages?limit=1&cursor={next_cursor}")
+        filtered_page = client.get("/api/public/decision-pages?search=spy&route=NO_TRADE")
+
+    assert first_page.json()["records"][0]["decision_id"] == "new"
+    assert second_page.json()["records"][0]["decision_id"] == "old"
+    assert filtered_page.json()["records"][0]["decision_id"] == "old"
+    assert filtered_page.json()["records"][0]["route"] == Route.NO_TRADE
 
 
 class FakePaperBroker:

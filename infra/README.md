@@ -36,16 +36,20 @@ immutable challenger run ID:
 terraform -chdir=infra/environments/prod apply \
   -var='api_image_tag=<immutable-tag>' \
   -var='challenger_run_id=<run-id>' \
-  -var='challenger_manifest_sha256=<manifest-sha256>'
+  -var='challenger_manifest_sha256=<manifest-sha256>' \
+  -var='bedrock_model_id=<model-or-inference-profile-id>' \
+  -var='bedrock_model_arn=<exact-model-or-inference-profile-arn>'
 ```
 
 The App Runner service injects the runtime secret as `ALPACA_CREDENTIALS`, parses its
 `ALPACA_KEY` and `ALPACA_SECRET` fields, and reconciles against only the Alpaca Paper Trading API
 at `https://paper-api.alpaca.markets/v2`. It loads and verifies the private S3 manifest and model
-at startup. The API exposes only sanitized challenger metadata; the model remains `SHADOW_ONLY`
-and has no order path.
+at startup. The API exposes only sanitized model metadata. Model execution defaults to shadow-only.
+Set `model_paper_execution_enabled=true` only for an artifact matching the ADR-0013 15-minute
+contract; runtime rejects this override for five-minute artifacts. Bedrock access is restricted to
+the exact configured ARN. The task retains HTTPS egress because it must reach AWS and Alpaca APIs.
 
-Build, upload, and invalidate the dashboard with:
+Build, deploy, and invalidate the dashboard with Terraform:
 
 ```bash
 TERRAFORM_BIN=terraform make deploy-dashboard

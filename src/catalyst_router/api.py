@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict
 
 from catalyst_router.challenger import PublicChallengerStatus
 from catalyst_router.container import Container
-from catalyst_router.domain import AgentMode, PublicDecisionRecord
+from catalyst_router.domain import AgentMode, PublicDecisionPage, PublicDecisionRecord, Route
 from catalyst_router.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -81,6 +81,26 @@ def create_app(container: Container | None = None) -> FastAPI:
         limit: Annotated[int, Query(ge=1, le=100)] = 50,
     ) -> list[PublicDecisionRecord]:
         return container.store.list_public_decisions(limit)
+
+    @app.get("/api/public/decision-pages", response_model=PublicDecisionPage)
+    def public_decision_pages(
+        container: ContainerDependency,
+        limit: Annotated[int, Query(ge=1, le=100)] = 25,
+        cursor: str | None = None,
+        search: Annotated[str | None, Query(max_length=100)] = None,
+        route: Route | None = None,
+        decision_type: Annotated[str | None, Query(max_length=100)] = None,
+    ) -> PublicDecisionPage:
+        try:
+            return container.store.list_public_decision_page(
+                limit=limit,
+                cursor=cursor,
+                search=search,
+                route=route,
+                decision_type=decision_type,
+            )
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail="invalid decision page cursor") from error
 
     @app.get("/api/public/challenger", response_model=PublicChallengerStatus)
     def public_challenger(container: ContainerDependency) -> PublicChallengerStatus:

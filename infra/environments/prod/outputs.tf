@@ -24,5 +24,11 @@ output "trader_environment" {
     RUNTIME_ROLE         = "worker"
     AUTO_RECONCILE       = "false"
     PUBLIC_DELAY_SECONDS = "900"
+    WORKER_POLL_SECONDS  = "15"
+    MODEL_EXECUTION      = var.model_paper_execution_enabled ? "PAPER_LIVE" : "SHADOW_ONLY"
+    MODEL_DECISION_GATE  = "0.52"
+    LLM_EVENTS_ENABLED   = "true"
+    BEDROCK_MODEL_ID     = var.bedrock_model_id
+    BEDROCK_PROMPT       = "event-v1"
   }
 }

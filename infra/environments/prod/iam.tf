@@ -82,6 +82,7 @@ data "aws_iam_policy_document" "trader" {
     actions = [
       "dynamodb:DescribeTable",
       "dynamodb:ConditionCheckItem",
+      "dynamodb:DeleteItem",
       "dynamodb:GetItem",
       "dynamodb:PutItem",
       "dynamodb:Query",
@@ -96,10 +97,33 @@ data "aws_iam_policy_document" "trader" {
     actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.archive.arn}/models/${var.challenger_run_id}/*"]
   }
+
+  statement {
+    sid     = "ExtractStructuredEvents"
+    effect  = "Allow"
+    actions = ["bedrock:InvokeModel"]
+    resources = concat([var.bedrock_model_arn], [
+      for region in ["us-east-1", "us-east-2", "us-west-2"] :
+      "arn:aws:bedrock:${region}::foundation-model/${replace(var.bedrock_model_id, "/^(us|global)\\./", "")}"
+    ])
+  }
 }
 
 resource "aws_iam_role_policy" "trader" {
   name   = "${local.name_prefix}-trader"
   role   = aws_iam_role.trader.id
   policy = data.aws_iam_policy_document.trader.json
+
+  lifecycle {
+    precondition {
+      condition = (
+        can(regex(
+          "^arn:aws:bedrock:${var.aws_region}:${var.aws_account_id}:(inference-profile|application-inference-profile)/[^/]+$",
+          var.bedrock_model_arn,
+        )) &&
+        element(reverse(split("/", var.bedrock_model_arn)), 0) == var.bedrock_model_id
+      )
+      error_message = "bedrock_model_arn must be an account inference-profile ARN for bedrock_model_id."
+    }
+  }
 }
