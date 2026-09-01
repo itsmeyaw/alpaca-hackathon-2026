@@ -1,0 +1,46 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1EJGP1G13XEFGBV2DD9Y416",
+  "session_id": "ses_fa97bb67affems6XXBLapKPajK",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-01T13:28:47.324136Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/adr/0005-keep-trained-models-in-shadow-mode.md",
+    "docs/training/local-benchmark.md",
+    "pyproject.toml",
+    "scripts/train-challengers",
+    "src/catalyst_router/training.py",
+    "tests/unit/test_training.py",
+    "uv.lock"
+  ],
+  "agent": "OpenCode",
+  "model": "gpt-5.6-sol",
+  "turn_id": "26782d320ccf",
+  "checkpoint_transcript_start": 12,
+  "transcript_lines_at_start": 12,
+  "compact_transcript_start": 12,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-01T13:28:47.301943Z",
+    "agent_lines": 348,
+    "agent_removed": 91,
+    "human_added": 250,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 598,
+    "total_lines_changed": 689,
+    "agent_percentage": 63.7155297532656,
+    "metric_version": 2
+  }
+}
