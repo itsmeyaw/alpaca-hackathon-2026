@@ -846,3 +846,49 @@ def test_agent_state_migrates_a_legacy_single_active_order() -> None:
 
     assert empty.active_order_ids == ()
     assert populated.active_order_ids == ("cr-legacy",)
+
+
+def test_model_strategy_accepts_a_quote_timestamped_ahead_by_clock_skew() -> None:
+    strategy = ModelStrategy(FakePredictor(0.90), decision_gate=Decimal("0.55"))
+    now = datetime.now(UTC)
+
+    intent = strategy.create_intent(
+        vector(), quote(timestamp=now + timedelta(milliseconds=10)), now=now
+    )
+
+    assert intent is not None
+    assert intent.quote_age_seconds == Decimal("0.0")
+
+
+def test_model_strategy_rejects_a_quote_beyond_the_clock_skew_tolerance() -> None:
+    strategy = ModelStrategy(FakePredictor(0.90), decision_gate=Decimal("0.55"))
+    now = datetime.now(UTC)
+
+    assert (
+        strategy.create_intent(vector(), quote(timestamp=now + timedelta(seconds=30)), now=now)
+        is None
+    )
+
+
+def test_model_strategy_still_rejects_a_stale_quote() -> None:
+    strategy = ModelStrategy(FakePredictor(0.90), decision_gate=Decimal("0.55"))
+    now = datetime.now(UTC)
+
+    assert (
+        strategy.create_intent(vector(), quote(timestamp=now - timedelta(seconds=6)), now=now)
+        is None
+    )
+
+
+def test_model_strategy_still_rejects_a_wide_spread() -> None:
+    strategy = ModelStrategy(FakePredictor(0.90), decision_gate=Decimal("0.55"))
+    now = datetime.now(UTC)
+
+    assert (
+        strategy.create_intent(
+            vector(),
+            quote(bid_price=Decimal("99.00"), ask_price=Decimal("100.00"), timestamp=now),
+            now=now,
+        )
+        is None
+    )

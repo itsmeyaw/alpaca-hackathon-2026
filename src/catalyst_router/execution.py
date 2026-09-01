@@ -154,6 +154,9 @@ class ModelStrategy:
     """Turns sufficiently directional model predictions into paper trade intents."""
 
     MAX_QUOTE_AGE = timedelta(seconds=5)
+    # Alpaca timestamps the freshest quotes microseconds ahead of our clock, so a
+    # strict lower bound of zero discards the newest quote on the most liquid names.
+    MAX_CLOCK_SKEW = timedelta(seconds=2)
     MAX_FEATURE_AGE = timedelta(minutes=7)
     MAX_SPREAD_BPS = Decimal("15")
 
@@ -200,7 +203,7 @@ class ModelStrategy:
         quote_age = observed_now - quote.timestamp
         if not timedelta(0) <= feature_age <= self.MAX_FEATURE_AGE:
             return None
-        if not timedelta(0) <= quote_age <= self.MAX_QUOTE_AGE:
+        if not -self.MAX_CLOCK_SKEW <= quote_age <= self.MAX_QUOTE_AGE:
             return None
         if quote.spread_bps > self.MAX_SPREAD_BPS:
             return None
@@ -236,7 +239,7 @@ class ModelStrategy:
             stop_price=stop_price,
             expected_horizon_minutes=240,
             exposure_group=exposure_group,
-            quote_age_seconds=Decimal(str(quote_age.total_seconds())),
+            quote_age_seconds=Decimal(str(max(0.0, quote_age.total_seconds()))),
             data_quality_passed=True,
         )
 
