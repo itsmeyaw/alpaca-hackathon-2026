@@ -1,0 +1,57 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1EJJ8E2H4Z6CKX1ZZYHF6X8",
+  "session_id": "ses_fa39568afffeh0capDIRybfyqm",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-01T13:29:32.937125Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "README.md",
+    "infra/environments/prod/delivery.tf",
+    "infra/environments/prod/ecs.tf",
+    "infra/environments/prod/variables.tf",
+    "src/catalyst_router/adapters/alpaca.py",
+    "src/catalyst_router/adapters/dynamodb.py",
+    "src/catalyst_router/adapters/memory.py",
+    "src/catalyst_router/challenger.py",
+    "src/catalyst_router/cli.py",
+    "src/catalyst_router/container.py",
+    "src/catalyst_router/execution.py",
+    "src/catalyst_router/ports.py",
+    "src/catalyst_router/settings.py",
+    "tests/integration/test_dynamodb_store.py",
+    "tests/unit/test_alpaca.py",
+    "tests/unit/test_challenger.py",
+    "tests/unit/test_execution.py",
+    "tests/unit/test_settings.py",
+    "tests/unit/test_store.py"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-luna",
+  "turn_id": "d6dae8e50afe",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 18,
+    "cache_creation_tokens": 62148,
+    "cache_read_tokens": 290900,
+    "output_tokens": 1962,
+    "api_call_count": 9
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-01T13:29:32.913359Z",
+    "agent_lines": 1076,
+    "agent_removed": 58,
+    "human_added": 43,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1119,
+    "total_lines_changed": 1183,
+    "agent_percentage": 95.85798816568047,
+    "metric_version": 2
+  }
+}
