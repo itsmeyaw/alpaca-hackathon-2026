@@ -1,12 +1,13 @@
 {
   "cli_version": "0.10.3",
   "checkpoint_id": "01M1EJJ8E2H4Z6CKX1ZZYHF6X8",
+  "session_id": "ses_fa66aa107ffeZKGkgY0FTrrCYO",
   "strategy": "manual-commit",
+  "created_at": "2026-09-01T13:29:34.945372Z",
   "branch": "main",
-  "checkpoints_count": 8,
+  "checkpoints_count": 3,
   "files_touched": [
     "README.md",
-    "docs/adr/0013-authorize-the-model-for-paper-execution.md",
     "infra/environments/prod/delivery.tf",
     "infra/environments/prod/ecs.tf",
     "infra/environments/prod/variables.tf",
@@ -26,34 +27,32 @@
     "tests/unit/test_settings.py",
     "tests/unit/test_store.py"
   ],
-  "sessions": [
-    {
-      "metadata": "/0/metadata.json",
-      "transcript": "/0/full.jsonl",
-      "compact_transcript": "/0/transcript.jsonl",
-      "content_hash": "/0/content_hash.txt",
-      "prompt": "/0/prompt.txt"
-    },
-    {
-      "metadata": "/1/metadata.json",
-      "transcript": "/1/full.jsonl",
-      "compact_transcript": "/1/transcript.jsonl",
-      "content_hash": "/1/content_hash.txt",
-      "prompt": "/1/prompt.txt"
-    },
-    {
-      "metadata": "/2/metadata.json",
-      "transcript": "/2/full.jsonl",
-      "compact_transcript": "/2/transcript.jsonl",
-      "content_hash": "/2/content_hash.txt",
-      "prompt": "/2/prompt.txt"
-    }
-  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-luna",
+  "turn_id": "2f9bb5ed7942",
+  "checkpoint_transcript_start": 19,
+  "transcript_lines_at_start": 19,
+  "compact_transcript_start": 19,
   "token_usage": {
-    "input_tokens": 344,
-    "cache_creation_tokens": 727307,
-    "cache_read_tokens": 21581963,
-    "output_tokens": 105520,
-    "api_call_count": 173
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-01T13:29:34.917009Z",
+    "agent_lines": 1076,
+    "agent_removed": 58,
+    "human_added": 43,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1119,
+    "total_lines_changed": 1183,
+    "agent_percentage": 95.85798816568047,
+    "metric_version": 2
   }
 }
