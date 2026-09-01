@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1EJGP1G13XEFGBV2DD9Y416",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/adr/0005-keep-trained-models-in-shadow-mode.md",
+    "docs/training/local-benchmark.md",
+    "pyproject.toml",
+    "scripts/train-challengers",
+    "src/catalyst_router/training.py",
+    "tests/unit/test_training.py",
+    "uv.lock"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 18,
+    "cache_creation_tokens": 62148,
+    "cache_read_tokens": 290900,
+    "output_tokens": 1962,
+    "api_call_count": 9
+  }
+}
