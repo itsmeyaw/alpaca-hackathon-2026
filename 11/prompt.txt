@@ -1,0 +1,1 @@
+Train the model using large data, improve model performance, make powerful model. Integrate LLM for making decision. Make the trade frequency to be 5 minutes instead of 15 minutes.

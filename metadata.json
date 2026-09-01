@@ -3,7 +3,7 @@
   "checkpoint_id": "01M1EJJ8E2H4Z6CKX1ZZYHF6X8",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 22,
+  "checkpoints_count": 25,
   "files_touched": [
     "README.md",
     "docs/adr/0013-authorize-the-model-for-paper-execution.md",
@@ -103,6 +103,13 @@
       "compact_transcript": "/10/transcript.jsonl",
       "content_hash": "/10/content_hash.txt",
       "prompt": "/10/prompt.txt"
+    },
+    {
+      "metadata": "/11/metadata.json",
+      "transcript": "/11/full.jsonl",
+      "compact_transcript": "/11/transcript.jsonl",
+      "content_hash": "/11/content_hash.txt",
+      "prompt": "/11/prompt.txt"
     }
   ],
   "token_usage": {
