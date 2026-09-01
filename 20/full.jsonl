@@ -1,0 +1,622 @@
+{
+  "info": {
+    "id": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+    "slug": "happy-star",
+    "projectID": "cdb1b2ca155067985326408a159253587dd4dc5a",
+    "directory": "/Users/itsmeyaw/projects/alpaca-hackathon",
+    "path": "",
+    "title": "catalyst_router overview",
+    "agent": "build",
+    "model": {
+      "id": "openai.gpt-5.6-terra",
+      "providerID": "amazon-bedrock",
+      "variant": "high"
+    },
+    "version": "1.18.23",
+    "summary": {
+      "additions": 0,
+      "deletions": 0,
+      "files": 0
+    },
+    "cost": 0.09269875999999999,
+    "tokens": {
+      "input": 6,
+      "output": 532,
+      "reasoning": 41,
+      "cache": {
+        "read": 43843,
+        "write": 27446
+      }
+    },
+    "time": {
+      "created": 1787939313720,
+      "updated": 1787939319371
+    }
+  },
+  "messages": [
+    {
+      "info": {
+        "role": "user",
+        "time": {
+          "created": 1787939313741
+        },
+        "agent": "build",
+        "model": {
+          "providerID": "amazon-bedrock",
+          "modelID": "openai.gpt-5.6-terra",
+          "variant": "high"
+        },
+        "summary": {
+          "diffs": []
+        },
+        "id": "msg_0497cd84d001Iau95N5iM7WII5",
+        "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV"
+      },
+      "parts": [
+        {
+          "type": "text",
+          "text": "<system-reminder>Note: The user opened the file \"/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/api.py\". This may or may not be relevant to the current task.</system-reminder>\n",
+          "synthetic": true,
+          "metadata": {
+            "kind": "editor_context",
+            "source": "websocket",
+            "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/api.py",
+            "ranges": [
+              {
+                "text": "",
+                "selection": {
+                  "start": {
+                    "line": 12,
+                    "character": 5
+                  },
+                  "end": {
+                    "line": 12,
+                    "character": 5
+                  }
+                }
+              }
+            ]
+          },
+          "id": "prt_0497cd84f001HAOfA4smTa2QpW",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cd84d001Iau95N5iM7WII5"
+        },
+        {
+          "type": "text",
+          "text": "What is  catalyst_router library?",
+          "id": "prt_0497cd84f002E71APVJ5S99YXI",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cd84d001Iau95N5iM7WII5"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_0497cd84d001Iau95N5iM7WII5",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.0568205,
+        "tokens": {
+          "total": 19815,
+          "input": 2,
+          "output": 182,
+          "reasoning": 41,
+          "cache": {
+            "write": 19590,
+            "read": 0
+          }
+        },
+        "modelID": "openai.gpt-5.6-terra",
+        "providerID": "amazon-bedrock",
+        "time": {
+          "created": 1787939314126,
+          "completed": 1787939317855
+        },
+        "finish": "tool-calls",
+        "id": "msg_0497cd9ce001Ps5uf9ZPNHemLO",
+        "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV"
+      },
+      "parts": [
+        {
+          "snapshot": "29b71631b87abc02efc77df40f54d7ec1ede1519",
+          "type": "step-start",
+          "id": "prt_0497ce3e80015WegmvgzqmPMG9",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cd9ce001Ps5uf9ZPNHemLO"
+        },
+        {
+          "type": "reasoning",
+          "text": "",
+          "time": {
+            "start": 1787939316714,
+            "end": 1787939316716
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_b2be7f2b2814521b837e03362fe1cfc7",
+              "reasoningEncryptedContent": "REDACTED/0dlrKc+5ls0wRpnX+0wjWt1IV/REDACTED////8AAAABAAAAAAAAAAAAAAABAAAA3cHNxob1BiCMJaBa5UoAYj2thmxSZ3tIsWeEx6lt/R8H/REDACTED/REDACTED/REDACTED"
+            }
+          },
+          "id": "prt_0497ce3ea0010i6oV2lxQ16w6m",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cd9ce001Ps5uf9ZPNHemLO"
+        },
+        {
+          "type": "text",
+          "text": "I’ll trace the package’s public API and the repository’s domain documentation so the description reflects this project rather than a generic router.",
+          "time": {
+            "start": 1787939316717,
+            "end": 1787939316899
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "msg_97591de4092b5a76a9cdfa56d68b1edc",
+              "phase": "commentary"
+            }
+          },
+          "id": "prt_0497ce3ed001criZro7nakhDnC",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cd9ce001Ps5uf9ZPNHemLO"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_6af011ff6c3f53a89e44a7ac5ffa9c60",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md</path>\n<type>file</type>\n<content>\n1: # Catalyst Router Domain\n2: \n3: ## Purpose\n4: \n5: Catalyst Router is an autonomous paper-trading agent competing for terminal P&L over a one-week Alpaca hackathon. It uses an LLM to classify new information and deterministic code to select trades, size risk, submit orders, and enforce portfolio limits.\n6: \n7: ## Core Concepts\n8: \n9: ### Market Observation\n10: \n11: A timestamped price, quote, bar, news item, market status, or account update. Every downstream decision records the observations and data feed that supported it.\n12: \n13: ### Opportunity\n14: \n15: A symbol and time horizon selected for evaluation because of a new Event, unusual market-relative movement, or regime evidence. An Opportunity can expire without producing a Trade Intent.\n16: \n17: ### Event\n18: \n19: A structured interpretation of news that includes type, direction, magnitude, novelty, surprise, expected horizon, confidence, affected symbols, and invalidating evidence. An Event is evidence, not permission to trade.\n20: \n21: ### Expert Assessment\n22: \n23: A deterministic or structured assessment produced by the catalyst, momentum, reversion, regime, or risk expert.\n24: \n25: ### Incumbent Strategy\n26: \n27: The deterministic scoring and routing policy authorized to create live Trade Intents. Its parameters are versioned so every decision can be reproduced.\n28: \n29: ### Challenger Model\n30: \n31: A trained model evaluated against the Incumbent Strategy without authority to place orders. A challenger requires chronological walk-forward evidence after costs before it can be promoted outside the judged window.\n32: \n33: ### Adaptive Policy\n34: \n35: A bounded policy that may change route-allocation weights and entry-confidence thresholds within prevalidated ranges. It cannot change risk limits, execution safeguards, data-quality requirements, event schemas, or the available strategies.\n36: \n37: ### Policy Profile\n38: \n39: One of the prevalidated `CONSERVATIVE`, `BASE`, or `AGGRESSIVE` combinations of route allocation and entry threshold. Profiles use fixed, versioned parameter values established before judging; the Adaptive Policy selects profiles but cannot synthesize parameters.\n40: \n41: ### Resolved Thesis\n42: \n43: A Position Thesis whose exit and after-cost outcome are known. Its clipped return in units of initial risk is the reward supplied to the Adaptive Policy.\n44: \n45: ### Route\n46: \n47: The selected interpretation of an opportunity:\n48: \n49: - `CATALYST_CONTINUATION`: new information and market confirmation imply continuation.\n50: - `LIQUIDITY_REVERSION`: an unexplained, market-relative displacement implies reversion.\n51: - `REGIME_TREND`: broad market conditions justify a small index position.\n52: - `NO_TRADE`: evidence, liquidity, data quality, or risk is insufficient.\n53: \n54: ### Trade Intent\n55: \n56: A typed proposal containing the route, thesis, instrument, direction, entry constraints, invalidation, expected horizon, and supporting evidence. It has no authority to place an order until approved by the Risk Governor.\n57: \n58: ### Risk Decision\n59: \n60: The Risk Governor's immutable record of approving, reducing, or vetoing a Trade Intent, including every evaluated invariant and the account snapshot used for sizing.\n61: \n62: ### Order Plan\n63: \n64: The deterministic translation of an approved Trade Intent into idempotent Alpaca orders and exit instructions. Alpaca trade updates, followed by reconciliation, are authoritative for order state.\n65: \n66: ### Risk Governor\n67: \n68: The deterministic authority that sizes positions and either approves, reduces, or vetoes a Trade Intent. The LLM cannot bypass it or choose order quantity.\n69: \n70: ### Position Thesis\n71: \n72: The accepted Trade Intent and invalidation conditions attached to an open position. Price stops, elapsed horizon, contradictory evidence, and portfolio limits can invalidate it.\n73: \n74: ### Exposure Group\n75: \n76: Positions expected to lose together because they share a sector, underlying driver, or market direction. The Risk Governor budgets an Exposure Group as one correlated risk rather than counting its positions as independent trades.\n77: \n78: ### Decision Record\n79: \n80: An immutable, timestamped account of observations, expert assessments, route selection, risk checks, order lifecycle, and outcome, including decisions that result in `NO_TRADE`.\n81: \n82: ### Agent Mode\n83: \n84: The operational authority state: `RUNNING`, `PAUSED`, `RISK_HALTED`, or `KILLED`. Only `RUNNING` permits new exposure. Restarting the process does not clear a halt or kill state.\n85: \n86: ## Decision Lifecycle\n87: \n88: ```text\n89: Market Observation\n90:   -> Opportunity\n91:   -> Event and Expert Assessments\n92:   -> Route\n93:   -> Trade Intent\n94:   -> Risk Decision\n95:   -> Order Plan\n96:   -> Position Thesis\n97:   -> Resolved Thesis\n98:   -> Adaptive Policy update\n99: ```\n100: \n101: Any stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an error.\n102: \n103: ## Module Boundaries\n104: \n105: - **Market Intelligence** owns feed normalization, point-in-time features, Opportunities, and Events.\n106: - **Decision Engine** owns Expert Assessments, route selection, Trade Intents, and Challenger Model predictions.\n107: - **Risk and Execution** owns Risk Decisions, Agent Mode, sizing, Order Plans, reconciliation, and exits.\n108: - **Portfolio Ledger** owns positions, realized and unrealized P&L, exposure groups, and performance attribution.\n109: - **Adaptation** owns Policy Profiles, priors, rewards, and versioned Adaptive Policy changes.\n110: - **Reporting** projects sanitized Decision Records into the public dashboard without controlling trading.\n111: \n112: ## Trading Mandate\n113: \n114: - Strong catalyst-continuation opportunities may use defined-risk options.\n115: - Liquidity-reversion opportunities use equities.\n116: - Naked short options are prohibited.\n117: - The system uses Alpaca's free market-data plan initially: IEX equities and indicative options pricing.\n118: - Incomplete, stale, or contradictory data must produce `NO_TRADE` rather than an inferred price.\n119: - Execution is autonomous after deterministic approval, with an operator kill switch.\n120: - Trained return models begin as Challenger Models and cannot affect live orders without prior promotion.\n121: - Every Adaptive Policy change is versioned, attributable to evidence, and reversible.\n122: - The Adaptive Policy learns only from Resolved Theses and starts the competition with the `BASE` Policy Profile.\n123: \n124: ## Market Scope\n125: \n126: - Build a daily universe of approximately 20 liquid option-enabled underlyings from active stocks and movers.\n127: - Reserve the remaining Basic-plan equity stream capacity for SPY, QQQ, and sector or regime references.\n128: - Dynamically subscribe only to option contracts under active evaluation and remain within the Basic-plan stream limit.\n129: - Use Alpaca News as the initial catalyst source.\n130: - Evaluate on news arrival and corrected one-minute bars; do not pursue sub-minute latency strategies on IEX and indicative option data.\n131: \n132: ## Agent Authority\n133: \n134: - The Bedrock-hosted LLM emits typed Events and explanations only.\n135: - `alpaca-py` is the runtime integration for streams, account reconciliation, market data, and orders.\n136: - Alpaca MCP exposes read-oriented research and demonstration tools to the LLM; it does not grant the LLM an ungoverned order path.\n137: - The Alpaca CLI is an operator and judging demonstration surface, including dry runs and account inspection.\n138: - Only Risk and Execution can create an Order Plan or submit an order.\n139: \n140: ## Current Risk Posture\n141: \n142: The accepted posture is competition-aggressive but survival-aware:\n143: \n144: - Risk at most 1% of equity on one trade.\n145: - Hold at most six positions concurrently.\n146: - Limit total open stop-risk to 4% of equity.\n147: - Limit overnight stop-risk to 2% of equity.\n148: - Limit one Exposure Group to 2% of equity.\n149: - At a 2% daily drawdown, reduce new-trade risk to 0.5% of equity.\n150: - Stop opening risk and begin flattening at a 4% daily loss.\n151: - Kill autonomous trading at a 12% competition drawdown.\n152: \n153: ## Holding Policy\n154: \n155: - A catalyst option position may remain open overnight only when the catalyst has already occurred, confidence is high, and the expected horizon extends beyond the close.\n156: - Liquidity-reversion equity positions must close during the entry session.\n157: - Do not hold an option through expiration.\n158: - Flatten all positions before the final judging cutoff.\n159: \n160: ## Option Contract Policy\n161: \n162: - Live option trades are long calls or long puts only.\n163: - Target 14 to 30 calendar days to expiration and approximately 0.55 to 0.70 absolute delta.\n164: - Prohibit 0DTE contracts and short option legs.\n165: - Require complete, fresh quotes and strict liquidity checks; otherwise route to `NO_TRADE`.\n166: - Evaluate debit spreads in shadow mode until consolidated option quotes are available and validated.\n167: \n168: ## Dashboard Policy\n169: \n170: - The public dashboard is read-only and shows delayed, sanitized decisions, P&L, drawdown, routes, vetoes, and policy changes.\n171: - Account identifiers, secrets, raw prompts, internal logs, and operator actions are private.\n172: - Pause, resume, flatten, and kill controls require operator authentication.\n173: \n174: ## Persistence Policy\n175: \n176: - DynamoDB is the authoritative operational store for agent mode, opportunities, decisions, orders, positions, risk state, policies, idempotency records, and dashboard projections.\n177: - Use conditional writes and transactions for state transitions that must not be applied twice.\n178: - Archive raw and high-volume market observations to S3 rather than making DynamoDB a tick store.\n179: - Alpaca remains authoritative for external account, order, and position state; startup reconciliation repairs local projections before trading resumes.\n180: \n181: ## Operating Cycle\n182: \n183: - **Premarket:** reconcile Alpaca state, check Agent Mode, select the universe, ingest news, and establish regime context.\n184: - **Regular session:** evaluate Opportunities on events and corrected minute bars, manage orders and Position Theses, and publish delayed reporting projections.\n185: - **Before close:** close liquidity-reversion positions, reevaluate every overnight candidate, and enforce overnight risk limits.\n186: - **After close:** reconcile outcomes, resolve completed theses, update the Adaptive Policy once per new reward, archive observations, and produce the daily report.\n187: - **Final session:** stop new entries early enough to flatten and reconcile every position before the judging cutoff.\n188: \n189: ## Validation Policy\n190: \n191: - Validate with chronological walk-forward splits and purged overlapping labels.\n192: - Include point-in-time universe construction, inference and order latency, bid/ask execution, slippage, and estimated costs.\n193: - Compare against cash, SPY, equal-weight, basic momentum, and an incumbent without LLM event routing.\n194: - Freeze Policy Profile definitions, safety limits, features, and strategy code before judging; only profile selection adapts live.\n\n(End of file - total 194 lines)\n</content>",
+            "metadata": {
+              "preview": "# Catalyst Router Domain\n\n## Purpose\n\nCatalyst Router is an autonomous paper-trading agent competing for terminal P&L over a one-week Alpaca hackathon. It uses an LLM to classify new information and deterministic code to select trades, size risk, submit orders, and enforce portfolio limits.\n\n## Core Concepts\n\n### Market Observation\n\nA timestamped price, quote, bar, news item, market status, or account update. Every downstream decision records the observations and data feed that supported it.\n\n### Opportunity\n\nA symbol and time horizon selected for evaluation because of a new Event, unusual market-relative movement, or regime evidence. An Opportunity can expire without producing a Trade Intent.\n\n### Event\n\nA structured interpretation of news that includes type, direction, magnitude, novelty, surprise, expected horizon, confidence, affected symbols, and invalidating evidence. An Event is evidence, not permission to trade.\n",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md",
+                "text": "# Catalyst Router Domain\n\n## Purpose\n\nCatalyst Router is an autonomous paper-trading agent competing for terminal P&L over a one-week Alpaca hackathon. It uses an LLM to classify new information and deterministic code to select trades, size risk, submit orders, and enforce portfolio limits.\n\n## Core Concepts\n\n### Market Observation\n\nA timestamped price, quote, bar, news item, market status, or account update. Every downstream decision records the observations and data feed that supported it.\n\n### Opportunity\n\nA symbol and time horizon selected for evaluation because of a new Event, unusual market-relative movement, or regime evidence. An Opportunity can expire without producing a Trade Intent.\n\n### Event\n\nA structured interpretation of news that includes type, direction, magnitude, novelty, surprise, expected horizon, confidence, affected symbols, and invalidating evidence. An Event is evidence, not permission to trade.\n\n### Expert Assessment\n\nA deterministic or structured assessment produced by the catalyst, momentum, reversion, regime, or risk expert.\n\n### Incumbent Strategy\n\nThe deterministic scoring and routing policy authorized to create live Trade Intents. Its parameters are versioned so every decision can be reproduced.\n\n### Challenger Model\n\nA trained model evaluated against the Incumbent Strategy without authority to place orders. A challenger requires chronological walk-forward evidence after costs before it can be promoted outside the judged window.\n\n### Adaptive Policy\n\nA bounded policy that may change route-allocation weights and entry-confidence thresholds within prevalidated ranges. It cannot change risk limits, execution safeguards, data-quality requirements, event schemas, or the available strategies.\n\n### Policy Profile\n\nOne of the prevalidated `CONSERVATIVE`, `BASE`, or `AGGRESSIVE` combinations of route allocation and entry threshold. Profiles use fixed, versioned parameter values established before judging; the Adaptive Policy selects profiles but cannot synthesize parameters.\n\n### Resolved Thesis\n\nA Position Thesis whose exit and after-cost outcome are known. Its clipped return in units of initial risk is the reward supplied to the Adaptive Policy.\n\n### Route\n\nThe selected interpretation of an opportunity:\n\n- `CATALYST_CONTINUATION`: new information and market confirmation imply continuation.\n- `LIQUIDITY_REVERSION`: an unexplained, market-relative displacement implies reversion.\n- `REGIME_TREND`: broad market conditions justify a small index position.\n- `NO_TRADE`: evidence, liquidity, data quality, or risk is insufficient.\n\n### Trade Intent\n\nA typed proposal containing the route, thesis, instrument, direction, entry constraints, invalidation, expected horizon, and supporting evidence. It has no authority to place an order until approved by the Risk Governor.\n\n### Risk Decision\n\nThe Risk Governor's immutable record of approving, reducing, or vetoing a Trade Intent, including every evaluated invariant and the account snapshot used for sizing.\n\n### Order Plan\n\nThe deterministic translation of an approved Trade Intent into idempotent Alpaca orders and exit instructions. Alpaca trade updates, followed by reconciliation, are authoritative for order state.\n\n### Risk Governor\n\nThe deterministic authority that sizes positions and either approves, reduces, or vetoes a Trade Intent. The LLM cannot bypass it or choose order quantity.\n\n### Position Thesis\n\nThe accepted Trade Intent and invalidation conditions attached to an open position. Price stops, elapsed horizon, contradictory evidence, and portfolio limits can invalidate it.\n\n### Exposure Group\n\nPositions expected to lose together because they share a sector, underlying driver, or market direction. The Risk Governor budgets an Exposure Group as one correlated risk rather than counting its positions as independent trades.\n\n### Decision Record\n\nAn immutable, timestamped account of observations, expert assessments, route selection, risk checks, order lifecycle, and outcome, including decisions that result in `NO_TRADE`.\n\n### Agent Mode\n\nThe operational authority state: `RUNNING`, `PAUSED`, `RISK_HALTED`, or `KILLED`. Only `RUNNING` permits new exposure. Restarting the process does not clear a halt or kill state.\n\n## Decision Lifecycle\n\n```text\nMarket Observation\n  -> Opportunity\n  -> Event and Expert Assessments\n  -> Route\n  -> Trade Intent\n  -> Risk Decision\n  -> Order Plan\n  -> Position Thesis\n  -> Resolved Thesis\n  -> Adaptive Policy update\n```\n\nAny stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an error.\n\n## Module Boundaries\n\n- **Market Intelligence** owns feed normalization, point-in-time features, Opportunities, and Events.\n- **Decision Engine** owns Expert Assessments, route selection, Trade Intents, and Challenger Model predictions.\n- **Risk and Execution** owns Risk Decisions, Agent Mode, sizing, Order Plans, reconciliation, and exits.\n- **Portfolio Ledger** owns positions, realized and unrealized P&L, exposure groups, and performance attribution.\n- **Adaptation** owns Policy Profiles, priors, rewards, and versioned Adaptive Policy changes.\n- **Reporting** projects sanitized Decision Records into the public dashboard without controlling trading.\n\n## Trading Mandate\n\n- Strong catalyst-continuation opportunities may use defined-risk options.\n- Liquidity-reversion opportunities use equities.\n- Naked short options are prohibited.\n- The system uses Alpaca's free market-data plan initially: IEX equities and indicative options pricing.\n- Incomplete, stale, or contradictory data must produce `NO_TRADE` rather than an inferred price.\n- Execution is autonomous after deterministic approval, with an operator kill switch.\n- Trained return models begin as Challenger Models and cannot affect live orders without prior promotion.\n- Every Adaptive Policy change is versioned, attributable to evidence, and reversible.\n- The Adaptive Policy learns only from Resolved Theses and starts the competition with the `BASE` Policy Profile.\n\n## Market Scope\n\n- Build a daily universe of approximately 20 liquid option-enabled underlyings from active stocks and movers.\n- Reserve the remaining Basic-plan equity stream capacity for SPY, QQQ, and sector or regime references.\n- Dynamically subscribe only to option contracts under active evaluation and remain within the Basic-plan stream limit.\n- Use Alpaca News as the initial catalyst source.\n- Evaluate on news arrival and corrected one-minute bars; do not pursue sub-minute latency strategies on IEX and indicative option data.\n\n## Agent Authority\n\n- The Bedrock-hosted LLM emits typed Events and explanations only.\n- `alpaca-py` is the runtime integration for streams, account reconciliation, market data, and orders.\n- Alpaca MCP exposes read-oriented research and demonstration tools to the LLM; it does not grant the LLM an ungoverned order path.\n- The Alpaca CLI is an operator and judging demonstration surface, including dry runs and account inspection.\n- Only Risk and Execution can create an Order Plan or submit an order.\n\n## Current Risk Posture\n\nThe accepted posture is competition-aggressive but survival-aware:\n\n- Risk at most 1% of equity on one trade.\n- Hold at most six positions concurrently.\n- Limit total open stop-risk to 4% of equity.\n- Limit overnight stop-risk to 2% of equity.\n- Limit one Exposure Group to 2% of equity.\n- At a 2% daily drawdown, reduce new-trade risk to 0.5% of equity.\n- Stop opening risk and begin flattening at a 4% daily loss.\n- Kill autonomous trading at a 12% competition drawdown.\n\n## Holding Policy\n\n- A catalyst option position may remain open overnight only when the catalyst has already occurred, confidence is high, and the expected horizon extends beyond the close.\n- Liquidity-reversion equity positions must close during the entry session.\n- Do not hold an option through expiration.\n- Flatten all positions before the final judging cutoff.\n\n## Option Contract Policy\n\n- Live option trades are long calls or long puts only.\n- Target 14 to 30 calendar days to expiration and approximately 0.55 to 0.70 absolute delta.\n- Prohibit 0DTE contracts and short option legs.\n- Require complete, fresh quotes and strict liquidity checks; otherwise route to `NO_TRADE`.\n- Evaluate debit spreads in shadow mode until consolidated option quotes are available and validated.\n\n## Dashboard Policy\n\n- The public dashboard is read-only and shows delayed, sanitized decisions, P&L, drawdown, routes, vetoes, and policy changes.\n- Account identifiers, secrets, raw prompts, internal logs, and operator actions are private.\n- Pause, resume, flatten, and kill controls require operator authentication.\n\n## Persistence Policy\n\n- DynamoDB is the authoritative operational store for agent mode, opportunities, decisions, orders, positions, risk state, policies, idempotency records, and dashboard projections.\n- Use conditional writes and transactions for state transitions that must not be applied twice.\n- Archive raw and high-volume market observations to S3 rather than making DynamoDB a tick store.\n- Alpaca remains authoritative for external account, order, and position state; startup reconciliation repairs local projections before trading resumes.\n\n## Operating Cycle\n\n- **Premarket:** reconcile Alpaca state, check Agent Mode, select the universe, ingest news, and establish regime context.\n- **Regular session:** evaluate Opportunities on events and corrected minute bars, manage orders and Position Theses, and publish delayed reporting projections.\n- **Before close:** close liquidity-reversion positions, reevaluate every overnight candidate, and enforce overnight risk limits.\n- **After close:** reconcile outcomes, resolve completed theses, update the Adaptive Policy once per new reward, archive observations, and produce the daily report.\n- **Final session:** stop new entries early enough to flatten and reconcile every position before the judging cutoff.\n\n## Validation Policy\n\n- Validate with chronological walk-forward splits and purged overlapping labels.\n- Include point-in-time universe construction, inference and order latency, bid/ask execution, slippage, and estimated costs.\n- Compare against cash, SPY, equal-weight, basic momentum, and an incumbent without LLM event routing.\n- Freeze Policy Profile definitions, safety limits, features, and strategy code before judging; only profile selection adapts live.",
+                "lineStart": 1,
+                "lineEnd": 194,
+                "totalLines": 194,
+                "truncated": false
+              }
+            },
+            "title": "CONTEXT.md",
+            "time": {
+              "start": 1787939317109,
+              "end": 1787939317126
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_1d60c0da3a93599e8019bb12114b6890"
+            }
+          },
+          "id": "prt_0497ce4a60017uuUJhG87gxeht",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cd9ce001Ps5uf9ZPNHemLO"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_35227a29ddcd57d4b475b75eff68b6ad",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/api.py"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/api.py</path>\n<type>file</type>\n<content>\n1: from __future__ import annotations\n2: \n3: import asyncio\n4: import logging\n5: from collections.abc import AsyncIterator\n6: from contextlib import asynccontextmanager\n7: from typing import Annotated, cast\n8: \n9: from fastapi import Depends, FastAPI, HTTPException, Query, Request\n10: from fastapi.middleware.cors import CORSMiddleware\n11: from pydantic import BaseModel, ConfigDict\n12: \n13: from catalyst_router.challenger import PublicChallengerStatus\n14: from catalyst_router.container import Container\n15: from catalyst_router.domain import AgentMode, PublicDecisionRecord\n16: from catalyst_router.settings import Settings\n17: \n18: logger = logging.getLogger(__name__)\n19: \n20: \n21: class PublicStatus(BaseModel):\n22:     model_config = ConfigDict(extra=\"forbid\")\n23: \n24:     mode: AgentMode\n25:     reconciled: bool\n26: \n27: \n28: def get_container(request: Request) -> Container:\n29:     return cast(Container, request.app.state.container)\n30: \n31: \n32: ContainerDependency = Annotated[Container, Depends(get_container)]\n33: \n34: \n35: def create_app(container: Container | None = None) -> FastAPI:\n36:     app_container = container or Container.build(Settings.from_env())\n37: \n38:     @asynccontextmanager\n39:     async def lifespan(_: FastAPI) -> AsyncIterator[None]:\n40:         if app_container.settings.auto_reconcile and app_container.broker is not None:\n41:             try:\n42:                 await asyncio.to_thread(app_container.reconciliation_service().reconcile)\n43:             except Exception:\n44:                 logger.exception(\"startup reconciliation failed; agent remains fenced\")\n45:         else:\n46:             app_container.store.begin_execution()\n47:         yield\n48: \n49:     app = FastAPI(title=\"Catalyst Router\", version=\"0.1.0\", lifespan=lifespan)\n50:     app.add_middleware(\n51:         CORSMiddleware,\n52:         allow_origins=list(app_container.settings.cors_origins),\n53:         allow_methods=[\"GET\"],\n54:         allow_headers=[\"Accept\"],\n55:     )\n56:     app.state.container = app_container\n57: \n58:     @app.get(\"/health\")\n59:     def health() -> dict[str, str]:\n60:         return {\"status\": \"ok\"}\n61: \n62:     @app.get(\"/ready\")\n63:     def ready(container: ContainerDependency) -> dict[str, str]:\n64:         if not container.store.get_agent_state().is_reconciled:\n65:             raise HTTPException(status_code=503, detail=\"current execution epoch is unreconciled\")\n66:         return {\"status\": \"ready\"}\n67: \n68:     @app.get(\"/api/public/status\", response_model=PublicStatus)\n69:     def public_status(container: ContainerDependency) -> PublicStatus:\n70:         state = container.store.get_agent_state()\n71:         return PublicStatus(\n72:             mode=state.mode,\n73:             reconciled=state.is_reconciled,\n74:         )\n75: \n76:     @app.get(\"/api/public/decisions\", response_model=list[PublicDecisionRecord])\n77:     def public_decisions(\n78:         container: ContainerDependency,\n79:         limit: Annotated[int, Query(ge=1, le=100)] = 50,\n80:     ) -> list[PublicDecisionRecord]:\n81:         return container.store.list_public_decisions(limit)\n82: \n83:     @app.get(\"/api/public/challenger\", response_model=PublicChallengerStatus)\n84:     def public_challenger(container: ContainerDependency) -> PublicChallengerStatus:\n85:         if container.challenger is None:\n86:             return PublicChallengerStatus.not_deployed()\n87:         return container.challenger.status\n88: \n89:     @app.post(\"/api/operator/reconcile\", include_in_schema=False)\n90:     def operator_reconcile() -> None:\n91:         raise HTTPException(status_code=404)\n92: \n93:     return app\n94: \n95: \n96: app = create_app()\n\n(End of file - total 96 lines)\n</content>",
+            "metadata": {
+              "preview": "from __future__ import annotations\n\nimport asyncio\nimport logging\nfrom collections.abc import AsyncIterator\nfrom contextlib import asynccontextmanager\nfrom typing import Annotated, cast\n\nfrom fastapi import Depends, FastAPI, HTTPException, Query, Request\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom pydantic import BaseModel, ConfigDict\n\nfrom catalyst_router.challenger import PublicChallengerStatus\nfrom catalyst_router.container import Container\nfrom catalyst_router.domain import AgentMode, PublicDecisionRecord\nfrom catalyst_router.settings import Settings\n\nlogger = logging.getLogger(__name__)\n\n",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/api.py",
+                "text": "from __future__ import annotations\n\nimport asyncio\nimport logging\nfrom collections.abc import AsyncIterator\nfrom contextlib import asynccontextmanager\nfrom typing import Annotated, cast\n\nfrom fastapi import Depends, FastAPI, HTTPException, Query, Request\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom pydantic import BaseModel, ConfigDict\n\nfrom catalyst_router.challenger import PublicChallengerStatus\nfrom catalyst_router.container import Container\nfrom catalyst_router.domain import AgentMode, PublicDecisionRecord\nfrom catalyst_router.settings import Settings\n\nlogger = logging.getLogger(__name__)\n\n\nclass PublicStatus(BaseModel):\n    model_config = ConfigDict(extra=\"forbid\")\n\n    mode: AgentMode\n    reconciled: bool\n\n\ndef get_container(request: Request) -> Container:\n    return cast(Container, request.app.state.container)\n\n\nContainerDependency = Annotated[Container, Depends(get_container)]\n\n\ndef create_app(container: Container | None = None) -> FastAPI:\n    app_container = container or Container.build(Settings.from_env())\n\n    @asynccontextmanager\n    async def lifespan(_: FastAPI) -> AsyncIterator[None]:\n        if app_container.settings.auto_reconcile and app_container.broker is not None:\n            try:\n                await asyncio.to_thread(app_container.reconciliation_service().reconcile)\n            except Exception:\n                logger.exception(\"startup reconciliation failed; agent remains fenced\")\n        else:\n            app_container.store.begin_execution()\n        yield\n\n    app = FastAPI(title=\"Catalyst Router\", version=\"0.1.0\", lifespan=lifespan)\n    app.add_middleware(\n        CORSMiddleware,\n        allow_origins=list(app_container.settings.cors_origins),\n        allow_methods=[\"GET\"],\n        allow_headers=[\"Accept\"],\n    )\n    app.state.container = app_container\n\n    @app.get(\"/health\")\n    def health() -> dict[str, str]:\n        return {\"status\": \"ok\"}\n\n    @app.get(\"/ready\")\n    def ready(container: ContainerDependency) -> dict[str, str]:\n        if not container.store.get_agent_state().is_reconciled:\n            raise HTTPException(status_code=503, detail=\"current execution epoch is unreconciled\")\n        return {\"status\": \"ready\"}\n\n    @app.get(\"/api/public/status\", response_model=PublicStatus)\n    def public_status(container: ContainerDependency) -> PublicStatus:\n        state = container.store.get_agent_state()\n        return PublicStatus(\n            mode=state.mode,\n            reconciled=state.is_reconciled,\n        )\n\n    @app.get(\"/api/public/decisions\", response_model=list[PublicDecisionRecord])\n    def public_decisions(\n        container: ContainerDependency,\n        limit: Annotated[int, Query(ge=1, le=100)] = 50,\n    ) -> list[PublicDecisionRecord]:\n        return container.store.list_public_decisions(limit)\n\n    @app.get(\"/api/public/challenger\", response_model=PublicChallengerStatus)\n    def public_challenger(container: ContainerDependency) -> PublicChallengerStatus:\n        if container.challenger is None:\n            return PublicChallengerStatus.not_deployed()\n        return container.challenger.status\n\n    @app.post(\"/api/operator/reconcile\", include_in_schema=False)\n    def operator_reconcile() -> None:\n        raise HTTPException(status_code=404)\n\n    return app\n\n\napp = create_app()",
+                "lineStart": 1,
+                "lineEnd": 96,
+                "totalLines": 96,
+                "truncated": false
+              }
+            },
+            "title": "src/catalyst_router/api.py",
+            "time": {
+              "start": 1787939317303,
+              "end": 1787939317320
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_d2bcadb9e1da5effba60abb0d72ba764"
+            }
+          },
+          "id": "prt_0497ce5760017A1lJxo75ix33W",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cd9ce001Ps5uf9ZPNHemLO"
+        },
+        {
+          "type": "tool",
+          "tool": "glob",
+          "callID": "call_2a2798fdf1bc58c88d752c60789cb04f",
+          "state": {
+            "status": "completed",
+            "input": {
+              "path": "/Users/itsmeyaw/projects/alpaca-hackathon",
+              "pattern": "src/catalyst_router/**/*"
+            },
+            "output": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/training.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/challenger.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/risk.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/py.typed\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/settings.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/cli.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/alpaca.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/__pycache__/__init__.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/__pycache__/dynamodb.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/__pycache__/memory.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/__pycache__/alpaca.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/__init__.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/memory.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/adapters/dynamodb.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/api.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/container.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/decision.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/decision.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/__init__.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/challenger.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/cli.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/domain.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/settings.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/ports.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/container.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/training.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/service.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/risk.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__pycache__/api.cpython-314.pyc\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__init__.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/ports.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/domain.py\n/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/service.py",
+            "metadata": {
+              "count": 33,
+              "truncated": false
+            },
+            "title": "",
+            "time": {
+              "start": 1787939317506,
+              "end": 1787939317541
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_293f68bea80a5c4aa73e09b3e408e1db"
+            }
+          },
+          "id": "prt_0497ce63b001cj4OJ2orcZ9tOQ",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cd9ce001Ps5uf9ZPNHemLO"
+        },
+        {
+          "type": "tool",
+          "tool": "glob",
+          "callID": "call_8dee8a35b685587f82aa8cd32904cf60",
+          "state": {
+            "status": "completed",
+            "input": {
+              "path": "/Users/itsmeyaw/projects/alpaca-hackathon",
+              "pattern": "README*"
+            },
+            "output": "/Users/itsmeyaw/projects/alpaca-hackathon/README.md\n/Users/itsmeyaw/projects/alpaca-hackathon/infra/README.md",
+            "metadata": {
+              "count": 2,
+              "truncated": false
+            },
+            "title": "",
+            "time": {
+              "start": 1787939317518,
+              "end": 1787939317539
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_7b06fbb70ae157e79fd012ea7938bc27"
+            }
+          },
+          "id": "prt_0497ce7040016cOi4eAhQYyc1f",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cd9ce001Ps5uf9ZPNHemLO"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "29b71631b87abc02efc77df40f54d7ec1ede1519",
+          "type": "step-finish",
+          "tokens": {
+            "total": 19815,
+            "input": 2,
+            "output": 182,
+            "reasoning": 41,
+            "cache": {
+              "write": 19590,
+              "read": 0
+            }
+          },
+          "cost": 0.0568205,
+          "id": "prt_0497ce82a001b0qJJKAlplvpfU",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cd9ce001Ps5uf9ZPNHemLO"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_0497cd84d001Iau95N5iM7WII5",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.01913065,
+        "tokens": {
+          "total": 24406,
+          "input": 2,
+          "output": 151,
+          "reasoning": 0,
+          "cache": {
+            "write": 4663,
+            "read": 19590
+          }
+        },
+        "modelID": "openai.gpt-5.6-terra",
+        "providerID": "amazon-bedrock",
+        "time": {
+          "created": 1787939317857,
+          "completed": 1787939319368
+        },
+        "finish": "tool-calls",
+        "id": "msg_0497ce861001wmIgMGZnKmZUq0",
+        "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV"
+      },
+      "parts": [
+        {
+          "snapshot": "29b71631b87abc02efc77df40f54d7ec1ede1519",
+          "type": "step-start",
+          "id": "prt_0497cebff001GogXj43f44PbKT",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497ce861001wmIgMGZnKmZUq0"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_fac8061d549951d29df3d7b1139d809c",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/README.md"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/README.md</path>\n<type>file</type>\n<content>\n1: # Catalyst Router\n2: \n3: Catalyst Router is an autonomous Alpaca paper-trading agent. The first vertical slice is deliberately read-only: it validates paper credentials, reconciles account state, evaluates deterministic route and risk decisions, and exposes sanitized status APIs. It contains no order-submission method.\n4: \n5: ## Setup\n6: \n7: The existing `.env` should contain:\n8: \n9: ```text\n10: ALPACA_KEY=...\n11: ALPACA_SECRET=...\n12: ```\n13: \n14: Install and verify:\n15: \n16: ```bash\n17: uv sync\n18: uv run pytest\n19: uv run catalyst-router check-alpaca\n20: uv run catalyst-router reconcile\n21: uv run catalyst-router serve\n22: ```\n23: \n24: The API starts in `PAUSED`. Open `http://127.0.0.1:8000/docs` or query:\n25: \n26: ```bash\n27: curl http://127.0.0.1:8000/health\n28: curl http://127.0.0.1:8000/api/public/status\n29: ```\n30: \n31: ## Alpaca CLI\n32: \n33: Install the alpha CLI and use the paper-only wrapper, which maps this repository's environment-variable names without creating a credential profile:\n34: \n35: ```bash\n36: brew install alpacahq/tap/cli\n37: scripts/alpaca-paper doctor\n38: scripts/alpaca-paper account get --jq '{status, trading_blocked, options_trading_level}'\n39: scripts/alpaca-paper order submit --symbol AAPL --side buy --qty 1 --type market --dry-run\n40: ```\n41: \n42: The wrapper rejects `--live` and mutating commands. It permits `order submit` only with `--dry-run`, so production execution remains owned by the deterministic Python gateway.\n43: \n44: ## State Backends\n45: \n46: Local development defaults to an in-memory state store. To use DynamoDB:\n47: \n48: ```text\n49: STATE_BACKEND=dynamodb\n50: DYNAMODB_TABLE=catalyst-router-local\n51: DYNAMODB_ENDPOINT_URL=http://localhost:8001\n52: AWS_REGION=us-east-1\n53: ```\n54: \n55: Order execution remains absent until DynamoDB idempotency, reconciliation, and risk-reservation integration tests are complete.\n56: \n57: ## Local Challenger Training\n58: \n59: Train price-only challenger models from cached raw IEX bars:\n60: \n61: ```bash\n62: make train-local\n63: ```\n64: \n65: The runner compares deterministic baselines, linear models, histogram boosting, and XGBoost\n66: with purged chronological walk-forward validation and a diagnostic holdout. Data and model\n67: artifacts stay under the ignored `.local/training/` directory. Every resulting manifest has\n68: `authority=SHADOW_ONLY`; numeric results cannot promote a model or affect a `TradeIntent`.\n69: \n70: See `docs/training/local-benchmark.md` for the current winner, experiment history, and limits.\n71: \n72: The provisioned AWS table can be exercised read-only with:\n73: \n74: ```bash\n75: STATE_BACKEND=dynamodb \\\n76: REDACTED \\\n77: COMPETITION_ID=alpaca-hackathon-2026 \\\n78: uv run catalyst-router reconcile\n79: ```\n\n(End of file - total 79 lines)\n</content>",
+            "metadata": {
+              "preview": "# Catalyst Router\n\nCatalyst Router is an autonomous Alpaca paper-trading agent. The first vertical slice is deliberately read-only: it validates paper credentials, reconciles account state, evaluates deterministic route and risk decisions, and exposes sanitized status APIs. It contains no order-submission method.\n\n## Setup\n\nThe existing `.env` should contain:\n\n```text\nALPACA_KEY=...\nALPACA_SECRET=...\n```\n\nInstall and verify:\n\n```bash\nuv sync\nuv run pytest\nuv run catalyst-router check-alpaca\nuv run catalyst-router reconcile",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/README.md",
+                "text": "# Catalyst Router\n\nCatalyst Router is an autonomous Alpaca paper-trading agent. The first vertical slice is deliberately read-only: it validates paper credentials, reconciles account state, evaluates deterministic route and risk decisions, and exposes sanitized status APIs. It contains no order-submission method.\n\n## Setup\n\nThe existing `.env` should contain:\n\n```text\nALPACA_KEY=...\nALPACA_SECRET=...\n```\n\nInstall and verify:\n\n```bash\nuv sync\nuv run pytest\nuv run catalyst-router check-alpaca\nuv run catalyst-router reconcile\nuv run catalyst-router serve\n```\n\nThe API starts in `PAUSED`. Open `http://127.0.0.1:8000/docs` or query:\n\n```bash\ncurl http://127.0.0.1:8000/health\ncurl http://127.0.0.1:8000/api/public/status\n```\n\n## Alpaca CLI\n\nInstall the alpha CLI and use the paper-only wrapper, which maps this repository's environment-variable names without creating a credential profile:\n\n```bash\nbrew install alpacahq/tap/cli\nscripts/alpaca-paper doctor\nscripts/alpaca-paper account get --jq '{status, trading_blocked, options_trading_level}'\nscripts/alpaca-paper order submit --symbol AAPL --side buy --qty 1 --type market --dry-run\n```\n\nThe wrapper rejects `--live` and mutating commands. It permits `order submit` only with `--dry-run`, so production execution remains owned by the deterministic Python gateway.\n\n## State Backends\n\nLocal development defaults to an in-memory state store. To use DynamoDB:\n\n```text\nSTATE_BACKEND=dynamodb\nDYNAMODB_TABLE=catalyst-router-local\nDYNAMODB_ENDPOINT_URL=http://localhost:8001\nAWS_REGION=us-east-1\n```\n\nOrder execution remains absent until DynamoDB idempotency, reconciliation, and risk-reservation integration tests are complete.\n\n## Local Challenger Training\n\nTrain price-only challenger models from cached raw IEX bars:\n\n```bash\nmake train-local\n```\n\nThe runner compares deterministic baselines, linear models, histogram boosting, and XGBoost\nwith purged chronological walk-forward validation and a diagnostic holdout. Data and model\nartifacts stay under the ignored `.local/training/` directory. Every resulting manifest has\n`authority=SHADOW_ONLY`; numeric results cannot promote a model or affect a `TradeIntent`.\n\nSee `docs/training/local-benchmark.md` for the current winner, experiment history, and limits.\n\nThe provisioned AWS table can be exercised read-only with:\n\n```bash\nSTATE_BACKEND=dynamodb \\\nREDACTED \\\nCOMPETITION_ID=alpaca-hackathon-2026 \\\nuv run catalyst-router reconcile\n```",
+                "lineStart": 1,
+                "lineEnd": 79,
+                "totalLines": 79,
+                "truncated": false
+              }
+            },
+            "title": "README.md",
+            "time": {
+              "start": 1787939318792,
+              "end": 1787939318805
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_b7576005213559f5b5c697ebd3b3938f"
+            }
+          },
+          "id": "prt_0497cec01001OoUjmLfoPLEiS3",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497ce861001wmIgMGZnKmZUq0"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_4281285f2ce65584bf69553dd328ed48",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__init__.py"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__init__.py</path>\n<type>file</type>\n<content>\n1: \"\"\"Catalyst Router trading agent.\"\"\"\n2: \n3: __version__ = \"0.1.0\"\n\n(End of file - total 3 lines)\n</content>",
+            "metadata": {
+              "preview": "\"\"\"Catalyst Router trading agent.\"\"\"\n\n__version__ = \"0.1.0\"",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/__init__.py",
+                "text": "\"\"\"Catalyst Router trading agent.\"\"\"\n\n__version__ = \"0.1.0\"",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "totalLines": 3,
+                "truncated": false
+              }
+            },
+            "title": "src/catalyst_router/__init__.py",
+            "time": {
+              "start": 1787939318988,
+              "end": 1787939319004
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_cc2f9ea86f4f53d59dc810fe7f8ed377"
+            }
+          },
+          "id": "prt_0497cec0a001HW4uMoO01L2e5L",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497ce861001wmIgMGZnKmZUq0"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_e4d45ba3f74253ec819174d6de951026",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/service.py"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/service.py</path>\n<type>file</type>\n<content>\n1: from __future__ import annotations\n2: \n3: from datetime import UTC, datetime, timedelta\n4: \n5: from catalyst_router.domain import DecisionRecord, ReconciliationSnapshot\n6: from catalyst_router.ports import OperationalStore, PaperBroker\n7: \n8: \n9: class ReconciliationService:\n10:     def __init__(self, *, broker: PaperBroker, store: OperationalStore) -> None:\n11:         self._broker = broker\n12:         self._store = store\n13: \n14:     def reconcile(self) -> ReconciliationSnapshot:\n15:         state = self._store.begin_execution()\n16:         snapshot = self._broker.reconciliation_snapshot()\n17:         self._validate_snapshot(snapshot)\n18:         record = DecisionRecord.create(\n19:             decision_type=\"RECONCILIATION_COMPLETED\",\n20:             summary=(\n21:                 f\"Reconciled {len(snapshot.positions)} positions and \"\n22:                 f\"{len(snapshot.open_orders)} open orders\"\n23:             ),\n24:             payload={\n25:                 \"market_is_open\": snapshot.clock.is_open,\n26:                 \"position_count\": len(snapshot.positions),\n27:                 \"open_order_count\": len(snapshot.open_orders),\n28:                 \"options_trading_level\": snapshot.account.options_trading_level,\n29:             },\n30:             public=True,\n31:             public_summary=(\n32:                 f\"Reconciled {len(snapshot.positions)} positions and \"\n33:                 f\"{len(snapshot.open_orders)} open orders\"\n34:             ),\n35:         )\n36:         self._store.commit_reconciliation(state.execution_epoch, record)\n37:         return snapshot\n38: \n39:     @staticmethod\n40:     def _validate_snapshot(snapshot: ReconciliationSnapshot) -> None:\n41:         now = datetime.now(UTC)\n42:         if snapshot.account.trading_blocked:\n43:             raise RuntimeError(\"Alpaca account is blocked from trading\")\n44:         if snapshot.account.equity <= 0 or snapshot.account.portfolio_value <= 0:\n45:             raise RuntimeError(\"Alpaca account values are invalid\")\n46:         if not now - timedelta(seconds=30) <= snapshot.captured_at <= now + timedelta(seconds=5):\n47:             raise RuntimeError(\"Alpaca reconciliation snapshot is stale\")\n48:         if len(snapshot.open_orders) >= 500:\n49:             raise RuntimeError(\"open-order response may be truncated\")\n\n(End of file - total 49 lines)\n</content>",
+            "metadata": {
+              "preview": "from __future__ import annotations\n\nfrom datetime import UTC, datetime, timedelta\n\nfrom catalyst_router.domain import DecisionRecord, ReconciliationSnapshot\nfrom catalyst_router.ports import OperationalStore, PaperBroker\n\n\nclass ReconciliationService:\n    def __init__(self, *, broker: PaperBroker, store: OperationalStore) -> None:\n        self._broker = broker\n        self._store = store\n\n    def reconcile(self) -> ReconciliationSnapshot:\n        state = self._store.begin_execution()\n        snapshot = self._broker.reconciliation_snapshot()\n        self._validate_snapshot(snapshot)\n        record = DecisionRecord.create(\n            decision_type=\"RECONCILIATION_COMPLETED\",\n            summary=(",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/service.py",
+                "text": "from __future__ import annotations\n\nfrom datetime import UTC, datetime, timedelta\n\nfrom catalyst_router.domain import DecisionRecord, ReconciliationSnapshot\nfrom catalyst_router.ports import OperationalStore, PaperBroker\n\n\nclass ReconciliationService:\n    def __init__(self, *, broker: PaperBroker, store: OperationalStore) -> None:\n        self._broker = broker\n        self._store = store\n\n    def reconcile(self) -> ReconciliationSnapshot:\n        state = self._store.begin_execution()\n        snapshot = self._broker.reconciliation_snapshot()\n        self._validate_snapshot(snapshot)\n        record = DecisionRecord.create(\n            decision_type=\"RECONCILIATION_COMPLETED\",\n            summary=(\n                f\"Reconciled {len(snapshot.positions)} positions and \"\n                f\"{len(snapshot.open_orders)} open orders\"\n            ),\n            payload={\n                \"market_is_open\": snapshot.clock.is_open,\n                \"position_count\": len(snapshot.positions),\n                \"open_order_count\": len(snapshot.open_orders),\n                \"options_trading_level\": snapshot.account.options_trading_level,\n            },\n            public=True,\n            public_summary=(\n                f\"Reconciled {len(snapshot.positions)} positions and \"\n                f\"{len(snapshot.open_orders)} open orders\"\n            ),\n        )\n        self._store.commit_reconciliation(state.execution_epoch, record)\n        return snapshot\n\n    @staticmethod\n    def _validate_snapshot(snapshot: ReconciliationSnapshot) -> None:\n        now = datetime.now(UTC)\n        if snapshot.account.trading_blocked:\n            raise RuntimeError(\"Alpaca account is blocked from trading\")\n        if snapshot.account.equity <= 0 or snapshot.account.portfolio_value <= 0:\n            raise RuntimeError(\"Alpaca account values are invalid\")\n        if not now - timedelta(seconds=30) <= snapshot.captured_at <= now + timedelta(seconds=5):\n            raise RuntimeError(\"Alpaca reconciliation snapshot is stale\")\n        if len(snapshot.open_orders) >= 500:\n            raise RuntimeError(\"open-order response may be truncated\")",
+                "lineStart": 1,
+                "lineEnd": 49,
+                "totalLines": 49,
+                "truncated": false
+              }
+            },
+            "title": "src/catalyst_router/service.py",
+            "time": {
+              "start": 1787939319156,
+              "end": 1787939319170
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_256d47de659a584c85152f93ee487333"
+            }
+          },
+          "id": "prt_0497cecce001PFaoLhedTSnUAx",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497ce861001wmIgMGZnKmZUq0"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_21657efc0e51541aa60720b7888e319f",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/risk.py"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/risk.py</path>\n<type>file</type>\n<content>\n1: from decimal import ROUND_FLOOR, Decimal\n2: \n3: from catalyst_router.domain import (\n4:     AgentMode,\n5:     AgentState,\n6:     InstrumentType,\n7:     PortfolioRiskState,\n8:     RiskDecision,\n9:     RiskDecisionStatus,\n10:     Route,\n11:     Side,\n12:     TradeIntent,\n13: )\n14: \n15: \n16: class RiskGovernor:\n17:     MAX_POSITIONS = 6\n18:     MAX_TRADE_RISK_RATE = Decimal(\"0.01\")\n19:     REDUCED_TRADE_RISK_RATE = Decimal(\"0.005\")\n20:     MAX_TOTAL_RISK_RATE = Decimal(\"0.04\")\n21:     MAX_OVERNIGHT_RISK_RATE = Decimal(\"0.02\")\n22:     MAX_GROUP_RISK_RATE = Decimal(\"0.02\")\n23:     DE_RISK_DAILY_LOSS_RATE = Decimal(\"0.02\")\n24:     MAX_DAILY_LOSS_RATE = Decimal(\"0.04\")\n25:     MAX_COMPETITION_DRAWDOWN_RATE = Decimal(\"0.12\")\n26:     MAX_QUOTE_AGE_SECONDS = Decimal(\"5\")\n27: \n28:     def __init__(self, *, options_execution_enabled: bool = False) -> None:\n29:         self._options_execution_enabled = options_execution_enabled\n30: \n31:     def evaluate(\n32:         self,\n33:         intent: TradeIntent,\n34:         agent: AgentState,\n35:         portfolio: PortfolioRiskState,\n36:         *,\n37:         market_is_open: bool,\n38:         overnight: bool = False,\n39:         trading_blocked: bool = False,\n40:     ) -> RiskDecision:\n41:         vetoes: list[str] = []\n42:         if intent.route is Route.NO_TRADE:\n43:             vetoes.append(\"NO_TRADE cannot create exposure\")\n44:         if intent.instrument_type is InstrumentType.OPTION and intent.side is not Side.BUY:\n45:             vetoes.append(\"short option legs are prohibited\")\n46:         if intent.instrument_type is InstrumentType.OPTION and not self._options_execution_enabled:\n47:             vetoes.append(\"live option execution is not enabled\")\n48:         if intent.route is Route.LIQUIDITY_REVERSION and (\n49:             intent.instrument_type is not InstrumentType.EQUITY\n50:         ):\n51:             vetoes.append(\"liquidity reversion must use equities\")\n52:         if intent.route is Route.REGIME_TREND and (\n53:             intent.instrument_type is not InstrumentType.EQUITY\n54:         ):\n55:             vetoes.append(\"regime trend must use equities\")\n56:         if trading_blocked:\n57:             vetoes.append(\"Alpaca account is blocked from trading\")\n58:         if agent.mode is not AgentMode.RUNNING:\n59:             vetoes.append(f\"agent mode is {agent.mode}\")\n60:         if not agent.is_reconciled:\n61:             vetoes.append(\"startup reconciliation is incomplete\")\n62:         if not market_is_open:\n63:             vetoes.append(\"market is closed\")\n64:         if not intent.data_quality_passed:\n65:             vetoes.append(\"intent data failed quality gates\")\n66:         if intent.quote_age_seconds > self.MAX_QUOTE_AGE_SECONDS:\n67:             vetoes.append(\"quote is stale\")\n68:         if intent.stop_distance <= 0:\n69:             vetoes.append(\"stop distance must be positive\")\n70:         if intent.side is Side.BUY and intent.stop_price >= intent.entry_price:\n71:             vetoes.append(\"buy stop must be below entry\")\n72:         if intent.side is Side.SELL and intent.stop_price <= intent.entry_price:\n73:             vetoes.append(\"sell stop must be above entry\")\n74:         if portfolio.position_count >= self.MAX_POSITIONS:\n75:             vetoes.append(\"maximum position count reached\")\n76: \n77:         daily_loss = max(Decimal(\"0\"), -portfolio.daily_pnl)\n78:         if daily_loss >= portfolio.equity * self.MAX_DAILY_LOSS_RATE:\n79:             vetoes.append(\"daily loss circuit breaker reached\")\n80:         if portfolio.competition_drawdown >= self.MAX_COMPETITION_DRAWDOWN_RATE:\n81:             vetoes.append(\"competition drawdown kill threshold reached\")\n82: \n83:         if vetoes:\n84:             return self._veto(intent, vetoes)\n85: \n86:         risk_rate = (\n87:             self.REDUCED_TRADE_RISK_RATE\n88:             if daily_loss >= portfolio.equity * self.DE_RISK_DAILY_LOSS_RATE\n89:             else self.MAX_TRADE_RISK_RATE\n90:         )\n91:         allowed_risk = portfolio.equity * risk_rate\n92:         total_capacity = portfolio.equity * self.MAX_TOTAL_RISK_RATE - portfolio.total_open_risk\n93:         group_capacity = (\n94:             portfolio.equity * self.MAX_GROUP_RISK_RATE\n95:             - portfolio.group_open_risk.get(intent.exposure_group, Decimal(\"0\"))\n96:         )\n97:         capacities = [allowed_risk, total_capacity, group_capacity]\n98:         if overnight:\n99:             capacities.append(\n100:                 portfolio.equity * self.MAX_OVERNIGHT_RISK_RATE - portfolio.overnight_open_risk\n101:             )\n102:         risk_amount = max(Decimal(\"0\"), min(capacities))\n103:         affordable = (portfolio.buying_power / intent.entry_cost_per_unit).to_integral_value(\n104:             rounding=ROUND_FLOOR\n105:         )\n106:         by_stop = (risk_amount / intent.stop_risk_per_unit).to_integral_value(rounding=ROUND_FLOOR)\n107:         quantity = int(min(affordable, by_stop))\n108:         if quantity < 1:\n109:             return self._veto(intent, [\"risk or buying-power capacity is insufficient\"])\n110: \n111:         actual_risk = intent.stop_risk_per_unit * quantity\n112:         status = (\n113:             RiskDecisionStatus.REDUCED\n114:             if risk_amount < allowed_risk or risk_rate < self.MAX_TRADE_RISK_RATE\n115:             else RiskDecisionStatus.APPROVED\n116:         )\n117:         return RiskDecision(\n118:             status=status,\n119:             intent_id=intent.intent_id,\n120:             quantity=quantity,\n121:             risk_amount=actual_risk,\n122:             checks=(\n123:                 \"agent running and reconciled\",\n124:                 \"data and market gates passed\",\n125:                 \"trade, portfolio, group, and buying-power limits passed\",\n126:             ),\n127:         )\n128: \n129:     @staticmethod\n130:     def _veto(intent: TradeIntent, vetoes: list[str]) -> RiskDecision:\n131:         return RiskDecision(\n132:             status=RiskDecisionStatus.VETOED,\n133:             intent_id=intent.intent_id,\n134:             quantity=0,\n135:             risk_amount=Decimal(\"0\"),\n136:             checks=tuple(vetoes),\n137:         )\n\n(End of file - total 137 lines)\n</content>",
+            "metadata": {
+              "preview": "from decimal import ROUND_FLOOR, Decimal\n\nfrom catalyst_router.domain import (\n    AgentMode,\n    AgentState,\n    InstrumentType,\n    PortfolioRiskState,\n    RiskDecision,\n    RiskDecisionStatus,\n    Route,\n    Side,\n    TradeIntent,\n)\n\n\nclass RiskGovernor:\n    MAX_POSITIONS = 6\n    MAX_TRADE_RISK_RATE = Decimal(\"0.01\")\n    REDUCED_TRADE_RISK_RATE = Decimal(\"0.005\")\n    MAX_TOTAL_RISK_RATE = Decimal(\"0.04\")",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/src/catalyst_router/risk.py",
+                "text": "from decimal import ROUND_FLOOR, Decimal\n\nfrom catalyst_router.domain import (\n    AgentMode,\n    AgentState,\n    InstrumentType,\n    PortfolioRiskState,\n    RiskDecision,\n    RiskDecisionStatus,\n    Route,\n    Side,\n    TradeIntent,\n)\n\n\nclass RiskGovernor:\n    MAX_POSITIONS = 6\n    MAX_TRADE_RISK_RATE = Decimal(\"0.01\")\n    REDUCED_TRADE_RISK_RATE = Decimal(\"0.005\")\n    MAX_TOTAL_RISK_RATE = Decimal(\"0.04\")\n    MAX_OVERNIGHT_RISK_RATE = Decimal(\"0.02\")\n    MAX_GROUP_RISK_RATE = Decimal(\"0.02\")\n    DE_RISK_DAILY_LOSS_RATE = Decimal(\"0.02\")\n    MAX_DAILY_LOSS_RATE = Decimal(\"0.04\")\n    MAX_COMPETITION_DRAWDOWN_RATE = Decimal(\"0.12\")\n    MAX_QUOTE_AGE_SECONDS = Decimal(\"5\")\n\n    def __init__(self, *, options_execution_enabled: bool = False) -> None:\n        self._options_execution_enabled = options_execution_enabled\n\n    def evaluate(\n        self,\n        intent: TradeIntent,\n        agent: AgentState,\n        portfolio: PortfolioRiskState,\n        *,\n        market_is_open: bool,\n        overnight: bool = False,\n        trading_blocked: bool = False,\n    ) -> RiskDecision:\n        vetoes: list[str] = []\n        if intent.route is Route.NO_TRADE:\n            vetoes.append(\"NO_TRADE cannot create exposure\")\n        if intent.instrument_type is InstrumentType.OPTION and intent.side is not Side.BUY:\n            vetoes.append(\"short option legs are prohibited\")\n        if intent.instrument_type is InstrumentType.OPTION and not self._options_execution_enabled:\n            vetoes.append(\"live option execution is not enabled\")\n        if intent.route is Route.LIQUIDITY_REVERSION and (\n            intent.instrument_type is not InstrumentType.EQUITY\n        ):\n            vetoes.append(\"liquidity reversion must use equities\")\n        if intent.route is Route.REGIME_TREND and (\n            intent.instrument_type is not InstrumentType.EQUITY\n        ):\n            vetoes.append(\"regime trend must use equities\")\n        if trading_blocked:\n            vetoes.append(\"Alpaca account is blocked from trading\")\n        if agent.mode is not AgentMode.RUNNING:\n            vetoes.append(f\"agent mode is {agent.mode}\")\n        if not agent.is_reconciled:\n            vetoes.append(\"startup reconciliation is incomplete\")\n        if not market_is_open:\n            vetoes.append(\"market is closed\")\n        if not intent.data_quality_passed:\n            vetoes.append(\"intent data failed quality gates\")\n        if intent.quote_age_seconds > self.MAX_QUOTE_AGE_SECONDS:\n            vetoes.append(\"quote is stale\")\n        if intent.stop_distance <= 0:\n            vetoes.append(\"stop distance must be positive\")\n        if intent.side is Side.BUY and intent.stop_price >= intent.entry_price:\n            vetoes.append(\"buy stop must be below entry\")\n        if intent.side is Side.SELL and intent.stop_price <= intent.entry_price:\n            vetoes.append(\"sell stop must be above entry\")\n        if portfolio.position_count >= self.MAX_POSITIONS:\n            vetoes.append(\"maximum position count reached\")\n\n        daily_loss = max(Decimal(\"0\"), -portfolio.daily_pnl)\n        if daily_loss >= portfolio.equity * self.MAX_DAILY_LOSS_RATE:\n            vetoes.append(\"daily loss circuit breaker reached\")\n        if portfolio.competition_drawdown >= self.MAX_COMPETITION_DRAWDOWN_RATE:\n            vetoes.append(\"competition drawdown kill threshold reached\")\n\n        if vetoes:\n            return self._veto(intent, vetoes)\n\n        risk_rate = (\n            self.REDUCED_TRADE_RISK_RATE\n            if daily_loss >= portfolio.equity * self.DE_RISK_DAILY_LOSS_RATE\n            else self.MAX_TRADE_RISK_RATE\n        )\n        allowed_risk = portfolio.equity * risk_rate\n        total_capacity = portfolio.equity * self.MAX_TOTAL_RISK_RATE - portfolio.total_open_risk\n        group_capacity = (\n            portfolio.equity * self.MAX_GROUP_RISK_RATE\n            - portfolio.group_open_risk.get(intent.exposure_group, Decimal(\"0\"))\n        )\n        capacities = [allowed_risk, total_capacity, group_capacity]\n        if overnight:\n            capacities.append(\n                portfolio.equity * self.MAX_OVERNIGHT_RISK_RATE - portfolio.overnight_open_risk\n            )\n        risk_amount = max(Decimal(\"0\"), min(capacities))\n        affordable = (portfolio.buying_power / intent.entry_cost_per_unit).to_integral_value(\n            rounding=ROUND_FLOOR\n        )\n        by_stop = (risk_amount / intent.stop_risk_per_unit).to_integral_value(rounding=ROUND_FLOOR)\n        quantity = int(min(affordable, by_stop))\n        if quantity < 1:\n            return self._veto(intent, [\"risk or buying-power capacity is insufficient\"])\n\n        actual_risk = intent.stop_risk_per_unit * quantity\n        status = (\n            RiskDecisionStatus.REDUCED\n            if risk_amount < allowed_risk or risk_rate < self.MAX_TRADE_RISK_RATE\n            else RiskDecisionStatus.APPROVED\n        )\n        return RiskDecision(\n            status=status,\n            intent_id=intent.intent_id,\n            quantity=quantity,\n            risk_amount=actual_risk,\n            checks=(\n                \"agent running and reconciled\",\n                \"data and market gates passed\",\n                \"trade, portfolio, group, and buying-power limits passed\",\n            ),\n        )\n\n    @staticmethod\n    def _veto(intent: TradeIntent, vetoes: list[str]) -> RiskDecision:\n        return RiskDecision(\n            status=RiskDecisionStatus.VETOED,\n            intent_id=intent.intent_id,\n            quantity=0,\n            risk_amount=Decimal(\"0\"),\n            checks=tuple(vetoes),\n        )",
+                "lineStart": 1,
+                "lineEnd": 137,
+                "totalLines": 137,
+                "truncated": false
+              }
+            },
+            "title": "src/catalyst_router/risk.py",
+            "time": {
+              "start": 1787939319166,
+              "end": 1787939319183
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_f0518f01f35d5c2bb455af972f4fa4da"
+            }
+          },
+          "id": "prt_0497ced760012fFCOl12bAado9",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497ce861001wmIgMGZnKmZUq0"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "29b71631b87abc02efc77df40f54d7ec1ede1519",
+          "type": "step-finish",
+          "tokens": {
+            "total": 24406,
+            "input": 2,
+            "output": 151,
+            "reasoning": 0,
+            "cache": {
+              "write": 4663,
+              "read": 19590
+            }
+          },
+          "cost": 0.01913065,
+          "id": "prt_0497cee17001yMFy8LCKDEN9Wq",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497ce861001wmIgMGZnKmZUq0"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_0497cd84d001Iau95N5iM7WII5",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.01674761,
+        "tokens": {
+          "total": 27647,
+          "input": 2,
+          "output": 199,
+          "reasoning": 0,
+          "cache": {
+            "write": 3193,
+            "read": 24253
+          }
+        },
+        "modelID": "openai.gpt-5.6-terra",
+        "providerID": "amazon-bedrock",
+        "time": {
+          "created": 1787939319370,
+          "completed": 1787939322431
+        },
+        "finish": "stop",
+        "id": "msg_0497cee4a001cnM41jgbzwySym",
+        "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV"
+      },
+      "parts": [
+        {
+          "snapshot": "29b71631b87abc02efc77df40f54d7ec1ede1519",
+          "type": "step-start",
+          "id": "prt_0497cf605001qxrhKtBc01T4b6",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cee4a001cnM41jgbzwySym"
+        },
+        {
+          "type": "text",
+          "text": "`catalyst_router` is this repository’s Python package for an autonomous **Alpaca paper-trading agent**.\n\nIt evaluates market/news opportunities, deterministically chooses a route (`CATALYST_CONTINUATION`, `LIQUIDITY_REVERSION`, `REGIME_TREND`, or `NO_TRADE`), and applies strict risk limits before any exposure could be approved.\n\nCurrent scope is deliberately read-only:\n- Validates Alpaca paper credentials and reconciles account state.\n- Records decisions and exposes sanitized public FastAPI endpoints.\n- Provides a CLI and in-memory/DynamoDB state backends.\n- Trains challenger models in shadow-only mode.\n- Contains **no order-submission method** yet.\n\n`src/catalyst_router/api.py` creates the FastAPI app with health/readiness checks plus public status, decisions, and challenger-status endpoints. The `RiskGovernor` enforces position, drawdown, liquidity, data-quality, and reconciliation gates.",
+          "time": {
+            "start": 1787939321352,
+            "end": 1787939322317
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "msg_ef05daf336125d90a4020378b5521242",
+              "phase": "final_answer"
+            }
+          },
+          "id": "prt_0497cf608001HJcJ61ExwK4xoK",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cee4a001cnM41jgbzwySym"
+        },
+        {
+          "reason": "stop",
+          "snapshot": "29b71631b87abc02efc77df40f54d7ec1ede1519",
+          "type": "step-finish",
+          "tokens": {
+            "total": 27647,
+            "input": 2,
+            "output": 199,
+            "reasoning": 0,
+            "cache": {
+              "write": 3193,
+              "read": 24253
+            }
+          },
+          "cost": 0.01674761,
+          "id": "prt_0497cfa0c001gBz9jl4Pl7xFSE",
+          "sessionID": "ses_fb68327c7ffewy9GSx3pgQvvGV",
+          "messageID": "msg_0497cee4a001cnM41jgbzwySym"
+        }
+      ]
+    }
+  ]
+}
