@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1EMXY03RAEPQT33S1VGHSYY",
+  "session_id": "ses_fa3988ee7ffeYX8jo8V1ZqW5Qf",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-01T14:10:55.753966Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "src/catalyst_router/adapters/alpaca.py",
+    "tests/unit/test_alpaca.py"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-sol",
+  "turn_id": "0c88788cffd7",
+  "checkpoint_transcript_start": 170,
+  "transcript_lines_at_start": 170,
+  "compact_transcript_start": 170,
+  "token_usage": {
+    "input_tokens": 48,
+    "cache_creation_tokens": 493597,
+    "cache_read_tokens": 5264299,
+    "output_tokens": 20408,
+    "api_call_count": 25
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-01T14:10:55.585469Z",
+    "agent_lines": 82,
+    "agent_removed": 1,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 82,
+    "total_lines_changed": 83,
+    "agent_percentage": 100,
+    "metric_version": 2
+  }
+}
