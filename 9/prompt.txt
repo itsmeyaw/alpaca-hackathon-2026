@@ -1,0 +1,1 @@
+CHeck the model performance. Currently there are no trade made. Analzye the cause and fix it. Iterative work. Repeat the process multiple times
