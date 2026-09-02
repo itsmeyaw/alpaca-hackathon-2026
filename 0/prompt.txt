@@ -1,0 +1,1 @@
+How is the metric in the frontend calculated actually? It seems that frontend shows positive P&L but in Alpaca Dashboard I am seeing loss in portofolio. [Image 1] [Image 2]
