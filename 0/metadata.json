@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1J06BY29YRGXYKNG4HCSXEB",
+  "session_id": "ses_fa67d2fa4ffeiHgqoR8v85K9Re",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-02T21:25:26.103605Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "save_step_count": 1,
+  "files_touched": [
+    "infra/environments/prod/.terraform.lock.hcl"
+  ],
+  "agent": "OpenCode",
+  "model": "gpt-5.6-sol",
+  "turn_id": "e79651de34a4",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 30,
+    "cache_creation_tokens": 124424,
+    "cache_read_tokens": 476716,
+    "output_tokens": 2836,
+    "api_call_count": 11
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-02T21:25:26.051578Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 702,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 702,
+    "total_lines_changed": 779,
+    "agent_percentage": 0,
+    "metric_version": 2
+  }
+}
