@@ -1,0 +1,80 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1J066S1H4Z48SNB4W74JE83",
+  "session_id": "ses_fa1c86110ffeVXb7SSP4wYNzwo",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-02T21:25:21.65068Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "Makefile",
+    "infra/README.md",
+    "infra/environments/prod/.terraform.lock.hcl",
+    "infra/environments/prod/delivery.tf",
+    "infra/environments/prod/ecs.tf",
+    "infra/environments/prod/variables.tf",
+    "scripts/deploy-dashboard"
+  ],
+  "agent": "OpenCode",
+  "model": "gpt-5.6-sol",
+  "turn_id": "edc162904366",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 57,
+    "cache_creation_tokens": 176134,
+    "cache_read_tokens": 1899488,
+    "output_tokens": 6935,
+    "api_call_count": 19
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-02T21:25:21.571368Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 56,
+    "human_removed": 62,
+    "total_committed": 0,
+    "total_lines_changed": 118,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 83,
+      "user_lines_removed": 56,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "Makefile": 4,
+        "infra/README.md": 11,
+        "infra/environments/prod/.terraform.lock.hcl": 32,
+        "infra/environments/prod/delivery.tf": 1,
+        "infra/environments/prod/ecs.tf": 7,
+        "infra/environments/prod/variables.tf": 4,
+        "scripts/deploy-dashboard": 3,
+        "scripts/verify-public-api": 21
+      },
+      "user_removed_per_file": {
+        "Makefile": 2,
+        "infra/README.md": 14,
+        "infra/environments/prod/.terraform.lock.hcl": 19,
+        "infra/environments/prod/delivery.tf": 1,
+        "infra/environments/prod/ecs.tf": 3,
+        "infra/environments/prod/variables.tf": 14,
+        "scripts/deploy-dashboard": 3
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 83,
+      "agent_lines_removed": 56
+    }
+  ]
+}
