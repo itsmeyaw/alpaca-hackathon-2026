@@ -22,6 +22,7 @@ from catalyst_router.domain import (
     OrderExecutionStatus,
     PublicDecisionPage,
     PublicDecisionRecord,
+    PublicPortfolioPoint,
     Route,
 )
 
@@ -159,6 +160,9 @@ class DynamoOperationalStore:
                     if equity is not None
                     else state.equity_peak
                 ),
+                "competition_start_equity": (
+                    state.competition_start_equity or state.equity_peak or equity
+                ),
                 "updated_at": datetime.now(UTC),
             }
         )
@@ -252,6 +256,49 @@ class DynamoOperationalStore:
                 and "ConditionalCheckFailed" in reason_codes
                 and reason_codes <= {"ConditionalCheckFailed", "None"}
             ):
+                return False
+            raise
+
+    def append_public_portfolio(self, point: PublicPortfolioPoint, *, expected_epoch: str) -> bool:
+        serializer = TypeSerializer()
+        captured = point.captured_at.astimezone(UTC)
+        visible = (captured + self._public_delay).isoformat(timespec="microseconds")
+        operations: list[TransactWriteItemTypeDef] = [
+            {
+                "ConditionCheck": {
+                    "TableName": self._table.name,
+                    "Key": {
+                        key: serializer.serialize(value) for key, value in self._control_key.items()
+                    },
+                    "ConditionExpression": "execution_epoch = :epoch AND reconciled_epoch = :epoch",
+                    "ExpressionAttributeValues": {":epoch": serializer.serialize(expected_epoch)},
+                }
+            },
+            {
+                "Put": {
+                    "TableName": self._table.name,
+                    "Item": {
+                        key: serializer.serialize(value)
+                        for key, value in {
+                            "PK": f"PUBLIC#PORTFOLIO#COMP#{self._competition_id}",
+                            "SK": (
+                                f"VISIBLE#{visible}#{captured.isoformat(timespec='microseconds')}"
+                            ),
+                            "payload": point.model_dump_json(),
+                        }.items()
+                    },
+                    "ConditionExpression": "attribute_not_exists(PK)",
+                }
+            },
+        ]
+        try:
+            self._client.transact_write_items(TransactItems=operations)
+            return True
+        except ClientError as exc:
+            reasons = exc.response.get("CancellationReasons", [])
+            if reasons and reasons[0].get("Code") == "ConditionalCheckFailed":
+                raise RuntimeError("worker lost execution epoch ownership") from exc
+            if len(reasons) > 1 and reasons[1].get("Code") == "ConditionalCheckFailed":
                 return False
             raise
 
@@ -539,6 +586,52 @@ class DynamoOperationalStore:
                 raise RuntimeError("decision payload is missing or invalid")
             records.append(PublicDecisionRecord.model_validate_json(payload))
         return records
+
+    def list_public_routes(self, limit: int = 100) -> list[PublicDecisionRecord]:
+        now = datetime.now(UTC).isoformat(timespec="microseconds")
+        records: list[PublicDecisionRecord] = []
+        cursor_key: dict[str, Any] | None = None
+        while len(records) < limit:
+            query_arguments: dict[str, Any] = {
+                "KeyConditionExpression": Key("PK").eq(f"PUBLIC#COMP#{self._competition_id}")
+                & Key("SK").between("VISIBLE#", f"VISIBLE#{now}#~"),
+                "ScanIndexForward": False,
+                "Limit": limit,
+                "ConsistentRead": True,
+            }
+            if cursor_key is not None:
+                query_arguments["ExclusiveStartKey"] = cursor_key
+            response = self._table.query(**cast(Any, query_arguments))
+            for item in response["Items"]:
+                payload = item.get("payload")
+                if not isinstance(payload, (str, bytes, bytearray)):
+                    raise RuntimeError("decision payload is missing or invalid")
+                record = PublicDecisionRecord.model_validate_json(payload)
+                if record.route is not None:
+                    records.append(record)
+                    if len(records) == limit:
+                        break
+            cursor_key = response.get("LastEvaluatedKey")
+            if cursor_key is None:
+                break
+        return records
+
+    def list_public_portfolio(self, limit: int = 200) -> list[PublicPortfolioPoint]:
+        now = datetime.now(UTC).isoformat(timespec="microseconds")
+        response = self._table.query(
+            KeyConditionExpression=Key("PK").eq(f"PUBLIC#PORTFOLIO#COMP#{self._competition_id}")
+            & Key("SK").between("VISIBLE#", f"VISIBLE#{now}#~"),
+            ScanIndexForward=False,
+            Limit=limit,
+            ConsistentRead=True,
+        )
+        points: list[PublicPortfolioPoint] = []
+        for item in reversed(response["Items"]):
+            payload = item.get("payload")
+            if not isinstance(payload, (str, bytes, bytearray)):
+                raise RuntimeError("public portfolio payload is missing or invalid")
+            points.append(PublicPortfolioPoint.model_validate_json(payload))
+        return points
 
     def list_public_decision_page(
         self,

@@ -31,6 +31,21 @@ export interface PublicDecisionFilters {
   route: Route | "";
 }
 
+export interface PublicPortfolioPoint {
+  captured_at: string;
+  equity: string;
+  cash: string;
+  net_pnl: string;
+  daily_return: string;
+  competition_return: string;
+  drawdown: string;
+  position_count: number;
+  max_trade_risk_rate: string;
+  total_open_risk_rate: string;
+  overnight_open_risk_rate: string;
+  max_group_open_risk_rate: string;
+}
+
 export interface PublicChallengerStatus {
   deployed: boolean;
   loaded: boolean;
@@ -60,6 +75,8 @@ export interface PublicChallengerStatus {
 export interface PublicSnapshot {
   status: PublicStatus;
   decisions: PublicDecision[];
+  routeDecisions: PublicDecision[];
+  portfolio: PublicPortfolioPoint[];
   challenger: PublicChallengerStatus;
   receivedAt: Date;
 }
@@ -79,9 +96,11 @@ async function getJson<T>(path: string, signal: AbortSignal): Promise<T> {
 }
 
 export async function fetchPublicSnapshot(signal: AbortSignal): Promise<PublicSnapshot> {
-  const [status, decisions, challenger] = await Promise.all([
+  const [status, decisions, routeDecisions, portfolio, challenger] = await Promise.all([
     getJson<PublicStatus>("/api/public/status", signal),
     getJson<PublicDecision[]>("/api/public/decisions?limit=50", signal),
+    getJson<PublicDecision[]>("/api/public/routes?limit=100", signal),
+    getJson<PublicPortfolioPoint[]>("/api/public/portfolio?limit=200", signal),
     getJson<PublicChallengerStatus>("/api/public/challenger", signal).catch(() => ({
       deployed: false,
       loaded: false,
@@ -108,7 +127,7 @@ export async function fetchPublicSnapshot(signal: AbortSignal): Promise<PublicSn
       model_sha256: null,
     })),
   ]);
-  return { status, decisions, challenger, receivedAt: new Date() };
+  return { status, decisions, routeDecisions, portfolio, challenger, receivedAt: new Date() };
 }
 
 export async function fetchPublicDecisionPage(

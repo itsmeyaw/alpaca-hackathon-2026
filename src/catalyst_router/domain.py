@@ -77,6 +77,7 @@ class AgentState(FrozenModel):
     reconciled_epoch: str | None = None
     active_order_ids: tuple[str, ...] = ()
     equity_peak: Decimal | None = None
+    competition_start_equity: Decimal | None = None
     reason: str = "initialized safely in PAUSED"
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -367,6 +368,21 @@ class PublicDecisionRecord(FrozenModel):
 class PublicDecisionPage(FrozenModel):
     records: list[PublicDecisionRecord]
     next_cursor: str | None = None
+
+
+class PublicPortfolioPoint(FrozenModel):
+    captured_at: datetime
+    equity: Decimal
+    cash: Decimal
+    net_pnl: Decimal
+    daily_return: Decimal
+    competition_return: Decimal
+    drawdown: Decimal = Field(ge=0)
+    position_count: int = Field(ge=0)
+    max_trade_risk_rate: Decimal = Field(ge=0)
+    total_open_risk_rate: Decimal = Field(ge=0)
+    overnight_open_risk_rate: Decimal = Field(ge=0)
+    max_group_open_risk_rate: Decimal = Field(ge=0)
 
 
 class DecisionRecord(PublicDecisionRecord):

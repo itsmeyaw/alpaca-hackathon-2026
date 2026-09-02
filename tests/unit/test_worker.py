@@ -121,6 +121,7 @@ def test_worker_cycle_persists_each_prediction_once() -> None:
     decisions = store.list_public_decisions()
     assert {record.symbol for record in decisions} == {"SPY", "AAPL"}
     assert {record.decision_type for record in decisions} == {"CHALLENGER_PREDICTION"}
+    assert all(record.route is None for record in decisions)
     assert {record.payload["authority"] for record in first} == {"PAPER_LIVE"}
     assert {record.public_summary for record in first} == {
         "Paper-Live Model signal: ABSTAIN",

@@ -1,9 +1,10 @@
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 import pytest
 
 from catalyst_router.adapters.memory import InMemoryOperationalStore
-from catalyst_router.domain import AgentMode, DecisionRecord
+from catalyst_router.domain import AgentMode, DecisionRecord, PublicPortfolioPoint, Route
 
 
 def test_store_defaults_to_paused_and_restart_epoch_requires_reconciliation() -> None:
@@ -58,6 +59,36 @@ def test_publication_delay_hides_recent_decisions() -> None:
     assert store.list_public_decisions() == [old.public_projection()]
 
 
+def test_publication_delay_hides_recent_portfolio_points() -> None:
+    store = InMemoryOperationalStore(public_delay_seconds=900)
+    started = store.begin_execution()
+    store.commit_reconciliation(
+        started.execution_epoch,
+        DecisionRecord.create(decision_type="RECONCILIATION_COMPLETED", summary="ok"),
+        equity=Decimal("100000"),
+    )
+    recent = PublicPortfolioPoint(
+        captured_at=datetime.now(UTC),
+        equity=Decimal("100100"),
+        cash=Decimal("90000"),
+        net_pnl=Decimal("100"),
+        daily_return=Decimal("0.001"),
+        competition_return=Decimal("0.001"),
+        drawdown=Decimal("0"),
+        position_count=1,
+        max_trade_risk_rate=Decimal("0.005"),
+        total_open_risk_rate=Decimal("0.005"),
+        overnight_open_risk_rate=Decimal("0"),
+        max_group_open_risk_rate=Decimal("0.005"),
+    )
+    old = recent.model_copy(update={"captured_at": datetime.now(UTC) - timedelta(minutes=16)})
+
+    assert store.append_public_portfolio(recent, expected_epoch=started.execution_epoch)
+    assert store.append_public_portfolio(old, expected_epoch=started.execution_epoch)
+
+    assert store.list_public_portfolio() == [old]
+
+
 def test_public_projection_excludes_internal_payload() -> None:
     record = DecisionRecord.create(
         decision_type="NO_TRADE",
@@ -72,6 +103,31 @@ def test_public_projection_excludes_internal_payload() -> None:
     assert "raw_prompt" not in projection
     assert "account_id" not in projection
     assert "sanitized veto" in projection
+
+
+def test_public_routes_skip_unrouted_records_without_losing_older_outcomes() -> None:
+    store = InMemoryOperationalStore()
+    routed = DecisionRecord.create(
+        decision_type="ORDER_EXECUTION",
+        route=Route.MODEL_DIRECTIONAL,
+        summary="private",
+        public=True,
+        public_summary="paper order acknowledged",
+        occurred_at=datetime.now(UTC) - timedelta(minutes=2),
+    )
+    store.append_decision(routed)
+    for index in range(3):
+        store.append_decision(
+            DecisionRecord.create(
+                decision_id=f"prediction-{index}",
+                decision_type="CHALLENGER_PREDICTION",
+                summary="private",
+                public=True,
+                public_summary="model prediction",
+            )
+        )
+
+    assert store.list_public_routes(limit=1) == [routed.public_projection()]
 
 
 def test_idempotent_decision_write_is_fenced_by_execution_epoch() -> None:

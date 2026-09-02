@@ -808,6 +808,10 @@ def test_live_cycle_reports_open_risk_of_held_positions_to_the_risk_governor() -
     snapshot = approval.payload["account_snapshot"]
     assert snapshot["position_count"] == 1
     assert Decimal(snapshot["total_open_risk"]) > Decimal("0")
+    public = store.list_public_portfolio()[-1]
+    assert public.position_count == 1
+    assert public.total_open_risk_rate > Decimal("0")
+    assert public.max_group_open_risk_rate > Decimal("0")
 
 
 def test_live_cycle_halts_when_any_held_position_loses_its_bracket() -> None:

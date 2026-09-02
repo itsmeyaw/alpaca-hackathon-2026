@@ -13,6 +13,7 @@ from catalyst_router.domain import (
     OrderPlan,
     PublicDecisionPage,
     PublicDecisionRecord,
+    PublicPortfolioPoint,
     ReconciliationSnapshot,
     Route,
 )
@@ -51,6 +52,10 @@ class OperationalStore(Protocol):
         self, record: DecisionRecord, *, expected_epoch: str | None = None
     ) -> bool: ...
 
+    def append_public_portfolio(
+        self, point: PublicPortfolioPoint, *, expected_epoch: str
+    ) -> bool: ...
+
     def claim_event_extraction(
         self,
         source_id: str,
@@ -87,6 +92,10 @@ class OperationalStore(Protocol):
     ) -> OrderExecution: ...
 
     def list_public_decisions(self, limit: int = 50) -> list[PublicDecisionRecord]: ...
+
+    def list_public_routes(self, limit: int = 100) -> list[PublicDecisionRecord]: ...
+
+    def list_public_portfolio(self, limit: int = 200) -> list[PublicPortfolioPoint]: ...
 
     def list_public_decision_page(
         self,

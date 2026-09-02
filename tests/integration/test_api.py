@@ -11,6 +11,7 @@ from catalyst_router.domain import (
     AgentMode,
     DecisionRecord,
     MarketClockSnapshot,
+    PublicPortfolioPoint,
     ReconciliationSnapshot,
     Route,
 )
@@ -116,11 +117,60 @@ def test_public_decision_pages_filter_and_page_through_records() -> None:
         next_cursor = first_page.json()["next_cursor"]
         second_page = client.get(f"/api/public/decision-pages?limit=1&cursor={next_cursor}")
         filtered_page = client.get("/api/public/decision-pages?search=spy&route=NO_TRADE")
+        routed = client.get("/api/public/routes")
 
     assert first_page.json()["records"][0]["decision_id"] == "new"
     assert second_page.json()["records"][0]["decision_id"] == "old"
     assert filtered_page.json()["records"][0]["decision_id"] == "old"
     assert filtered_page.json()["records"][0]["route"] == Route.NO_TRADE
+    assert [record["decision_id"] for record in routed.json()] == ["new", "old"]
+
+
+def test_public_portfolio_returns_only_sanitized_delayed_ledger_fields() -> None:
+    store = InMemoryOperationalStore()
+    started = store.begin_execution()
+    store.commit_reconciliation(
+        started.execution_epoch,
+        DecisionRecord.create(decision_type="RECONCILIATION_COMPLETED", summary="ok"),
+        equity=Decimal("100000"),
+    )
+    store.append_public_portfolio(
+        PublicPortfolioPoint(
+            captured_at=datetime.now(UTC),
+            equity=Decimal("99800"),
+            cash=Decimal("75000"),
+            net_pnl=Decimal("-200"),
+            daily_return=Decimal("-0.002"),
+            competition_return=Decimal("-0.002"),
+            drawdown=Decimal("0.002"),
+            position_count=2,
+            max_trade_risk_rate=Decimal("0.008"),
+            total_open_risk_rate=Decimal("0.015"),
+            overnight_open_risk_rate=Decimal("0"),
+            max_group_open_risk_rate=Decimal("0.01"),
+        ),
+        expected_epoch=started.execution_epoch,
+    )
+    app = create_app(Container(settings=settings(), store=store, broker=None))
+
+    with TestClient(app) as client:
+        response = client.get("/api/public/portfolio")
+
+    assert response.status_code == 200
+    assert response.json()[0] == {
+        "captured_at": response.json()[0]["captured_at"],
+        "equity": "99800",
+        "cash": "75000",
+        "net_pnl": "-200",
+        "daily_return": "-0.002",
+        "competition_return": "-0.002",
+        "drawdown": "0.002",
+        "position_count": 2,
+        "max_trade_risk_rate": "0.008",
+        "total_open_risk_rate": "0.015",
+        "overnight_open_risk_rate": "0",
+        "max_group_open_risk_rate": "0.01",
+    }
 
 
 class FakePaperBroker:

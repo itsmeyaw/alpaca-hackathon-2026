@@ -13,6 +13,7 @@ from catalyst_router.domain import (
     OrderExecutionStatus,
     PublicDecisionPage,
     PublicDecisionRecord,
+    PublicPortfolioPoint,
     Route,
 )
 
@@ -23,6 +24,7 @@ class InMemoryOperationalStore:
         self._state: AgentState | None = None
         self._decisions: dict[str, DecisionRecord] = {}
         self._orders: dict[str, OrderExecution] = {}
+        self._public_portfolio: dict[datetime, PublicPortfolioPoint] = {}
         self._event_extractions: set[tuple[str, str, str]] = set()
         self._public_delay = timedelta(seconds=public_delay_seconds)
 
@@ -89,6 +91,9 @@ class InMemoryOperationalStore:
                         if equity is not None
                         else state.equity_peak
                     ),
+                    "competition_start_equity": (
+                        state.competition_start_equity or state.equity_peak or equity
+                    ),
                     "updated_at": datetime.now(UTC),
                 }
             )
@@ -113,6 +118,16 @@ class InMemoryOperationalStore:
             if record.decision_id in self._decisions:
                 return False
             self._decisions[record.decision_id] = record
+            return True
+
+    def append_public_portfolio(self, point: PublicPortfolioPoint, *, expected_epoch: str) -> bool:
+        with self._lock:
+            state = self.initialize()
+            if state.execution_epoch != expected_epoch or not state.is_reconciled:
+                raise RuntimeError("worker lost execution epoch ownership")
+            if point.captured_at in self._public_portfolio:
+                return False
+            self._public_portfolio[point.captured_at] = point
             return True
 
     def claim_event_extraction(
@@ -239,6 +254,35 @@ class InMemoryOperationalStore:
             ]
             selected = sorted(records, key=lambda record: record.occurred_at, reverse=True)[:limit]
             return [record.public_projection() for record in selected]
+
+    def list_public_routes(self, limit: int = 100) -> list[PublicDecisionRecord]:
+        with self._lock:
+            now = datetime.now(UTC)
+            records = sorted(
+                (
+                    record
+                    for record in self._decisions.values()
+                    if record.public
+                    and record.route is not None
+                    and record.occurred_at + self._public_delay <= now
+                ),
+                key=lambda record: record.occurred_at,
+                reverse=True,
+            )[:limit]
+            return [record.public_projection() for record in records]
+
+    def list_public_portfolio(self, limit: int = 200) -> list[PublicPortfolioPoint]:
+        with self._lock:
+            now = datetime.now(UTC)
+            points = sorted(
+                (
+                    point
+                    for point in self._public_portfolio.values()
+                    if point.captured_at + self._public_delay <= now
+                ),
+                key=lambda point: point.captured_at,
+            )
+            return points[-limit:]
 
     def list_public_decision_page(
         self,

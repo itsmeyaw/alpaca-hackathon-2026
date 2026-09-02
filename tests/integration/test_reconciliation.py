@@ -11,6 +11,7 @@ from catalyst_router.domain import (
     DecisionRecord,
     MarketClockSnapshot,
     OrderPlan,
+    PublicPortfolioPoint,
     ReconciliationSnapshot,
 )
 from catalyst_router.service import ReconciliationService
@@ -66,6 +67,12 @@ class FailingCommitStore(InMemoryOperationalStore):
         raise RuntimeError("conditional write failed")
 
 
+class FailingProjectionStore(InMemoryOperationalStore):
+    def append_public_portfolio(self, point: PublicPortfolioPoint, *, expected_epoch: str) -> bool:
+        del point, expected_epoch
+        raise OSError("reporting write failed")
+
+
 def test_reconciliation_fences_execution_and_records_result() -> None:
     store = InMemoryOperationalStore()
     service = ReconciliationService(broker=FakePaperBroker(), store=store)
@@ -75,7 +82,12 @@ def test_reconciliation_fences_execution_and_records_result() -> None:
     assert snapshot.account.options_trading_level == 3
     assert store.get_agent_state().is_reconciled
     assert store.get_agent_state().equity_peak == Decimal("100000")
+    assert store.get_agent_state().competition_start_equity == Decimal("100000")
     assert store.list_public_decisions()[0].decision_type == "RECONCILIATION_COMPLETED"
+    portfolio = store.list_public_portfolio()[0]
+    assert portfolio.equity == Decimal("100000")
+    assert portfolio.net_pnl == Decimal("0")
+    assert portfolio.position_count == 0
 
 
 def test_blocked_account_remains_unreconciled_and_unpublished() -> None:
@@ -98,3 +110,11 @@ def test_failed_commit_does_not_publish_reconciliation() -> None:
 
     assert not store.get_agent_state().is_reconciled
     assert store.list_public_decisions() == []
+
+
+def test_reporting_failure_does_not_invalidate_reconciliation() -> None:
+    store = FailingProjectionStore()
+
+    ReconciliationService(broker=FakePaperBroker(), store=store).reconcile()
+
+    assert store.get_agent_state().is_reconciled

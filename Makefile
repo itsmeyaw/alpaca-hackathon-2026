@@ -1,3 +1,5 @@
+TOFU_BIN ?= tofu
+
 .PHONY: check test test-integration train-local dashboard-build deploy-dashboard docker-build infra-fmt
 
 check:
@@ -22,10 +24,10 @@ dashboard-build:
 	npm --prefix dashboard run build
 
 deploy-dashboard: dashboard-build
-	scripts/deploy-dashboard
+	TOFU_BIN=$(TOFU_BIN) scripts/deploy-dashboard
 
 docker-build:
 	docker build --platform linux/amd64 -t catalyst-router:local .
 
 infra-fmt:
-	terraform fmt -check -recursive infra
+	$(TOFU_BIN) fmt -check -recursive infra

@@ -31,23 +31,13 @@ variable "environment" {
   }
 }
 
-variable "api_image_tag" {
+variable "runtime_image_tag" {
   type        = string
-  description = "Immutable ECR image tag deployed to App Runner."
+  description = "Immutable ECR image tag deployed to both App Runner and the ECS worker."
 
   validation {
-    condition     = length(var.api_image_tag) > 0 && var.api_image_tag != "latest"
-    error_message = "api_image_tag must be a non-latest immutable tag."
-  }
-}
-
-variable "worker_image_tag" {
-  type        = string
-  description = "Immutable ECR image tag deployed to the ECS worker."
-
-  validation {
-    condition     = length(var.worker_image_tag) > 0 && var.worker_image_tag != "latest"
-    error_message = "worker_image_tag must be a non-latest immutable tag."
+    condition     = length(var.runtime_image_tag) > 0 && var.runtime_image_tag != "latest"
+    error_message = "runtime_image_tag must be a non-latest immutable tag."
   }
 }
 

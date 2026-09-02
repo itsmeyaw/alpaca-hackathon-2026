@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+tofu_bin="${TOFU_BIN:-tofu}"
+dashboard_url="${1:-$("$tofu_bin" -chdir=infra/environments/prod output -raw dashboard_url)}"
+api_url="${2:-$("$tofu_bin" -chdir=infra/environments/prod output -raw api_service_url)}"
+
+curl --fail --silent --show-error --retry 12 --retry-delay 5 \
+  --output /dev/null "${api_url}/ready"
+printf 'verified %s\n' "/ready"
+
+for endpoint in \
+    "/api/public/status" \
+    "/api/public/portfolio?limit=1" \
+    "/api/public/routes?limit=1" \
+    "/api/public/decisions?limit=1" \
+  "/api/public/decision-pages?limit=1" \
+  "/api/public/challenger"
+do
+  curl --fail --silent --show-error --retry 12 --retry-delay 5 \
+    --output /dev/null "${dashboard_url}${endpoint}"
+  printf 'verified %s\n' "$endpoint"
+done

@@ -14,9 +14,9 @@ data "aws_subnets" "default" {
   }
 }
 
-data "aws_ecr_image" "worker" {
+data "aws_ecr_image" "runtime" {
   repository_name = aws_ecr_repository.trader.name
-  image_tag       = var.worker_image_tag
+  image_tag       = var.runtime_image_tag
 }
 
 resource "aws_security_group" "trader" {
@@ -58,7 +58,7 @@ resource "aws_ecs_task_definition" "trader" {
   container_definitions = jsonencode([
     {
       name                   = "trader"
-      image                  = "${aws_ecr_repository.trader.repository_url}@${data.aws_ecr_image.worker.image_digest}"
+      image                  = "${aws_ecr_repository.trader.repository_url}@${data.aws_ecr_image.runtime.image_digest}"
       essential              = true
       command                = ["catalyst-router", "worker"]
       user                   = "10001:10001"
@@ -140,6 +140,10 @@ resource "aws_ecs_service" "trader" {
   availability_zone_rebalancing      = "DISABLED"
   enable_ecs_managed_tags            = true
   propagate_tags                     = "SERVICE"
+
+  # New readers retain compatibility with the previous state schema. Deploy
+  # reporting before allowing a worker with a new schema to write durable state.
+  depends_on = [aws_apprunner_service.api]
 
   deployment_circuit_breaker {
     enable   = true

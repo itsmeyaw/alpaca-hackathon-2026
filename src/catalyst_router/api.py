@@ -12,7 +12,13 @@ from pydantic import BaseModel, ConfigDict
 
 from catalyst_router.challenger import PublicChallengerStatus
 from catalyst_router.container import Container
-from catalyst_router.domain import AgentMode, PublicDecisionPage, PublicDecisionRecord, Route
+from catalyst_router.domain import (
+    AgentMode,
+    PublicDecisionPage,
+    PublicDecisionRecord,
+    PublicPortfolioPoint,
+    Route,
+)
 from catalyst_router.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -81,6 +87,20 @@ def create_app(container: Container | None = None) -> FastAPI:
         limit: Annotated[int, Query(ge=1, le=100)] = 50,
     ) -> list[PublicDecisionRecord]:
         return container.store.list_public_decisions(limit)
+
+    @app.get("/api/public/portfolio", response_model=list[PublicPortfolioPoint])
+    def public_portfolio(
+        container: ContainerDependency,
+        limit: Annotated[int, Query(ge=1, le=1000)] = 200,
+    ) -> list[PublicPortfolioPoint]:
+        return container.store.list_public_portfolio(limit)
+
+    @app.get("/api/public/routes", response_model=list[PublicDecisionRecord])
+    def public_routes(
+        container: ContainerDependency,
+        limit: Annotated[int, Query(ge=1, le=1000)] = 100,
+    ) -> list[PublicDecisionRecord]:
+        return container.store.list_public_routes(limit)
 
     @app.get("/api/public/decision-pages", response_model=PublicDecisionPage)
     def public_decision_pages(

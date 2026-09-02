@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-terraform_bin="${TERRAFORM_BIN:-terraform}"
+tofu_bin="${TOFU_BIN:-tofu}"
 deployment_dir="infra/deployments/dashboard"
 
-"$terraform_bin" -chdir="$deployment_dir" init -input=false
-"$terraform_bin" -chdir="$deployment_dir" apply -auto-approve -input=false
+"$tofu_bin" -chdir="$deployment_dir" init -input=false
+"$tofu_bin" -chdir="$deployment_dir" apply -auto-approve -input=false

@@ -17,6 +17,8 @@ from catalyst_router.domain import (
     OrderExecution,
     OrderExecutionStatus,
     OrderPlan,
+    PublicPortfolioPoint,
+    Route,
     Side,
 )
 
@@ -72,8 +74,27 @@ def test_dynamodb_store_fences_restart_and_keeps_decisions_immutable(
         public_summary="reconciliation completed",
     )
     assert dynamodb_store.commit_reconciliation(
-        started.execution_epoch, reconciliation
+        started.execution_epoch, reconciliation, equity=Decimal("100000")
     ).is_reconciled
+    portfolio = PublicPortfolioPoint(
+        captured_at=datetime.now(UTC),
+        equity=Decimal("99900"),
+        cash=Decimal("75000"),
+        net_pnl=Decimal("-100"),
+        daily_return=Decimal("-0.001"),
+        competition_return=Decimal("-0.001"),
+        drawdown=Decimal("0.001"),
+        position_count=1,
+        max_trade_risk_rate=Decimal("0.005"),
+        total_open_risk_rate=Decimal("0.005"),
+        overnight_open_risk_rate=Decimal("0"),
+        max_group_open_risk_rate=Decimal("0.005"),
+    )
+    assert dynamodb_store.append_public_portfolio(portfolio, expected_epoch=started.execution_epoch)
+    assert not dynamodb_store.append_public_portfolio(
+        portfolio, expected_epoch=started.execution_epoch
+    )
+    assert dynamodb_store.list_public_portfolio() == [portfolio]
     running = dynamodb_store.transition_agent_mode(
         AgentMode.RUNNING,
         reason="integration resume",
@@ -109,6 +130,7 @@ def test_dynamodb_store_fences_restart_and_keeps_decisions_immutable(
 
     record = DecisionRecord.create(
         decision_type="NO_TRADE",
+        route=Route.NO_TRADE,
         summary="private quality detail",
         public=True,
         public_summary="quality veto",
@@ -118,6 +140,7 @@ def test_dynamodb_store_fences_restart_and_keeps_decisions_immutable(
         record.public_projection(),
         reconciliation.public_projection(),
     ]
+    assert dynamodb_store.list_public_routes() == [record.public_projection()]
 
     with pytest.raises(ClientError):
         dynamodb_store.append_decision(record)

@@ -9,6 +9,7 @@ from catalyst_router.domain import (
     ReconciliationSnapshot,
 )
 from catalyst_router.ports import OperationalStore, PaperBroker
+from catalyst_router.reporting import build_public_portfolio_point, publish_public_portfolio
 
 
 class ReconciliationService:
@@ -39,8 +40,18 @@ class ReconciliationService:
                 f"{len(snapshot.open_orders)} open orders"
             ),
         )
-        self._store.commit_reconciliation(
+        committed = self._store.commit_reconciliation(
             state.execution_epoch, record, equity=snapshot.account.equity
+        )
+        tracked = tuple(
+            execution
+            for client_order_id in committed.active_order_ids
+            if (execution := self._store.get_order(client_order_id)) is not None
+        )
+        publish_public_portfolio(
+            self._store,
+            build_public_portfolio_point(snapshot, committed, tracked),
+            expected_epoch=committed.execution_epoch,
         )
         return snapshot
 

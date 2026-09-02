@@ -28,6 +28,7 @@ from catalyst_router.domain import (
     TradeIntent,
 )
 from catalyst_router.ports import OperationalStore, PaperBroker
+from catalyst_router.reporting import build_public_portfolio_point, publish_public_portfolio
 from catalyst_router.risk import RiskGovernor
 from catalyst_router.training import FEATURE_SCHEMA, FeatureVector
 
@@ -318,6 +319,11 @@ class LiveTradingCycle:
                 Decimal("0"),
                 (equity_peak - snapshot.account.equity) / equity_peak,
             ),
+        )
+        publish_public_portfolio(
+            self._store,
+            build_public_portfolio_point(snapshot, agent, tracked.values()),
+            expected_epoch=expected_epoch,
         )
         daily_loss = max(Decimal("0"), -portfolio.daily_pnl)
         if portfolio.competition_drawdown >= RiskGovernor.MAX_COMPETITION_DRAWDOWN_RATE:

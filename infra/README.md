@@ -1,21 +1,21 @@
 # AWS Infrastructure
 
-Terraform is pinned to `>= 1.10` because the remote S3 backend uses native lock files. Terraform 1.5.7 cannot initialize this configuration.
+OpenTofu is pinned to `>= 1.10` because the remote S3 backend uses native lock files.
 
 ## Bootstrap Remote State
 
 ```bash
-terraform -chdir=infra/bootstrap init -backend=false
-terraform -chdir=infra/bootstrap apply
-terraform -chdir=infra/bootstrap init -migrate-state
+tofu -chdir=infra/bootstrap init -backend=false
+tofu -chdir=infra/bootstrap apply
+tofu -chdir=infra/bootstrap init -migrate-state
 ```
 
 ## Provision Foundations
 
 ```bash
-terraform -chdir=infra/environments/prod init
-terraform -chdir=infra/environments/prod plan
-terraform -chdir=infra/environments/prod apply
+tofu -chdir=infra/environments/prod init
+tofu -chdir=infra/environments/prod plan
+tofu -chdir=infra/environments/prod apply
 ```
 
 Terraform creates only the secret container. Load Alpaca values outside Terraform so credentials never enter state:
@@ -33,8 +33,8 @@ dashboard bucket through CloudFront. Deployment requires an immutable ECR image 
 immutable challenger run ID:
 
 ```bash
-terraform -chdir=infra/environments/prod apply \
-  -var='api_image_tag=<immutable-tag>' \
+tofu -chdir=infra/environments/prod apply \
+  -var='runtime_image_tag=<immutable-tag>' \
   -var='challenger_run_id=<run-id>' \
   -var='challenger_manifest_sha256=<manifest-sha256>' \
   -var='bedrock_model_id=<model-or-inference-profile-id>' \
@@ -52,14 +52,11 @@ the exact configured ARN. The task retains HTTPS egress because it must reach AW
 Build, deploy, and invalidate the dashboard with Terraform:
 
 ```bash
-TERRAFORM_BIN=terraform make deploy-dashboard
+make deploy-dashboard
 ```
 
 Read the deployed URLs and verify the public surfaces with:
 
 ```bash
-terraform -chdir=infra/environments/prod output -raw dashboard_url
-terraform -chdir=infra/environments/prod output -raw api_service_url
-curl "$(terraform -chdir=infra/environments/prod output -raw dashboard_url)/api/public/status"
-curl "$(terraform -chdir=infra/environments/prod output -raw dashboard_url)/api/public/challenger"
+scripts/verify-public-api
 ```

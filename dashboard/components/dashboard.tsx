@@ -24,6 +24,7 @@ import {
   type AgentMode,
   type PublicDecision,
   type PublicDecisionPage,
+  type PublicPortfolioPoint,
   type PublicSnapshot,
   type Route,
   fetchPublicDecisionPage,
@@ -73,6 +74,80 @@ function formatRecorderTime(value: string): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function formatCurrency(value: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value));
+}
+
+function formatSignedCurrency(value: string): string {
+  return `${Number(value) > 0 ? "+" : ""}${formatCurrency(value)}`;
+}
+
+function formatPercent(value: string): string {
+  const rate = Number(value);
+  return `${rate > 0 ? "+" : ""}${(rate * 100).toFixed(2)}%`;
+}
+
+function PortfolioChart({ points }: { points: PublicPortfolioPoint[] }) {
+  if (points.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border bg-muted/60 p-3">
+        <div className="flex h-48 items-end sm:h-56">
+          <p className="font-mono text-[11px] leading-5 text-muted-foreground">Awaiting the first delayed portfolio projection.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const width = 800;
+  const height = 210;
+  const inset = 16;
+  const values = points.flatMap((point) => [Number(point.equity), Number(point.cash)]);
+  const minimum = Math.min(...values);
+  const maximum = Math.max(...values);
+  const range = maximum - minimum || Math.max(maximum * 0.01, 1);
+  const coordinate = (point: PublicPortfolioPoint, index: number, field: "equity" | "cash") => {
+    const cx = points.length === 1 ? width / 2 : inset + (index / (points.length - 1)) * (width - inset * 2);
+    const cy = height - inset - ((Number(point[field]) - minimum) / range) * (height - inset * 2);
+    return { cx, cy };
+  };
+  const coordinates = (field: "equity" | "cash") => points.map((point, index) => {
+    const { cx, cy } = coordinate(point, index, field);
+    return `${cx},${cy}`;
+  }).join(" ");
+  const latest = points.at(-1)!;
+
+  return (
+    <div className="rounded-xl border border-border bg-muted/40 p-3">
+      <div className="mb-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[10px] text-muted-foreground uppercase">
+        <span><span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-primary" />Equity {formatCurrency(latest.equity)}</span>
+        <span><span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-muted-foreground" />Cash {formatCurrency(latest.cash)}</span>
+      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby="chart-title chart-desc" className="h-48 w-full sm:h-56">
+        <title id="chart-title">Delayed portfolio equity and cash</title>
+        <desc id="chart-desc">Portfolio totals from {formatTime(points[0].captured_at)} to {formatTime(latest.captured_at)}.</desc>
+        <path d="M16 194 H784 M16 105 H784 M16 16 H784" fill="none" stroke="var(--border)" strokeWidth="1" />
+        <polyline points={coordinates("cash")} fill="none" stroke="var(--muted-foreground)" strokeWidth="2" opacity=".7" />
+        <polyline points={coordinates("equity")} fill="none" stroke="var(--primary)" strokeWidth="3" />
+        {points.length === 1 ? (
+          <>
+            <circle {...coordinate(points[0], 0, "cash")} r="4" fill="var(--muted-foreground)" />
+            <circle {...coordinate(points[0], 0, "equity")} r="5" fill="var(--primary)" />
+          </>
+        ) : null}
+      </svg>
+      <div className="flex justify-between font-mono text-[10px] text-muted-foreground">
+        <time dateTime={points[0].captured_at}>{formatRecorderTime(points[0].captured_at)}</time>
+        <time dateTime={latest.captured_at}>{formatRecorderTime(latest.captured_at)}</time>
+      </div>
+    </div>
+  );
 }
 
 function routeBreakdown(decisions: PublicDecision[]) {
@@ -162,7 +237,14 @@ export function Dashboard() {
   const status = snapshot?.status;
   const challenger = snapshot?.challenger;
   const decisions = snapshot?.decisions ?? [];
-  const routes = routeBreakdown(decisions);
+  const routeDecisions = snapshot?.routeDecisions ?? [];
+  const portfolio = snapshot?.portfolio ?? [];
+  const latestPortfolio = portfolio.at(-1);
+  const observedMaxDrawdown = portfolio.reduce(
+    (maximum, point) => Math.max(maximum, Number(point.drawdown)),
+    0,
+  );
+  const routes = routeBreakdown(routeDecisions);
   const visibleDecisions = decisionPage?.records ?? [];
   const firstRecordIndex = decisionPageIndex * RECORDS_PER_PAGE;
   const resetDecisionPaging = () => {
@@ -199,23 +281,15 @@ export function Dashboard() {
         {error ? <div role="alert" className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}. Retrying every 30 seconds.</div> : null}
 
         <section className="mb-10" aria-labelledby="performance-title">
-          <SectionTitle number="01 / Performance field" title="Account ledger" description="Portfolio data will publish here once the sanitized ledger projection is available." />
+          <SectionTitle number="01 / Performance field" title="Account ledger" description="Delayed, sanitized account totals from the execution worker." />
           <div className="mt-5 grid gap-5 lg:grid-cols-[1.65fr_1fr]">
             <Card className="border-border">
               <CardHeader>
                 <CardTitle id="performance-title">Equity curve</CardTitle>
-                <CardDescription>Equity, SPY, and cash baselines</CardDescription>
+                <CardDescription>Equity and cash totals</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-xl border border-dashed border-border bg-muted/60 p-3">
-                  <svg viewBox="0 0 800 210" role="img" aria-labelledby="chart-title chart-desc" className="h-48 w-full sm:h-56">
-                    <title id="chart-title">Portfolio equity placeholder</title>
-                    <desc id="chart-desc">Performance data has not been published yet.</desc>
-                    <path d="M0 178 H800 M0 112 H800 M0 46 H800" fill="none" stroke="var(--border)" strokeWidth="1" />
-                    <path d="M0 166 C180 160 275 135 400 139 S610 88 800 72" fill="none" stroke="var(--primary)" strokeDasharray="8 8" strokeWidth="3" opacity=".55" />
-                  </svg>
-                  <p className="mt-2 font-mono text-[11px] leading-5 text-muted-foreground">Awaiting the first portfolio ledger projection.</p>
-                </div>
+                <PortfolioChart points={portfolio} />
               </CardContent>
             </Card>
             <Card className="border-border">
@@ -224,7 +298,12 @@ export function Dashboard() {
                 <CardDescription>Published after ledger reconciliation</CardDescription>
               </CardHeader>
               <CardContent className="space-y-1">
-                {[["Net P&L", "-"], ["Today", "-%"], ["Competition return", "-%"], ["Max drawdown", "-%"]].map(([label, value]) => (
+                {[
+                  ["Net P&L", latestPortfolio ? formatSignedCurrency(latestPortfolio.net_pnl) : "-"],
+                  ["Today", latestPortfolio ? formatPercent(latestPortfolio.daily_return) : "-"],
+                  ["Competition return", latestPortfolio ? formatPercent(latestPortfolio.competition_return) : "-"],
+                  ["Observed max drawdown", latestPortfolio ? `${(observedMaxDrawdown * 100).toFixed(2)}%` : "-"],
+                ].map(([label, value]) => (
                   <div key={label} className="flex items-center justify-between border-t border-border py-3 first:border-t-0 first:pt-0">
                     <span className="text-sm text-muted-foreground">{label}</span>
                     <span className="font-mono text-base font-semibold">{value}</span>
@@ -239,11 +318,20 @@ export function Dashboard() {
           <SectionTitle number="02 / Immutable envelope" title="Risk ruler" description="Hard limits stay outside of model authority." />
           <Card className="mt-5 border-border">
             <CardContent className="grid gap-5 pt-5 sm:grid-cols-2 lg:grid-cols-3">
-              {[["Per trade", "1%"], ["Open stop-risk", "4%"], ["Overnight", "2%"], ["Exposure group", "2%"], ["Positions", "6"], ["Competition kill", "12%"]].map(([label, limit]) => (
+              {[
+                { label: "Per trade", value: Number(latestPortfolio?.max_trade_risk_rate ?? 0), limit: 0.01, unit: "rate" },
+                { label: "Open stop-risk", value: Number(latestPortfolio?.total_open_risk_rate ?? 0), limit: 0.04, unit: "rate" },
+                { label: "Overnight", value: Number(latestPortfolio?.overnight_open_risk_rate ?? 0), limit: 0.02, unit: "rate" },
+                { label: "Exposure group", value: Number(latestPortfolio?.max_group_open_risk_rate ?? 0), limit: 0.02, unit: "rate" },
+                { label: "Positions", value: latestPortfolio?.position_count ?? 0, limit: 6, unit: "count" },
+                { label: "Competition kill", value: Number(latestPortfolio?.drawdown ?? 0), limit: 0.12, unit: "rate" },
+              ].map(({ label, value, limit, unit }) => (
                 <div key={label} className="rounded-xl border border-border bg-muted/60 p-4">
-                  <div className="mb-3 flex items-center justify-between font-mono text-[11px] uppercase"><span className="text-muted-foreground">{label}</span><strong>{limit}</strong></div>
-                  <div className="h-2 overflow-hidden rounded-full bg-border"><div className="h-full w-0 bg-primary" /></div>
-                  <p className="mt-2 text-xs text-muted-foreground">No public exposure projection</p>
+                  <div className="mb-3 flex items-center justify-between font-mono text-[11px] uppercase"><span className="text-muted-foreground">{label}</span><strong>{unit === "count" ? limit : `${limit * 100}%`}</strong></div>
+                  <div className="h-2 overflow-hidden rounded-full bg-border"><div className="h-full bg-primary" style={{ width: `${Math.min(100, (value / limit) * 100)}%` }} /></div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {latestPortfolio ? `${unit === "count" ? value : `${(value * 100).toFixed(2)}%`} currently used` : "Awaiting delayed exposure data"}
+                  </p>
                 </div>
               ))}
             </CardContent>
