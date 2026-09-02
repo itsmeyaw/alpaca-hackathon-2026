@@ -1,0 +1,47 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1J063W72EFVCADW63NV1V26",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Makefile",
+    "dashboard/components/dashboard.tsx",
+    "dashboard/lib/api.ts",
+    "infra/README.md",
+    "infra/environments/prod/.terraform.lock.hcl",
+    "infra/environments/prod/delivery.tf",
+    "infra/environments/prod/ecs.tf",
+    "infra/environments/prod/variables.tf",
+    "scripts/deploy-dashboard",
+    "src/catalyst_router/adapters/dynamodb.py",
+    "src/catalyst_router/adapters/memory.py",
+    "src/catalyst_router/api.py",
+    "src/catalyst_router/domain.py",
+    "src/catalyst_router/execution.py",
+    "src/catalyst_router/ports.py",
+    "src/catalyst_router/service.py",
+    "tests/integration/test_api.py",
+    "tests/integration/test_dynamodb_store.py",
+    "tests/integration/test_reconciliation.py",
+    "tests/unit/test_execution.py",
+    "tests/unit/test_store.py",
+    "tests/unit/test_worker.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 30,
+    "cache_creation_tokens": 157989,
+    "cache_read_tokens": 691236,
+    "output_tokens": 3422,
+    "api_call_count": 11
+  }
+}
