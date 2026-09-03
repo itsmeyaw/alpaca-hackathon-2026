@@ -51,6 +51,7 @@ class FakeBroker:
         options_buying_power: Decimal | None = None,
         minutes_to_close: int = 60,
         option_exit_status: str = "accepted",
+        now: datetime | None = None,
     ) -> None:
         self.orders: dict[str, BrokerOrderSnapshot] = {}
         self.submissions = 0
@@ -66,6 +67,7 @@ class FakeBroker:
         self.options_buying_power = options_buying_power
         self.minutes_to_close = minutes_to_close
         self.option_exit_status = option_exit_status
+        self.now = now or datetime.now(UTC)
 
     def get_order_by_client_id(self, client_order_id: str) -> BrokerOrderSnapshot | None:
         return self.orders.get(client_order_id)
@@ -125,7 +127,7 @@ class FakeBroker:
         )
 
     def reconciliation_snapshot(self) -> ReconciliationSnapshot:
-        now = datetime.now(UTC)
+        now = self.now
         return ReconciliationSnapshot(
             account=AccountSnapshot(
                 equity=self.equity,
@@ -991,9 +993,95 @@ def test_rejected_managed_option_exit_risk_halts_and_flattens() -> None:
     assert broker.flattened
 
 
-def test_missing_managed_option_quote_risk_halts_and_flattens() -> None:
+def test_transient_missing_managed_option_quote_recovers_without_flattening() -> None:
     store = reconciled_store()
-    broker = FakeBroker(track_positions=True)
+    now = datetime.now(UTC)
+    broker = FakeBroker(track_positions=True, now=now)
+    intent = option_intent()
+    epoch = store.get_agent_state().execution_epoch
+    ExecutionGateway(store=store, broker=broker).execute(
+        intent,
+        approved(intent.intent_id, quantity=1),
+        expected_epoch=epoch,
+        max_active_orders=6,
+    )
+
+    class RecoveringOptionQuotes:
+        available = False
+
+        def latest_quote(self, symbol: str) -> QuoteSnapshot:
+            if not self.available:
+                raise RuntimeError(f"no quote for {symbol}")
+            return quote(symbol=symbol, timestamp=broker.now, feed="indicative")
+
+    option_quotes = RecoveringOptionQuotes()
+    cycle = LiveTradingCycle(
+        store=store,
+        broker=broker,
+        quotes=FakeQuotes(),
+        option_quotes=option_quotes,
+    )
+
+    cycle.manage(expected_epoch=epoch)
+    cycle.run((vector("MSFT"),), expected_epoch=epoch)
+
+    assert store.get_agent_state().mode is AgentMode.RUNNING
+    assert not broker.flattened
+    assert broker.submissions == 1
+
+    broker.now += timedelta(seconds=15)
+    option_quotes.available = True
+    cycle.manage(expected_epoch=epoch)
+
+    assert store.get_agent_state().mode is AgentMode.RUNNING
+    assert not broker.flattened
+
+    option_quotes.available = False
+    broker.now += timedelta(seconds=15)
+    cycle.manage(expected_epoch=epoch)
+    broker.now += timedelta(seconds=45)
+    cycle.manage(expected_epoch=epoch)
+
+    assert store.get_agent_state().mode is AgentMode.RUNNING
+    assert not broker.flattened
+
+
+def test_sustained_stale_managed_option_quote_risk_halts_and_flattens() -> None:
+    store = reconciled_store()
+    now = datetime.now(UTC)
+    broker = FakeBroker(track_positions=True, now=now)
+    intent = option_intent()
+    epoch = store.get_agent_state().execution_epoch
+    ExecutionGateway(store=store, broker=broker).execute(
+        intent,
+        approved(intent.intent_id, quantity=1),
+        expected_epoch=epoch,
+        max_active_orders=6,
+    )
+
+    class StaleOptionQuotes:
+        def latest_quote(self, symbol: str) -> QuoteSnapshot:
+            return quote(symbol=symbol, timestamp=broker.now - timedelta(seconds=6))
+
+    cycle = LiveTradingCycle(
+        store=store,
+        broker=broker,
+        quotes=FakeQuotes(),
+        option_quotes=StaleOptionQuotes(),
+    )
+
+    cycle.manage(expected_epoch=epoch)
+    broker.now += timedelta(seconds=61)
+    cycle.manage(expected_epoch=epoch)
+
+    assert store.get_agent_state().mode is AgentMode.RISK_HALTED
+    assert broker.flattened
+
+
+def test_sustained_missing_managed_option_quote_survives_restart_and_risk_halts() -> None:
+    store = reconciled_store()
+    now = datetime.now(UTC)
+    broker = FakeBroker(track_positions=True, now=now)
     intent = option_intent()
     epoch = store.get_agent_state().execution_epoch
     ExecutionGateway(store=store, broker=broker).execute(
@@ -1007,6 +1095,15 @@ def test_missing_managed_option_quote_risk_halts_and_flattens() -> None:
         def latest_quote(self, symbol: str) -> QuoteSnapshot:
             raise RuntimeError(f"no quote for {symbol}")
 
+    cycle = LiveTradingCycle(
+        store=store,
+        broker=broker,
+        quotes=FakeQuotes(),
+        option_quotes=MissingOptionQuotes(),
+    )
+
+    cycle.manage(expected_epoch=epoch)
+    broker.now += timedelta(seconds=61)
     LiveTradingCycle(
         store=store,
         broker=broker,
@@ -1016,6 +1113,36 @@ def test_missing_managed_option_quote_risk_halts_and_flattens() -> None:
 
     assert store.get_agent_state().mode is AgentMode.RISK_HALTED
     assert broker.flattened
+
+
+def test_transient_stale_managed_option_quote_does_not_flatten() -> None:
+    store = reconciled_store()
+    now = datetime.now(UTC)
+    broker = FakeBroker(track_positions=True, now=now)
+    intent = option_intent()
+    epoch = store.get_agent_state().execution_epoch
+    ExecutionGateway(store=store, broker=broker).execute(
+        intent,
+        approved(intent.intent_id, quantity=1),
+        expected_epoch=epoch,
+        max_active_orders=6,
+    )
+
+    class StaleOptionQuotes:
+        def latest_quote(self, symbol: str) -> QuoteSnapshot:
+            return quote(symbol=symbol, timestamp=broker.now - timedelta(seconds=6))
+
+    cycle = LiveTradingCycle(
+        store=store,
+        broker=broker,
+        quotes=FakeQuotes(),
+        option_quotes=StaleOptionQuotes(),
+    )
+
+    cycle.manage(expected_epoch=epoch)
+
+    assert store.get_agent_state().mode is AgentMode.RUNNING
+    assert not broker.flattened
 
 
 def test_agent_state_migrates_a_legacy_single_active_order() -> None:

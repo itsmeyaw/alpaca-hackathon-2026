@@ -374,6 +374,7 @@ class OrderExecution(FrozenModel):
     version: int = Field(default=0, ge=0)
     alpaca_order_id: str | None = None
     broker_status: str | None = None
+    option_quote_failure_started_at: datetime | None = None
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 

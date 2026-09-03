@@ -29,10 +29,12 @@ multiplier, a fresh complete indicative quote, spread at most 10%, open interest
 positive bid and ask sizes. Rank eligible contracts deterministically.
 
 Budget the entire premium as maximum loss. Actively close at a 30% premium loss, 50% premium gain,
-the four-hour model horizon, or the session cutoff. Continue to enforce account option level, option
-buying power, position count, group and total risk, reconciliation, idempotent entry claims, daily
-loss, and competition drawdown. The feature artifact is unchanged; no retraining or alteration of its
-recorded validation evidence is implied.
+the four-hour model horizon, or the session cutoff. A managed position pauses new entries on an
+unavailable or stale quote, resumes supervision when quote quality recovers, and risk-halts and
+flattens only after 60 seconds of continuous quote failure. Continue to enforce account option level,
+option buying power, position count, group and total risk, reconciliation, idempotent entry claims,
+daily loss, and competition drawdown. The feature artifact is unchanged; no retraining or alteration
+of its recorded validation evidence is implied.
 
 Production activation requires `MODEL_OPTIONS_EXECUTION_ENABLED=true` in addition to the existing
 paper-live model gates. The flag defaults off in configuration and infrastructure.

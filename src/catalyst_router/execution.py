@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
@@ -34,6 +35,7 @@ from catalyst_router.risk import RiskGovernor
 from catalyst_router.training import FEATURE_SCHEMA, FeatureVector
 
 _CENT = Decimal("0.01")
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -352,6 +354,7 @@ class LiveTradingCycle:
 
     MAX_ENTRY_NOTIONAL_RATE = Decimal("0.10")
     MAX_CONCURRENT_POSITIONS = RiskGovernor.MAX_POSITIONS
+    MANAGED_OPTION_QUOTE_GRACE = timedelta(seconds=60)
 
     def __init__(
         self,
@@ -369,6 +372,7 @@ class LiveTradingCycle:
         self._strategy = strategy or IncumbentStrategy()
         self._risk = risk_governor or RiskGovernor()
         self._option_quotes = option_quotes
+        self._option_quote_failures: dict[str, datetime] = {}
         self._gateway = ExecutionGateway(store=store, broker=broker)
 
     def run(
@@ -407,7 +411,7 @@ class LiveTradingCycle:
             return ()
 
         option_exits = self._manage_option_exits(snapshot, tracked, expected_epoch)
-        if option_exits:
+        if option_exits or self._option_quote_failures:
             return option_exits
 
         last_equity = snapshot.account.last_equity or snapshot.account.equity
@@ -551,6 +555,17 @@ class LiveTradingCycle:
         expected_epoch: str,
     ) -> tuple[DecisionRecord, ...]:
         positions = {position.symbol: position for position in snapshot.positions}
+        managed_symbols = {
+            execution.plan.symbol
+            for execution in tracked.values()
+            if execution.plan.instrument_type is InstrumentType.OPTION
+            and execution.plan.symbol in positions
+        }
+        self._option_quote_failures = {
+            symbol: failed_at
+            for symbol, failed_at in self._option_quote_failures.items()
+            if symbol in managed_symbols
+        }
         for client_order_id, execution in tracked.items():
             plan = execution.plan
             position = positions.get(plan.symbol)
@@ -566,20 +581,43 @@ class LiveTradingCycle:
                 try:
                     quote = self._option_quotes.latest_quote(plan.symbol)
                 except Exception:
-                    self._halt_and_flatten(
-                        AgentMode.RISK_HALTED,
+                    if self._record_option_quote_failure(
+                        execution,
+                        snapshot.clock.timestamp,
                         f"option quote unavailable for managed position {plan.symbol}",
-                    )
-                    return ()
+                    ):
+                        return ()
+                    continue
                 quote_age = snapshot.clock.timestamp - quote.timestamp
                 if quote.feed != "indicative" or not (
                     -ModelStrategy.MAX_CLOCK_SKEW <= quote_age <= timedelta(seconds=5)
                 ):
-                    self._halt_and_flatten(
-                        AgentMode.RISK_HALTED,
+                    if self._record_option_quote_failure(
+                        execution,
+                        snapshot.clock.timestamp,
                         f"option quote failed quality gates for managed position {plan.symbol}",
+                    ):
+                        return ()
+                    continue
+                failed_at = (
+                    execution.option_quote_failure_started_at
+                    or self._option_quote_failures.pop(plan.symbol, None)
+                )
+                if failed_at is not None:
+                    self._option_quote_failures.pop(plan.symbol, None)
+                    recovered = execution.model_copy(
+                        update={
+                            "option_quote_failure_started_at": None,
+                            "version": execution.version + 1,
+                            "updated_at": datetime.now(UTC),
+                        }
                     )
-                    return ()
+                    self._store.update_order(recovered, expected_status=execution.status)
+                    logger.info(
+                        "managed option quote recovered for %s after %.1f seconds",
+                        plan.symbol,
+                        (snapshot.clock.timestamp - failed_at).total_seconds(),
+                    )
                 if quote.bid_price <= plan.stop_price:
                     reason = "premium stop reached"
                 elif quote.bid_price >= plan.take_profit_price:
@@ -638,6 +676,34 @@ class LiveTradingCycle:
                 else ()
             )
         return ()
+
+    def _record_option_quote_failure(
+        self, execution: OrderExecution, observed_at: datetime, reason: str
+    ) -> bool:
+        symbol = execution.plan.symbol
+        failed_at = execution.option_quote_failure_started_at
+        if failed_at is None:
+            failed_at = observed_at
+            degraded = execution.model_copy(
+                update={
+                    "option_quote_failure_started_at": failed_at,
+                    "version": execution.version + 1,
+                    "updated_at": datetime.now(UTC),
+                }
+            )
+            self._store.update_order(degraded, expected_status=execution.status)
+        self._option_quote_failures[symbol] = failed_at
+        failure_age = observed_at - failed_at
+        if failure_age < self.MANAGED_OPTION_QUOTE_GRACE:
+            logger.warning(
+                "%s; pausing new entries during %.1f/%.1f second grace period",
+                reason,
+                failure_age.total_seconds(),
+                self.MANAGED_OPTION_QUOTE_GRACE.total_seconds(),
+            )
+            return False
+        self._halt_and_flatten(AgentMode.RISK_HALTED, reason)
+        return True
 
     @staticmethod
     def _is_terminal_rejection(status: str) -> bool:
