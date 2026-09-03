@@ -1,0 +1,64 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "01M1KZV36TJJZHNE7AK2K38GET",
+  "session_id": "ses_f9bf84b47ffe40ZYrAaHuM0FwV",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-03T15:57:50.341807Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "save_step_count": 4,
+  "files_touched": [],
+  "agent": "OpenCode",
+  "model": "gpt-5.6-sol",
+  "turn_id": "53233de08259",
+  "checkpoint_transcript_start": 155,
+  "transcript_lines_at_start": 155,
+  "compact_transcript_start": 155,
+  "token_usage": {
+    "input_tokens": 170,
+    "cache_creation_tokens": 323415,
+    "cache_read_tokens": 5977965,
+    "output_tokens": 13045,
+    "api_call_count": 59
+  },
+  "session_metrics": {
+    "turn_count": 6
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 267,
+      "agent_lines_removed": 55
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 267,
+      "agent_lines_removed": 55
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 267,
+      "agent_lines_removed": 55
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 478,
+      "agent_lines_removed": 70
+    }
+  ]
+}
