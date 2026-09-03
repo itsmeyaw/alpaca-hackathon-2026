@@ -5,11 +5,18 @@ from typing import cast
 
 from alpaca.common.exceptions import APIError
 from alpaca.trading.client import TradingClient
-from alpaca.trading.enums import OrderClass, OrderSide, QueryOrderStatus, TimeInForce
+from alpaca.trading.enums import (
+    OrderClass,
+    OrderSide,
+    PositionIntent,
+    QueryOrderStatus,
+    TimeInForce,
+)
 from alpaca.trading.models import Clock, Order, Position, TradeAccount
 from alpaca.trading.requests import (
     GetOrdersRequest,
     LimitOrderRequest,
+    MarketOrderRequest,
     StopLossRequest,
     TakeProfitRequest,
 )
@@ -17,6 +24,7 @@ from alpaca.trading.requests import (
 from catalyst_router.domain import (
     AccountSnapshot,
     BrokerOrderSnapshot,
+    InstrumentType,
     MarketClockSnapshot,
     OpenOrderSnapshot,
     OrderPlan,
@@ -68,6 +76,11 @@ class AlpacaPaperBroker:
                 portfolio_value=Decimal(str(account.portfolio_value)),
                 trading_blocked=bool(account.trading_blocked),
                 options_trading_level=int(account.options_trading_level or 0),
+                options_buying_power=(
+                    Decimal(str(account.options_buying_power))
+                    if account.options_buying_power is not None
+                    else None
+                ),
                 last_equity=(
                     Decimal(str(account.last_equity)) if account.last_equity is not None else None
                 ),
@@ -110,22 +123,35 @@ class AlpacaPaperBroker:
         return self._order_snapshot(order)
 
     def submit_order(self, plan: OrderPlan) -> BrokerOrderSnapshot:
+        if plan.instrument_type is InstrumentType.OPTION:
+            if plan.side is not Side.BUY:
+                raise ValueError("option opening orders must buy to open")
+            request = LimitOrderRequest(
+                symbol=plan.symbol,
+                qty=plan.quantity,
+                side=OrderSide.BUY,
+                time_in_force=TimeInForce.DAY,
+                extended_hours=False,
+                client_order_id=plan.client_order_id,
+                limit_price=float(plan.limit_price),
+                position_intent=PositionIntent.BUY_TO_OPEN,
+            )
+        else:
+            request = LimitOrderRequest(
+                symbol=plan.symbol,
+                qty=plan.quantity,
+                side=OrderSide.BUY if plan.side is Side.BUY else OrderSide.SELL,
+                time_in_force=TimeInForce.DAY,
+                order_class=OrderClass.BRACKET,
+                extended_hours=False,
+                client_order_id=plan.client_order_id,
+                limit_price=float(plan.limit_price),
+                take_profit=TakeProfitRequest(limit_price=float(plan.take_profit_price)),
+                stop_loss=StopLossRequest(stop_price=float(plan.stop_price)),
+            )
         order = cast(
             Order,
-            self._client.submit_order(
-                LimitOrderRequest(
-                    symbol=plan.symbol,
-                    qty=plan.quantity,
-                    side=OrderSide.BUY if plan.side is Side.BUY else OrderSide.SELL,
-                    time_in_force=TimeInForce.DAY,
-                    order_class=OrderClass.BRACKET,
-                    extended_hours=False,
-                    client_order_id=plan.client_order_id,
-                    limit_price=float(plan.limit_price),
-                    take_profit=TakeProfitRequest(limit_price=float(plan.take_profit_price)),
-                    stop_loss=StopLossRequest(stop_price=float(plan.stop_price)),
-                )
-            ),
+            self._client.submit_order(request),
         )
         return self._order_snapshot(order)
 
@@ -148,6 +174,25 @@ class AlpacaPaperBroker:
         except APIError as exc:
             if exc.status_code != 404:
                 raise
+
+    def submit_option_exit(
+        self, symbol: str, quantity: int, client_order_id: str
+    ) -> BrokerOrderSnapshot:
+        order = cast(
+            Order,
+            self._client.submit_order(
+                MarketOrderRequest(
+                    symbol=symbol,
+                    qty=quantity,
+                    side=OrderSide.SELL,
+                    time_in_force=TimeInForce.DAY,
+                    extended_hours=False,
+                    client_order_id=client_order_id,
+                    position_intent=PositionIntent.SELL_TO_CLOSE,
+                )
+            ),
+        )
+        return self._order_snapshot(order)
 
     def flatten(self) -> None:
         self._client.close_all_positions(cancel_orders=True)

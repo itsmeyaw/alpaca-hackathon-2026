@@ -26,6 +26,7 @@ output "trader_environment" {
     PUBLIC_DELAY_SECONDS = "900"
     WORKER_POLL_SECONDS  = "15"
     MODEL_EXECUTION      = var.model_paper_execution_enabled ? "PAPER_LIVE" : "SHADOW_ONLY"
+    MODEL_OPTIONS        = var.model_options_execution_enabled ? "LONG_CALL_PUT" : "DISABLED"
     MODEL_DECISION_GATE  = "0.52"
     LLM_EVENTS_ENABLED   = "true"
     BEDROCK_MODEL_ID     = var.bedrock_model_id

@@ -124,7 +124,8 @@ Any stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an 
 
 ## Market Scope
 
-- Build a daily universe of approximately 20 liquid option-enabled underlyings from active stocks and movers.
+- Build and persist a daily universe of approximately 20 liquid option-enabled underlyings from
+  most-active stocks, gainers, and losers.
 - Reserve the remaining Basic-plan equity stream capacity for SPY, QQQ, and sector or regime references.
 - Dynamically subscribe only to option contracts under active evaluation and remain within the Basic-plan stream limit.
 - Use Alpaca News as the initial catalyst source.
@@ -133,7 +134,8 @@ Any stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an 
 ## Agent Authority
 
 - The Bedrock-hosted LLM emits typed Events and explanations only. Event output may influence the deterministic router in shadow mode, but has no order authority.
-- The deployed price classifier may emit long or short paper Trade Intents at its versioned runtime gate.
+- The deployed price classifier may emit paper Trade Intents at its versioned runtime gate. Under
+  ADR-0016's explicit option gate, bullish predictions buy calls and bearish predictions buy puts.
 - `alpaca-py` is the runtime integration for streams, account reconciliation, market data, and orders.
 - Alpaca MCP exposes read-oriented research and demonstration tools to the LLM; it does not grant the LLM an ungoverned order path.
 - The Alpaca CLI is an operator and judging demonstration surface, including dry runs and account inspection.
@@ -163,6 +165,11 @@ The accepted posture is competition-aggressive but survival-aware:
 
 - Live option trades are long calls or long puts only.
 - Target 14 to 30 calendar days to expiration and approximately 0.55 to 0.70 absolute delta.
+- Require price at least $5, prior-day underlying dollar volume at least $50M, underlying spread at
+  most 15 bps, option spread at most 10%, open interest at least 100, positive quote sizes, and a
+  quote no more than five seconds old.
+- Budget the full premium as maximum loss and actively exit at -30%, +50%, the model horizon, or the
+  session cutoff.
 - Prohibit 0DTE contracts and short option legs.
 - Require complete, fresh quotes and strict liquidity checks; otherwise route to `NO_TRADE`.
 - Evaluate debit spreads in shadow mode until consolidated option quotes are available and validated.
@@ -182,7 +189,8 @@ The accepted posture is competition-aggressive but survival-aware:
 
 ## Operating Cycle
 
-- **Premarket:** reconcile Alpaca state, check Agent Mode, select the universe, ingest news, and establish regime context.
+- **Premarket:** reconcile Alpaca state, check Agent Mode, ingest news, and establish regime context;
+  finalize the daily universe at the open when the IEX spread gate has current quotes.
 - **Regular session:** evaluate Opportunities on events and corrected minute bars, manage orders and Position Theses, and publish delayed reporting projections.
 - **Before close:** close liquidity-reversion positions, reevaluate every overnight candidate, and enforce overnight risk limits.
 - **After close:** reconcile outcomes, resolve completed theses, update the Adaptive Policy once per new reward, archive observations, and produce the daily report.

@@ -37,6 +37,8 @@ tofu -chdir=infra/environments/prod apply \
   -var='runtime_image_tag=<immutable-tag>' \
   -var='challenger_run_id=<run-id>' \
   -var='challenger_manifest_sha256=<manifest-sha256>' \
+  -var='model_paper_execution_enabled=true' \
+  -var='model_options_execution_enabled=true' \
   -var='bedrock_model_id=<model-or-inference-profile-id>' \
   -var='bedrock_model_arn=<exact-model-or-inference-profile-arn>'
 ```
@@ -48,6 +50,8 @@ at startup. The API exposes only sanitized model metadata. Model execution defau
 Set `model_paper_execution_enabled=true` only for an artifact matching the ADR-0013 15-minute
 contract; runtime rejects this override for five-minute artifacts. Bedrock access is restricted to
 the exact configured ARN. The task retains HTTPS egress because it must reach AWS and Alpaca APIs.
+Directional long-option execution is separately gated by `model_options_execution_enabled`, which
+defaults off and requires model paper execution.
 
 Build, deploy, and invalidate the dashboard with Terraform:
 

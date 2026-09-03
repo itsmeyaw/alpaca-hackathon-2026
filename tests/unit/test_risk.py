@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -7,6 +7,7 @@ from catalyst_router.domain import (
     AgentMode,
     AgentState,
     InstrumentType,
+    OptionType,
     PortfolioRiskState,
     RiskDecisionStatus,
     Route,
@@ -32,6 +33,11 @@ def intent(**updates: object) -> TradeIntent:
         "data_quality_passed": True,
     }
     values.update(updates)
+    if values["instrument_type"] is InstrumentType.OPTION:
+        values.setdefault("underlying_symbol", "AAPL")
+        values.setdefault("option_type", OptionType.CALL)
+        values.setdefault("option_expiration_date", date(2026, 9, 25))
+        values.setdefault("take_profit_price", Decimal("150"))
     return TradeIntent.model_validate(values)
 
 
@@ -186,9 +192,46 @@ def test_option_contract_multiplier_is_enforced_and_used_for_sizing() -> None:
         contract_multiplier=100,
     )
     decision = RiskGovernor(options_execution_enabled=True).evaluate(
-        option, agent(), portfolio(), market_is_open=True
+        option,
+        agent(),
+        portfolio(),
+        market_is_open=True,
+        options_trading_level=2,
+        options_buying_power=Decimal("100000"),
     )
 
     assert decision.status is RiskDecisionStatus.APPROVED
-    assert decision.quantity == 10
+    assert decision.quantity == 5
     assert decision.risk_amount == Decimal("1000")
+
+
+def test_options_require_level_two_and_use_options_buying_power() -> None:
+    option = intent(
+        route=Route.MODEL_DIRECTIONAL,
+        instrument_type=InstrumentType.OPTION,
+        entry_price=Decimal("4"),
+        stop_price=Decimal("2.80"),
+        contract_multiplier=100,
+    )
+    governor = RiskGovernor(options_execution_enabled=True)
+
+    level_one = governor.evaluate(
+        option,
+        agent(),
+        portfolio(),
+        market_is_open=True,
+        options_trading_level=1,
+        options_buying_power=Decimal("100000"),
+    )
+    insufficient = governor.evaluate(
+        option,
+        agent(),
+        portfolio(),
+        market_is_open=True,
+        options_trading_level=2,
+        options_buying_power=Decimal("399"),
+    )
+
+    assert level_one.status is RiskDecisionStatus.VETOED
+    assert "options trading level 2" in level_one.checks[0]
+    assert insufficient.status is RiskDecisionStatus.VETOED

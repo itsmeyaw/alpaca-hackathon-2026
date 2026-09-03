@@ -69,6 +69,7 @@ def test_reads_live_model_execution_settings(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setenv("MODEL_AUTHORITY", "PAPER_LIVE")
     monkeypatch.setenv("MODEL_DECISION_GATE", "0.55")
     monkeypatch.setenv("WORKER_POLL_SECONDS", "15")
+    monkeypatch.setenv("MODEL_OPTIONS_EXECUTION_ENABLED", "true")
 
     configured = Settings.from_env()
 
@@ -76,6 +77,23 @@ def test_reads_live_model_execution_settings(monkeypatch: pytest.MonkeyPatch) ->
     assert configured.model_authority == "PAPER_LIVE"
     assert configured.model_decision_gate == Decimal("0.55")
     assert configured.worker_poll_seconds == 15
+    assert configured.model_options_execution_enabled
+
+
+def test_rejects_option_execution_without_live_model_authority() -> None:
+    with pytest.raises(ValueError, match="MODEL_OPTIONS_EXECUTION_ENABLED"):
+        Settings(
+            alpaca_key=None,
+            alpaca_secret=None,
+            state_backend="memory",
+            competition_id="test",
+            aws_region="us-east-1",
+            dynamodb_table="unused",
+            dynamodb_endpoint_url=None,
+            auto_reconcile=False,
+            public_delay_seconds=0,
+            model_options_execution_enabled=True,
+        )
 
 
 def test_rejects_model_gate_without_directional_margin() -> None:

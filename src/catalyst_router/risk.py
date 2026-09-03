@@ -37,6 +37,8 @@ class RiskGovernor:
         market_is_open: bool,
         overnight: bool = False,
         trading_blocked: bool = False,
+        options_trading_level: int = 0,
+        options_buying_power: Decimal | None = None,
     ) -> RiskDecision:
         vetoes: list[str] = []
         if intent.route is Route.NO_TRADE:
@@ -45,6 +47,8 @@ class RiskGovernor:
             vetoes.append("short option legs are prohibited")
         if intent.instrument_type is InstrumentType.OPTION and not self._options_execution_enabled:
             vetoes.append("live option execution is not enabled")
+        if intent.instrument_type is InstrumentType.OPTION and options_trading_level < 2:
+            vetoes.append("options trading level 2 is required")
         if intent.route is Route.LIQUIDITY_REVERSION and (
             intent.instrument_type is not InstrumentType.EQUITY
         ):
@@ -100,7 +104,14 @@ class RiskGovernor:
                 portfolio.equity * self.MAX_OVERNIGHT_RISK_RATE - portfolio.overnight_open_risk
             )
         risk_amount = max(Decimal("0"), min(capacities))
-        affordable = (portfolio.buying_power / intent.entry_cost_per_unit).to_integral_value(
+        buying_power = (
+            options_buying_power
+            if intent.instrument_type is InstrumentType.OPTION
+            else portfolio.buying_power
+        )
+        if buying_power is None:
+            return self._veto(intent, ["options buying power is unavailable"])
+        affordable = (buying_power / intent.entry_cost_per_unit).to_integral_value(
             rounding=ROUND_FLOOR
         )
         by_stop = (risk_amount / intent.stop_risk_per_unit).to_integral_value(rounding=ROUND_FLOOR)

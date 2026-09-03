@@ -5,11 +5,11 @@ from typing import Any, cast
 from uuid import UUID
 
 import pytest
-from alpaca.trading.enums import OrderClass, OrderSide, TimeInForce
-from alpaca.trading.requests import LimitOrderRequest
+from alpaca.trading.enums import OrderClass, OrderSide, PositionIntent, TimeInForce
+from alpaca.trading.requests import LimitOrderRequest, MarketOrderRequest
 
 from catalyst_router.adapters import alpaca
-from catalyst_router.domain import OrderPlan, Side
+from catalyst_router.domain import InstrumentType, OptionType, OrderPlan, Side
 
 
 def test_broker_is_pinned_to_paper_trading_api(
@@ -126,6 +126,91 @@ def test_broker_submits_a_protected_short_bracket(
     assert request.take_profit.limit_price == 96.0
     assert request.stop_loss is not None
     assert request.stop_loss.stop_price == 102.0
+    assert result.side is Side.SELL
+
+
+def test_broker_submits_a_long_option_as_a_simple_buy_to_open_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    submitted: dict[str, object] = {}
+
+    class FakeTradingClient:
+        def __init__(self, key: str, secret: str, **kwargs: Any) -> None:
+            del key, secret, kwargs
+
+        def submit_order(self, request: object) -> object:
+            submitted["request"] = request
+            return SimpleNamespace(
+                id=UUID("00000000-0000-0000-0000-000000000007"),
+                client_order_id="cr-option",
+                symbol="AAPL260925C00100000",
+                side=OrderSide.BUY,
+                qty="2",
+                status="accepted",
+                legs=None,
+            )
+
+    monkeypatch.setattr(alpaca, "TradingClient", FakeTradingClient)
+    broker = alpaca.AlpacaPaperBroker("paper-key", "paper-secret")
+    plan = OrderPlan(
+        client_order_id="cr-option",
+        intent_id="intent-option",
+        symbol="AAPL260925C00100000",
+        underlying_symbol="AAPL",
+        instrument_type=InstrumentType.OPTION,
+        option_type=OptionType.CALL,
+        option_expiration_date=datetime(2026, 9, 25, tzinfo=UTC).date(),
+        side=Side.BUY,
+        quantity=2,
+        limit_price=Decimal("4.00"),
+        stop_price=Decimal("2.80"),
+        take_profit_price=Decimal("6.00"),
+        risk_amount=Decimal("800"),
+        exposure_group="us-options:bullish",
+        created_at=datetime(2026, 9, 3, tzinfo=UTC),
+        expires_at=datetime(2026, 9, 3, 4, tzinfo=UTC),
+    )
+
+    broker.submit_order(plan)
+
+    request = cast(LimitOrderRequest, submitted["request"])
+    assert request.order_class is None
+    assert request.position_intent is PositionIntent.BUY_TO_OPEN
+    assert request.side is OrderSide.BUY
+    assert request.time_in_force is TimeInForce.DAY
+
+
+def test_broker_submits_an_idempotent_option_sell_to_close(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    submitted: dict[str, object] = {}
+
+    class FakeTradingClient:
+        def __init__(self, key: str, secret: str, **kwargs: Any) -> None:
+            del key, secret, kwargs
+
+        def submit_order(self, request: object) -> object:
+            submitted["request"] = request
+            return SimpleNamespace(
+                id=UUID("00000000-0000-0000-0000-000000000008"),
+                client_order_id="crx-option",
+                symbol="AAPL260925C00100000",
+                side=OrderSide.SELL,
+                qty="2",
+                status="accepted",
+                legs=None,
+            )
+
+    monkeypatch.setattr(alpaca, "TradingClient", FakeTradingClient)
+
+    result = alpaca.AlpacaPaperBroker("paper-key", "paper-secret").submit_option_exit(
+        "AAPL260925C00100000", 2, "crx-option"
+    )
+
+    request = cast(MarketOrderRequest, submitted["request"])
+    assert request.position_intent is PositionIntent.SELL_TO_CLOSE
+    assert request.side is OrderSide.SELL
+    assert request.client_order_id == "crx-option"
     assert result.side is Side.SELL
 
 

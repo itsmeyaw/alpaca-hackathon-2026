@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Any
@@ -50,6 +50,11 @@ class EventType(StrEnum):
 class InstrumentType(StrEnum):
     EQUITY = "EQUITY"
     OPTION = "OPTION"
+
+
+class OptionType(StrEnum):
+    CALL = "CALL"
+    PUT = "PUT"
 
 
 class Side(StrEnum):
@@ -111,6 +116,7 @@ class AccountSnapshot(FrozenModel):
     portfolio_value: Decimal
     trading_blocked: bool
     options_trading_level: int
+    options_buying_power: Decimal | None = None
     last_equity: Decimal | None = None
 
 
@@ -265,12 +271,24 @@ class TradeIntent(FrozenModel):
     quote_age_seconds: Decimal = Field(ge=0)
     data_quality_passed: bool
     contract_multiplier: int = Field(default=1, gt=0)
+    underlying_symbol: str | None = None
+    option_type: OptionType | None = None
+    option_expiration_date: date | None = None
+    take_profit_price: Decimal | None = Field(default=None, gt=0)
+    universe_id: str | None = None
 
     @model_validator(mode="after")
     def validate_contract_multiplier(self) -> TradeIntent:
         expected = 100 if self.instrument_type is InstrumentType.OPTION else 1
         if self.contract_multiplier != expected:
             raise ValueError(f"{self.instrument_type} contract multiplier must be {expected}")
+        if self.instrument_type is InstrumentType.OPTION and (
+            self.underlying_symbol is None
+            or self.option_type is None
+            or self.option_expiration_date is None
+            or self.take_profit_price is None
+        ):
+            raise ValueError("long option intents require complete contract and exit metadata")
         return self
 
     @property
@@ -279,6 +297,8 @@ class TradeIntent(FrozenModel):
 
     @property
     def stop_risk_per_unit(self) -> Decimal:
+        if self.instrument_type is InstrumentType.OPTION:
+            return self.entry_price * self.contract_multiplier
         return self.stop_distance * self.contract_multiplier
 
     @property
@@ -317,6 +337,11 @@ class OrderPlan(FrozenModel):
     take_profit_price: Decimal = Field(gt=0)
     risk_amount: Decimal = Field(gt=0)
     exposure_group: str
+    instrument_type: InstrumentType = InstrumentType.EQUITY
+    underlying_symbol: str | None = None
+    option_type: OptionType | None = None
+    option_expiration_date: date | None = None
+    universe_id: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     expires_at: datetime
 
@@ -332,6 +357,13 @@ class OrderPlan(FrozenModel):
             raise ValueError("short bracket prices must be take profit < entry < stop")
         if self.expires_at.tzinfo is None or self.expires_at <= self.created_at:
             raise ValueError("order plan expiry must be timezone-aware and after creation")
+        if self.instrument_type is InstrumentType.OPTION and (
+            self.side is not Side.BUY
+            or self.underlying_symbol is None
+            or self.option_type is None
+            or self.option_expiration_date is None
+        ):
+            raise ValueError("long option plans require complete contract metadata")
         return self
 
 

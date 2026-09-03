@@ -4,7 +4,7 @@ import base64
 import hashlib
 import json
 from binascii import Error as BinasciiError
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
@@ -25,6 +25,7 @@ from catalyst_router.domain import (
     PublicPortfolioPoint,
     Route,
 )
+from catalyst_router.universe import UniverseSnapshot
 
 if TYPE_CHECKING:
     from mypy_boto3_dynamodb.type_defs import TransactWriteItemTypeDef
@@ -288,6 +289,63 @@ class DynamoOperationalStore:
                         }.items()
                     },
                     "ConditionExpression": "attribute_not_exists(PK)",
+                }
+            },
+        ]
+        try:
+            self._client.transact_write_items(TransactItems=operations)
+            return True
+        except ClientError as exc:
+            reasons = exc.response.get("CancellationReasons", [])
+            if reasons and reasons[0].get("Code") == "ConditionalCheckFailed":
+                raise RuntimeError("worker lost execution epoch ownership") from exc
+            if len(reasons) > 1 and reasons[1].get("Code") == "ConditionalCheckFailed":
+                return False
+            raise
+
+    def get_daily_universe(self, session_date: date) -> UniverseSnapshot | None:
+        response = self._table.get_item(
+            Key={
+                "PK": f"COMP#{self._competition_id}",
+                "SK": f"UNIVERSE#{session_date.isoformat()}",
+            },
+            ConsistentRead=True,
+        )
+        item = response.get("Item")
+        if item is None:
+            return None
+        payload = item.get("payload")
+        if not isinstance(payload, (str, bytes, bytearray)):
+            raise RuntimeError("universe payload is missing or invalid")
+        return UniverseSnapshot.model_validate_json(payload)
+
+    def put_daily_universe(self, snapshot: UniverseSnapshot, *, expected_epoch: str) -> bool:
+        serializer = TypeSerializer()
+        operations: list[TransactWriteItemTypeDef] = [
+            {
+                "ConditionCheck": {
+                    "TableName": self._table.name,
+                    "Key": {
+                        key: serializer.serialize(value) for key, value in self._control_key.items()
+                    },
+                    "ConditionExpression": (
+                        "execution_epoch = :epoch AND reconciled_epoch = :epoch"
+                    ),
+                    "ExpressionAttributeValues": {":epoch": serializer.serialize(expected_epoch)},
+                }
+            },
+            {
+                "Put": {
+                    "TableName": self._table.name,
+                    "Item": {
+                        key: serializer.serialize(value)
+                        for key, value in {
+                            "PK": f"COMP#{self._competition_id}",
+                            "SK": f"UNIVERSE#{snapshot.session_date.isoformat()}",
+                            "payload": snapshot.model_dump_json(),
+                        }.items()
+                    },
+                    "ConditionExpression": "attribute_not_exists(PK) AND attribute_not_exists(SK)",
                 }
             },
         ]

@@ -12,6 +12,7 @@ from catalyst_router.challenger import PublicChallengerStatus, ShadowPrediction
 from catalyst_router.domain import DecisionRecord
 from catalyst_router.ports import OperationalStore
 from catalyst_router.training import FeatureVector, MarketBar, build_feature_vectors
+from catalyst_router.universe import DailyUniverse, UniverseSnapshot, UniverseUnavailable
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,14 @@ class FeatureBuilder(Protocol):
 
 
 class LiveTrader(Protocol):
+    def manage(self, *, expected_epoch: str) -> tuple[DecisionRecord, ...]: ...
+
     def run(
-        self, vectors: tuple[FeatureVector, ...], *, expected_epoch: str
+        self,
+        vectors: tuple[FeatureVector, ...],
+        *,
+        expected_epoch: str,
+        universe_id: str | None = None,
     ) -> tuple[DecisionRecord, ...]: ...
 
 
@@ -66,6 +73,7 @@ class TradingWorker:
         store: OperationalStore,
         market_data: MarketData,
         challenger: ChallengerPredictor,
+        universe: DailyUniverse,
         feature_builder: FeatureBuilder | None = None,
         live_trader: LiveTrader | None = None,
         event_router: EventRouter | None = None,
@@ -74,6 +82,7 @@ class TradingWorker:
         self._store = store
         self._market_data = market_data
         self._challenger = challenger
+        self._universe = universe
         self._feature_builder = feature_builder or LiveFeatureBuilder(
             challenger.status.feature_schema or "bar-features-v3"
         )
@@ -85,6 +94,7 @@ class TradingWorker:
         self._execution_epoch: str | None = None
         self._bars: dict[tuple[str, datetime], MarketBar] = {}
         self._market_data_bootstrapped = False
+        self._universe_id: str | None = None
 
     def run_cycle(self) -> tuple[DecisionRecord, ...]:
         state = self._store.get_agent_state()
@@ -94,9 +104,23 @@ class TradingWorker:
             raise RuntimeError("worker lost execution epoch ownership")
         if not self._challenger.status.deployed or not self._challenger.status.loaded:
             raise RuntimeError("challenger is not ready for inference")
+        expected_epoch = self._execution_epoch or state.execution_epoch
+        if self._live_trader is not None:
+            management_records = self._live_trader.manage(expected_epoch=expected_epoch)
+            if management_records:
+                return management_records
+        try:
+            universe = self._universe.current(expected_epoch=expected_epoch)
+        except UniverseUnavailable:
+            return ()
+        if universe.universe_id != self._universe_id:
+            self._bars.clear()
+            self._market_data_bootstrapped = False
+            self._universe_id = universe.universe_id
+        symbols = tuple(dict.fromkeys(("SPY", *universe.symbols)))
         timeframe = self._challenger.status.timeframe_minutes or 5
         bars = self._market_data.recent_bars(
-            self._challenger.symbols,
+            symbols,
             timeframe_minutes=timeframe,
             lookback_days=10 if not self._market_data_bootstrapped else 1,
         )
@@ -114,11 +138,10 @@ class TradingWorker:
         latest_vectors = tuple(
             vector for vector in vectors if vector.observed_at == latest_by_symbol[vector.symbol]
         )
-        expected_epoch = self._execution_epoch or state.execution_epoch
         records = []
         for vector in latest_vectors:
             prediction = self._challenger.predict(vector)
-            record = self._prediction_record(prediction)
+            record = self._prediction_record(prediction, universe)
             if self._store.append_decision_once(record, expected_epoch=expected_epoch):
                 records.append(record)
         if self._event_router is not None:
@@ -132,7 +155,8 @@ class TradingWorker:
             eligible_vectors = tuple(
                 vector
                 for vector in latest_vectors
-                if self._live_started_at is None or vector.observed_at > self._live_started_at
+                if vector.symbol in universe.symbols
+                and (self._live_started_at is None or vector.observed_at > self._live_started_at)
             )
             live_vectors = tuple(
                 vector
@@ -143,7 +167,13 @@ class TradingWorker:
             )
             if not live_vectors:
                 return tuple(records)
-            records.extend(self._live_trader.run(live_vectors, expected_epoch=expected_epoch))
+            records.extend(
+                self._live_trader.run(
+                    live_vectors,
+                    expected_epoch=expected_epoch,
+                    universe_id=universe.universe_id,
+                )
+            )
         return tuple(records)
 
     def run_forever(
@@ -174,7 +204,9 @@ class TradingWorker:
                     raise
             sleep(poll_seconds)
 
-    def _prediction_record(self, prediction: ShadowPrediction) -> DecisionRecord:
+    def _prediction_record(
+        self, prediction: ShadowPrediction, universe: UniverseSnapshot
+    ) -> DecisionRecord:
         authority = self._challenger.status.authority or "SHADOW_ONLY"
         model_label = "paper-live model" if authority == "PAPER_LIVE" else "shadow model"
         decision_id = str(
@@ -204,6 +236,7 @@ class TradingWorker:
                 "run_id": prediction.run_id,
                 "value": prediction.value,
                 "signal": prediction.signal,
+                "universe_id": universe.universe_id,
             },
             public=True,
             public_summary=f"{model_label.title()} signal: {prediction.signal}",

@@ -9,7 +9,9 @@ from catalyst_router.domain import (
     AgentMode,
     BrokerOrderSnapshot,
     DecisionRecord,
+    InstrumentType,
     MarketClockSnapshot,
+    OptionType,
     OrderExecutionStatus,
     OrderPlan,
     PositionSnapshot,
@@ -19,6 +21,7 @@ from catalyst_router.domain import (
     RiskDecisionStatus,
     Route,
     Side,
+    TradeIntent,
 )
 from catalyst_router.execution import (
     ExecutionGateway,
@@ -44,6 +47,10 @@ class FakeBroker:
         equity: Decimal = Decimal("100000"),
         last_equity: Decimal = Decimal("100000"),
         track_positions: bool = False,
+        options_trading_level: int = 0,
+        options_buying_power: Decimal | None = None,
+        minutes_to_close: int = 60,
+        option_exit_status: str = "accepted",
     ) -> None:
         self.orders: dict[str, BrokerOrderSnapshot] = {}
         self.submissions = 0
@@ -54,6 +61,11 @@ class FakeBroker:
         self.flattened = False
         self.track_positions = track_positions
         self.closed: list[str] = []
+        self.plans: dict[str, OrderPlan] = {}
+        self.options_trading_level = options_trading_level
+        self.options_buying_power = options_buying_power
+        self.minutes_to_close = minutes_to_close
+        self.option_exit_status = option_exit_status
 
     def get_order_by_client_id(self, client_order_id: str) -> BrokerOrderSnapshot | None:
         return self.orders.get(client_order_id)
@@ -72,9 +84,25 @@ class FakeBroker:
         )
         self.submissions += 1
         self.orders[client_order_id] = order
+        self.plans[client_order_id] = plan
         if self.lose_first_response:
             self.lose_first_response = False
             raise TimeoutError("response lost after acceptance")
+        return order
+
+    def submit_option_exit(
+        self, symbol: str, quantity: int, client_order_id: str
+    ) -> BrokerOrderSnapshot:
+        order = BrokerOrderSnapshot(
+            order_id="alpaca-exit-1",
+            client_order_id=client_order_id,
+            symbol=symbol,
+            side=Side.SELL,
+            quantity=quantity,
+            status=self.option_exit_status,
+        )
+        self.closed.append(symbol)
+        self.orders[client_order_id] = order
         return order
 
     def _held_positions(self) -> tuple[PositionSnapshot, ...]:
@@ -83,12 +111,16 @@ class FakeBroker:
         return tuple(
             PositionSnapshot(
                 symbol=order.symbol,
-                asset_class="us_equity",
+                asset_class=(
+                    "us_option"
+                    if self.plans[client_order_id].instrument_type is InstrumentType.OPTION
+                    else "us_equity"
+                ),
                 quantity=Decimal(order.quantity),
                 market_value=Decimal(order.quantity) * Decimal("100"),
                 unrealized_pl=Decimal("0"),
             )
-            for order in self.orders.values()
+            for client_order_id, order in self.orders.items()
             if order.symbol not in self.closed and order.status != "canceled"
         )
 
@@ -101,14 +133,15 @@ class FakeBroker:
                 cash=Decimal("100000"),
                 portfolio_value=self.equity,
                 trading_blocked=False,
-                options_trading_level=0,
+                options_trading_level=self.options_trading_level,
+                options_buying_power=self.options_buying_power,
                 last_equity=self.last_equity,
             ),
             clock=MarketClockSnapshot(
                 is_open=True,
                 timestamp=now,
                 next_open=now + timedelta(days=1),
-                next_close=now + timedelta(hours=1),
+                next_close=now + timedelta(minutes=self.minutes_to_close),
             ),
             positions=self._held_positions(),
             open_orders=(),
@@ -298,6 +331,28 @@ def quote(**updates: object) -> QuoteSnapshot:
     }
     values.update(updates)
     return QuoteSnapshot.model_validate(values)
+
+
+def option_intent() -> TradeIntent:
+    return TradeIntent(
+        intent_id="option-intent",
+        route=Route.MODEL_DIRECTIONAL,
+        symbol="AAPL260925C00100000",
+        underlying_symbol="AAPL",
+        instrument_type=InstrumentType.OPTION,
+        option_type=OptionType.CALL,
+        option_expiration_date=datetime(2026, 9, 25, tzinfo=UTC).date(),
+        side=Side.BUY,
+        confidence=Decimal("0.8"),
+        entry_price=Decimal("4.00"),
+        stop_price=Decimal("2.80"),
+        take_profit_price=Decimal("6.00"),
+        expected_horizon_minutes=240,
+        exposure_group="us-options:bullish",
+        quote_age_seconds=Decimal("1"),
+        data_quality_passed=True,
+        contract_multiplier=100,
+    )
 
 
 def approved(intent_id: str, quantity: int = 10) -> RiskDecision:
@@ -837,6 +892,127 @@ def test_live_cycle_halts_when_any_held_position_loses_its_bracket() -> None:
     )
 
     cycle.run(signals, expected_epoch=epoch)
+
+    assert store.get_agent_state().mode is AgentMode.RISK_HALTED
+    assert broker.flattened
+
+
+def test_live_cycle_manages_a_long_option_premium_stop_without_bracket_legs() -> None:
+    store = reconciled_store()
+    broker = FakeBroker(
+        track_positions=True,
+        options_trading_level=2,
+        options_buying_power=Decimal("100000"),
+    )
+    intent = option_intent()
+    epoch = store.get_agent_state().execution_epoch
+    ExecutionGateway(store=store, broker=broker).execute(
+        intent,
+        approved(intent.intent_id, quantity=1),
+        expected_epoch=epoch,
+        max_active_orders=6,
+    )
+
+    class OptionQuotes:
+        def latest_quote(self, symbol: str) -> QuoteSnapshot:
+            return quote(
+                symbol=symbol,
+                bid_price=Decimal("2.79"),
+                ask_price=Decimal("2.81"),
+                feed="indicative",
+            )
+
+    records = LiveTradingCycle(
+        store=store,
+        broker=broker,
+        quotes=FakeQuotes(),
+        option_quotes=OptionQuotes(),
+    ).manage(expected_epoch=epoch)
+
+    assert broker.closed == ["AAPL260925C00100000"]
+    assert len(records) == 1
+    assert records[0].decision_type == "OPTION_EXIT"
+
+
+def test_live_cycle_flattens_long_options_at_the_session_cutoff() -> None:
+    store = reconciled_store()
+    broker = FakeBroker(track_positions=True, minutes_to_close=10)
+    intent = option_intent()
+    epoch = store.get_agent_state().execution_epoch
+    ExecutionGateway(store=store, broker=broker).execute(
+        intent,
+        approved(intent.intent_id, quantity=1),
+        expected_epoch=epoch,
+        max_active_orders=6,
+    )
+
+    records = LiveTradingCycle(
+        store=store,
+        broker=broker,
+        quotes=FakeQuotes(),
+    ).manage(expected_epoch=epoch)
+
+    assert records == ()
+    assert broker.flattened
+
+
+def test_rejected_managed_option_exit_risk_halts_and_flattens() -> None:
+    store = reconciled_store()
+    broker = FakeBroker(
+        track_positions=True,
+        option_exit_status="rejected",
+    )
+    intent = option_intent()
+    epoch = store.get_agent_state().execution_epoch
+    ExecutionGateway(store=store, broker=broker).execute(
+        intent,
+        approved(intent.intent_id, quantity=1),
+        expected_epoch=epoch,
+        max_active_orders=6,
+    )
+
+    class OptionQuotes:
+        def latest_quote(self, symbol: str) -> QuoteSnapshot:
+            return quote(
+                symbol=symbol,
+                bid_price=Decimal("2.79"),
+                ask_price=Decimal("2.81"),
+                feed="indicative",
+            )
+
+    LiveTradingCycle(
+        store=store,
+        broker=broker,
+        quotes=FakeQuotes(),
+        option_quotes=OptionQuotes(),
+    ).manage(expected_epoch=epoch)
+
+    assert store.get_agent_state().mode is AgentMode.RISK_HALTED
+    assert broker.flattened
+
+
+def test_missing_managed_option_quote_risk_halts_and_flattens() -> None:
+    store = reconciled_store()
+    broker = FakeBroker(track_positions=True)
+    intent = option_intent()
+    epoch = store.get_agent_state().execution_epoch
+    ExecutionGateway(store=store, broker=broker).execute(
+        intent,
+        approved(intent.intent_id, quantity=1),
+        expected_epoch=epoch,
+        max_active_orders=6,
+    )
+
+    class MissingOptionQuotes:
+        def latest_quote(self, symbol: str) -> QuoteSnapshot:
+            raise RuntimeError(f"no quote for {symbol}")
+
+    LiveTradingCycle(
+        store=store,
+        broker=broker,
+        quotes=FakeQuotes(),
+        option_quotes=MissingOptionQuotes(),
+    ).manage(expected_epoch=epoch)
 
     assert store.get_agent_state().mode is AgentMode.RISK_HALTED
     assert broker.flattened

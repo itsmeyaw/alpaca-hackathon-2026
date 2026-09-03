@@ -76,6 +76,7 @@ resource "aws_ecs_task_definition" "trader" {
         { name = "WORKER_POLL_SECONDS", value = "15" },
         { name = "PAPER_EXECUTION_ENABLED", value = "true" },
         { name = "MODEL_EXECUTION_ENABLED", value = tostring(var.model_paper_execution_enabled) },
+        { name = "MODEL_OPTIONS_EXECUTION_ENABLED", value = tostring(var.model_options_execution_enabled) },
         { name = "MODEL_AUTHORITY", value = var.model_paper_execution_enabled ? "PAPER_LIVE" : "SHADOW_ONLY" },
         { name = "MODEL_DECISION_GATE", value = "0.52" },
         { name = "LLM_EVENTS_ENABLED", value = "true" },
@@ -125,6 +126,13 @@ resource "aws_ecs_task_definition" "trader" {
   ])
 
   depends_on = [aws_iam_role_policy.task_execution, aws_iam_role_policy.trader]
+
+  lifecycle {
+    precondition {
+      condition     = !var.model_options_execution_enabled || var.model_paper_execution_enabled
+      error_message = "model_options_execution_enabled requires model_paper_execution_enabled."
+    }
+  }
 }
 
 resource "aws_ecs_service" "trader" {

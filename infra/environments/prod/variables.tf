@@ -87,3 +87,9 @@ variable "model_paper_execution_enabled" {
   description = "Explicitly authorize the selected ADR-0013 15-minute model for paper execution."
   default     = false
 }
+
+variable "model_options_execution_enabled" {
+  type        = bool
+  description = "Replace directional equity entries with bounded long calls and puts."
+  default     = false
+}

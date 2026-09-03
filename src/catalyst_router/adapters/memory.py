@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from threading import RLock
 from uuid import uuid4
@@ -16,6 +16,7 @@ from catalyst_router.domain import (
     PublicPortfolioPoint,
     Route,
 )
+from catalyst_router.universe import UniverseSnapshot
 
 
 class InMemoryOperationalStore:
@@ -26,6 +27,7 @@ class InMemoryOperationalStore:
         self._orders: dict[str, OrderExecution] = {}
         self._public_portfolio: dict[datetime, PublicPortfolioPoint] = {}
         self._event_extractions: set[tuple[str, str, str]] = set()
+        self._universes: dict[date, UniverseSnapshot] = {}
         self._public_delay = timedelta(seconds=public_delay_seconds)
 
     def initialize(self) -> AgentState:
@@ -128,6 +130,20 @@ class InMemoryOperationalStore:
             if point.captured_at in self._public_portfolio:
                 return False
             self._public_portfolio[point.captured_at] = point
+            return True
+
+    def get_daily_universe(self, session_date: date) -> UniverseSnapshot | None:
+        with self._lock:
+            return self._universes.get(session_date)
+
+    def put_daily_universe(self, snapshot: UniverseSnapshot, *, expected_epoch: str) -> bool:
+        with self._lock:
+            state = self.initialize()
+            if state.execution_epoch != expected_epoch or not state.is_reconciled:
+                raise RuntimeError("worker lost execution epoch ownership")
+            if snapshot.session_date in self._universes:
+                return False
+            self._universes[snapshot.session_date] = snapshot
             return True
 
     def claim_event_extraction(

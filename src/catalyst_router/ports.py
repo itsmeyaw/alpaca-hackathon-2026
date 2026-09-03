@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
@@ -17,6 +18,7 @@ from catalyst_router.domain import (
     ReconciliationSnapshot,
     Route,
 )
+from catalyst_router.universe import UniverseSnapshot
 
 
 class PaperBroker(Protocol):
@@ -25,6 +27,10 @@ class PaperBroker(Protocol):
     def get_order_by_client_id(self, client_order_id: str) -> BrokerOrderSnapshot | None: ...
 
     def submit_order(self, plan: OrderPlan) -> BrokerOrderSnapshot: ...
+
+    def submit_option_exit(
+        self, symbol: str, quantity: int, client_order_id: str
+    ) -> BrokerOrderSnapshot: ...
 
     def close_position(self, symbol: str) -> None: ...
 
@@ -55,6 +61,10 @@ class OperationalStore(Protocol):
     def append_public_portfolio(
         self, point: PublicPortfolioPoint, *, expected_epoch: str
     ) -> bool: ...
+
+    def get_daily_universe(self, session_date: date) -> UniverseSnapshot | None: ...
+
+    def put_daily_universe(self, snapshot: UniverseSnapshot, *, expected_epoch: str) -> bool: ...
 
     def claim_event_extraction(
         self,

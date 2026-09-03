@@ -30,6 +30,7 @@ class Settings:
     challenger_manifest_sha256: str | None = None
     paper_execution_enabled: bool = False
     model_execution_enabled: bool = False
+    model_options_execution_enabled: bool = False
     model_authority: str = "SHADOW_ONLY"
     model_decision_gate: Decimal = Decimal("0.55")
     llm_events_enabled: bool = False
@@ -53,6 +54,15 @@ class Settings:
             raise ValueError("MODEL_EXECUTION_ENABLED requires PAPER_EXECUTION_ENABLED")
         if self.model_execution_enabled and self.model_authority != "PAPER_LIVE":
             raise ValueError("MODEL_EXECUTION_ENABLED requires MODEL_AUTHORITY=PAPER_LIVE")
+        if self.model_options_execution_enabled and not (
+            self.paper_execution_enabled
+            and self.model_execution_enabled
+            and self.model_authority == "PAPER_LIVE"
+        ):
+            raise ValueError(
+                "MODEL_OPTIONS_EXECUTION_ENABLED requires paper execution and "
+                "PAPER_LIVE model execution"
+            )
         if (
             self.runtime_role == "worker"
             and self.model_authority == "PAPER_LIVE"
@@ -98,6 +108,7 @@ class Settings:
             challenger_manifest_sha256=os.getenv("CHALLENGER_MANIFEST_SHA256"),
             paper_execution_enabled=_as_bool(os.getenv("PAPER_EXECUTION_ENABLED")),
             model_execution_enabled=_as_bool(os.getenv("MODEL_EXECUTION_ENABLED")),
+            model_options_execution_enabled=_as_bool(os.getenv("MODEL_OPTIONS_EXECUTION_ENABLED")),
             model_authority=os.getenv("MODEL_AUTHORITY", "SHADOW_ONLY"),
             model_decision_gate=Decimal(os.getenv("MODEL_DECISION_GATE", "0.55")),
             llm_events_enabled=_as_bool(os.getenv("LLM_EVENTS_ENABLED")),

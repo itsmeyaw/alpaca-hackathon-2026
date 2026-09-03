@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -21,6 +21,7 @@ from catalyst_router.domain import (
     Route,
     Side,
 )
+from catalyst_router.universe import UniverseSnapshot
 
 
 @pytest.fixture
@@ -95,6 +96,18 @@ def test_dynamodb_store_fences_restart_and_keeps_decisions_immutable(
         portfolio, expected_epoch=started.execution_epoch
     )
     assert dynamodb_store.list_public_portfolio() == [portfolio]
+    universe = UniverseSnapshot(
+        universe_id="universe-v1:2026-09-03",
+        policy_version="universe-v1",
+        session_date=date(2026, 9, 3),
+        selected_at=datetime.now(UTC),
+        symbols=("AAPL",),
+        source_ranks={"AAPL": {"most_active": 1}},
+        rejections={},
+    )
+    assert dynamodb_store.put_daily_universe(universe, expected_epoch=started.execution_epoch)
+    assert not dynamodb_store.put_daily_universe(universe, expected_epoch=started.execution_epoch)
+    assert dynamodb_store.get_daily_universe(date(2026, 9, 3)) == universe
     running = dynamodb_store.transition_agent_mode(
         AgentMode.RUNNING,
         reason="integration resume",

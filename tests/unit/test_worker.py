@@ -1,9 +1,10 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from catalyst_router.adapters.memory import InMemoryOperationalStore
 from catalyst_router.challenger import PublicChallengerStatus, ShadowPrediction
 from catalyst_router.domain import DecisionRecord, Route
 from catalyst_router.training import FEATURE_NAMES, FEATURE_SCHEMA, FeatureVector, MarketBar
+from catalyst_router.universe import DailyUniverse, UniverseSnapshot, UniverseUnavailable
 from catalyst_router.worker import TradingWorker
 
 
@@ -18,6 +19,27 @@ class FakeMarketData:
         assert timeframe_minutes == 5
         self.lookbacks.append(lookback_days)
         return []
+
+
+class FakeUniverseSource:
+    def session_date(self) -> date:
+        return date(2026, 8, 28)
+
+    def build(self, session_date: date) -> UniverseSnapshot:
+        assert session_date == date(2026, 8, 28)
+        return UniverseSnapshot(
+            universe_id="universe-v1:2026-08-28",
+            policy_version="universe-v1",
+            session_date=date(2026, 8, 28),
+            selected_at=datetime(2026, 8, 28, 12, tzinfo=UTC),
+            symbols=("AAPL",),
+            source_ranks={"AAPL": {"most_active": 1}},
+            rejections={},
+        )
+
+
+def fake_universe(store: InMemoryOperationalStore) -> DailyUniverse:
+    return DailyUniverse(store=store, source=FakeUniverseSource())
 
 
 class FakeFeatureBuilder:
@@ -65,11 +87,21 @@ class FakeChallenger:
 class FakeLiveTrader:
     def __init__(self) -> None:
         self.calls: list[tuple[FeatureVector, ...]] = []
+        self.management_calls = 0
+
+    def manage(self, *, expected_epoch: str) -> tuple[DecisionRecord, ...]:
+        del expected_epoch
+        self.management_calls += 1
+        return ()
 
     def run(
-        self, vectors: tuple[FeatureVector, ...], *, expected_epoch: str
+        self,
+        vectors: tuple[FeatureVector, ...],
+        *,
+        expected_epoch: str,
+        universe_id: str | None = None,
     ) -> tuple[DecisionRecord, ...]:
-        del expected_epoch
+        del expected_epoch, universe_id
         self.calls.append(vectors)
         return ()
 
@@ -110,6 +142,7 @@ def test_worker_cycle_persists_each_prediction_once() -> None:
         store=store,
         market_data=market_data,
         challenger=FakeChallenger(),
+        universe=fake_universe(store),
         feature_builder=FakeFeatureBuilder(),
     )
 
@@ -118,7 +151,11 @@ def test_worker_cycle_persists_each_prediction_once() -> None:
 
     assert len(first) == 2
     assert second == ()
-    decisions = store.list_public_decisions()
+    decisions = [
+        record
+        for record in store.list_public_decisions()
+        if record.decision_type == "CHALLENGER_PREDICTION"
+    ]
     assert {record.symbol for record in decisions} == {"SPY", "AAPL"}
     assert {record.decision_type for record in decisions} == {"CHALLENGER_PREDICTION"}
     assert all(record.route is None for record in decisions)
@@ -159,6 +196,7 @@ def test_worker_scores_each_symbols_latest_complete_bar() -> None:
         store=store,
         market_data=FakeMarketData(),
         challenger=FakeChallenger(),
+        universe=fake_universe(store),
         feature_builder=UnevenFeatureBuilder(),
     )
 
@@ -167,12 +205,109 @@ def test_worker_scores_each_symbols_latest_complete_bar() -> None:
     assert {record.symbol for record in records} == {"SPY", "AAPL"}
 
 
+def test_worker_uses_daily_universe_instead_of_manifest_symbols() -> None:
+    store = InMemoryOperationalStore()
+    started = store.begin_execution()
+    store.commit_reconciliation(
+        started.execution_epoch,
+        DecisionRecord.create(decision_type="RECONCILIATION_COMPLETED", summary="ok"),
+    )
+
+    class DynamicSource:
+        def session_date(self) -> date:
+            return date(2026, 8, 28)
+
+        def build(self, session_date: date) -> UniverseSnapshot:
+            assert session_date == date(2026, 8, 28)
+            return UniverseSnapshot(
+                universe_id="universe-v1:2026-08-28",
+                policy_version="universe-v1",
+                session_date=date(2026, 8, 28),
+                selected_at=datetime(2026, 8, 28, 12, tzinfo=UTC),
+                symbols=("MSFT",),
+                source_ranks={"MSFT": {"gainer": 1}},
+                rejections={},
+            )
+
+    requested: list[tuple[str, ...]] = []
+
+    class DynamicMarketData:
+        def recent_bars(
+            self,
+            symbols: tuple[str, ...],
+            *,
+            timeframe_minutes: int,
+            lookback_days: int,
+        ) -> list[MarketBar]:
+            del timeframe_minutes, lookback_days
+            requested.append(symbols)
+            return []
+
+    class DynamicFeatureBuilder:
+        def build(self, bars: list[MarketBar]) -> tuple[FeatureVector, ...]:
+            del bars
+            return tuple(
+                FeatureVector(
+                    symbol=symbol,
+                    observed_at=datetime(2026, 8, 28, 14, tzinfo=UTC),
+                    schema=FEATURE_SCHEMA,
+                    names=FEATURE_NAMES,
+                    values=(0.0,) * len(FEATURE_NAMES),
+                )
+                for symbol in ("SPY", "MSFT")
+            )
+
+    records = TradingWorker(
+        store=store,
+        market_data=DynamicMarketData(),
+        challenger=FakeChallenger(),
+        universe=DailyUniverse(store=store, source=DynamicSource()),
+        feature_builder=DynamicFeatureBuilder(),
+    ).run_cycle()
+
+    assert requested == [("SPY", "MSFT")]
+    assert {record.symbol for record in records} == {"SPY", "MSFT"}
+    assert {record.payload["universe_id"] for record in records} == {"universe-v1:2026-08-28"}
+
+
+def test_worker_keeps_supervising_while_daily_universe_waits_for_open() -> None:
+    store = InMemoryOperationalStore()
+    started = store.begin_execution()
+    store.commit_reconciliation(
+        started.execution_epoch,
+        DecisionRecord.create(decision_type="RECONCILIATION_COMPLETED", summary="ok"),
+    )
+    live_trader = FakeLiveTrader()
+
+    class ClosedSource:
+        def session_date(self) -> date:
+            return date(2026, 8, 31)
+
+        def build(self, session_date: date) -> UniverseSnapshot:
+            del session_date
+            raise UniverseUnavailable("market closed")
+
+    worker = TradingWorker(
+        store=store,
+        market_data=FakeMarketData(),
+        challenger=FakeChallenger(),
+        universe=DailyUniverse(store=store, source=ClosedSource()),
+        feature_builder=FakeFeatureBuilder(),
+        live_trader=live_trader,
+    )
+
+    assert worker.run_cycle() == ()
+    assert live_trader.management_calls == 1
+    assert live_trader.calls == []
+
+
 def test_worker_cycle_requires_current_reconciled_execution_epoch() -> None:
     store = InMemoryOperationalStore()
     worker = TradingWorker(
         store=store,
         market_data=FakeMarketData(),
         challenger=FakeChallenger(),
+        universe=fake_universe(store),
         feature_builder=FakeFeatureBuilder(),
     )
 
@@ -196,6 +331,7 @@ def test_live_trader_waits_for_a_bar_completed_after_worker_start() -> None:
         store=store,
         market_data=FakeMarketData(),
         challenger=FakeChallenger(),
+        universe=fake_universe(store),
         feature_builder=FakeFeatureBuilder(),
         live_trader=live_trader,
         live_started_at=datetime(2026, 8, 28, 14, 0, tzinfo=UTC),
@@ -218,6 +354,7 @@ def test_live_trader_accepts_the_next_completed_bar() -> None:
         store=store,
         market_data=FakeMarketData(),
         challenger=FakeChallenger(),
+        universe=fake_universe(store),
         feature_builder=FakeFeatureBuilder(datetime(2026, 8, 28, 14, 15, tzinfo=UTC)),
         live_trader=live_trader,
         live_started_at=datetime(2026, 8, 28, 14, 0, tzinfo=UTC),
@@ -244,6 +381,7 @@ def test_shadow_event_record_is_not_passed_to_live_trader() -> None:
         store=store,
         market_data=FakeMarketData(),
         challenger=FakeChallenger(),
+        universe=fake_universe(store),
         feature_builder=FakeFeatureBuilder(datetime(2026, 8, 28, 14, 15, tzinfo=UTC)),
         live_trader=live_trader,
         event_router=FakeEventRouter(),
@@ -269,6 +407,7 @@ def test_shadow_event_failure_does_not_block_live_trader() -> None:
         store=store,
         market_data=FakeMarketData(),
         challenger=FakeChallenger(),
+        universe=fake_universe(store),
         feature_builder=FakeFeatureBuilder(datetime(2026, 8, 28, 14, 15, tzinfo=UTC)),
         live_trader=live_trader,
         event_router=FailingEventRouter(),

@@ -5,7 +5,7 @@ import json
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
-from typing import Literal, Protocol
+from typing import Literal, Protocol, cast
 from uuid import NAMESPACE_URL, uuid5
 
 from catalyst_router.challenger import PublicChallengerStatus, ShadowPrediction
@@ -15,6 +15,7 @@ from catalyst_router.domain import (
     BrokerOrderSnapshot,
     DecisionRecord,
     InstrumentType,
+    OptionType,
     OrderExecution,
     OrderExecutionStatus,
     OrderPlan,
@@ -245,6 +246,103 @@ class ModelStrategy:
         )
 
 
+class OptionSelectionSource(Protocol):
+    def select(
+        self,
+        underlying_symbol: str,
+        direction: Side,
+        underlying_price: Decimal,
+        *,
+        now: datetime | None = None,
+    ) -> object: ...
+
+
+class DirectionalOptionStrategy(ModelStrategy):
+    """Maps model direction to a premium-bounded long call or long put."""
+
+    def __init__(
+        self,
+        predictor: ModelPredictor,
+        options: OptionSelectionSource,
+        *,
+        decision_gate: Decimal,
+    ) -> None:
+        super().__init__(predictor, decision_gate=decision_gate)
+        self._options = options
+
+    def create_intent(
+        self,
+        vector: FeatureVector,
+        quote: QuoteSnapshot,
+        *,
+        signal: EntrySignal | None = None,
+        now: datetime | None = None,
+    ) -> TradeIntent | None:
+        from catalyst_router.options import OptionSelection
+
+        observed_now = now or datetime.now(UTC)
+        if vector.schema != self._predictor.status.feature_schema or quote.symbol != vector.symbol:
+            return None
+        feature_age = observed_now - vector.observed_at
+        quote_age = observed_now - quote.timestamp
+        if not timedelta(0) <= feature_age <= self.MAX_FEATURE_AGE:
+            return None
+        if not -self.MAX_CLOCK_SKEW <= quote_age <= self.MAX_QUOTE_AGE:
+            return None
+        if quote.spread_bps > self.MAX_SPREAD_BPS:
+            return None
+        selected_signal = signal or self.signal(vector)
+        if selected_signal is None:
+            return None
+        underlying_price = (quote.bid_price + quote.ask_price) / Decimal("2")
+        selection = cast(
+            OptionSelection,
+            self._options.select(
+                vector.symbol,
+                selected_signal.side,
+                underlying_price,
+                now=observed_now,
+            ),
+        )
+        contract = selection.selected
+        if contract is None:
+            return None
+        entry_price = contract.ask_price.quantize(_CENT, rounding=ROUND_CEILING)
+        stop_price = (entry_price * Decimal("0.70")).quantize(_CENT, rounding=ROUND_FLOOR)
+        take_profit = (entry_price * Decimal("1.50")).quantize(_CENT, rounding=ROUND_CEILING)
+        intent_id = str(
+            uuid5(
+                NAMESPACE_URL,
+                (
+                    f"{selected_signal.source}:long-option:{contract.contract_symbol}:"
+                    f"{vector.observed_at.isoformat()}"
+                ),
+            )
+        )
+        direction = "bullish" if selected_signal.side is Side.BUY else "bearish"
+        return TradeIntent(
+            intent_id=intent_id,
+            route=selected_signal.route,
+            symbol=contract.contract_symbol,
+            underlying_symbol=vector.symbol,
+            instrument_type=InstrumentType.OPTION,
+            option_type=(OptionType.CALL if selected_signal.side is Side.BUY else OptionType.PUT),
+            option_expiration_date=contract.expiration_date,
+            side=Side.BUY,
+            confidence=selected_signal.confidence,
+            entry_price=entry_price,
+            stop_price=stop_price,
+            take_profit_price=take_profit,
+            expected_horizon_minutes=240,
+            exposure_group=f"us-options:{direction}",
+            quote_age_seconds=Decimal(
+                str(max(0.0, (observed_now - contract.quote_timestamp).total_seconds()))
+            ),
+            data_quality_passed=True,
+            contract_multiplier=100,
+        )
+
+
 class QuoteSource(Protocol):
     def latest_quote(self, symbol: str) -> QuoteSnapshot: ...
 
@@ -263,16 +361,22 @@ class LiveTradingCycle:
         quotes: QuoteSource,
         strategy: EntryStrategy | None = None,
         risk_governor: RiskGovernor | None = None,
+        option_quotes: QuoteSource | None = None,
     ) -> None:
         self._store = store
         self._broker = broker
         self._quotes = quotes
         self._strategy = strategy or IncumbentStrategy()
         self._risk = risk_governor or RiskGovernor()
+        self._option_quotes = option_quotes
         self._gateway = ExecutionGateway(store=store, broker=broker)
 
     def run(
-        self, vectors: tuple[FeatureVector, ...], *, expected_epoch: str
+        self,
+        vectors: tuple[FeatureVector, ...],
+        *,
+        expected_epoch: str,
+        universe_id: str | None = None,
     ) -> tuple[DecisionRecord, ...]:
         agent = self._store.get_agent_state()
         if agent.mode is not AgentMode.RUNNING:
@@ -294,12 +398,17 @@ class LiveTradingCycle:
         expired = tuple(
             execution
             for execution in tracked.values()
-            if snapshot.clock.timestamp >= execution.plan.expires_at
+            if execution.plan.instrument_type is not InstrumentType.OPTION
+            and snapshot.clock.timestamp >= execution.plan.expires_at
         )
         if expired:
             for execution in expired:
                 self._broker.close_position(execution.plan.symbol)
             return ()
+
+        option_exits = self._manage_option_exits(snapshot, tracked, expected_epoch)
+        if option_exits:
+            return option_exits
 
         last_equity = snapshot.account.last_equity or snapshot.account.equity
         equity_peak = agent.equity_peak or max(last_equity, snapshot.account.equity)
@@ -346,12 +455,17 @@ class LiveTradingCycle:
         ):
             return ()
         committed = {execution.plan.symbol for execution in tracked.values()}
+        committed_underlyings = {
+            execution.plan.underlying_symbol or execution.plan.symbol
+            for execution in tracked.values()
+        }
         committed.update(position.symbol for position in snapshot.positions)
         committed.update(order.symbol for order in snapshot.open_orders)
         candidates = [
             (signal, vector)
             for vector in vectors
             if vector.symbol not in committed
+            and vector.symbol not in committed_underlyings
             and (signal := self._strategy.signal(vector)) is not None
         ]
         for signal, vector in sorted(
@@ -361,12 +475,23 @@ class LiveTradingCycle:
             intent = self._strategy.create_intent(vector, quote, signal=signal)
             if intent is None:
                 continue
+            if universe_id is not None:
+                intent = intent.model_copy(update={"universe_id": universe_id})
             risk = self._risk.evaluate(
                 intent,
                 agent,
                 portfolio,
                 market_is_open=snapshot.clock.is_open,
                 trading_blocked=snapshot.account.trading_blocked,
+                options_trading_level=snapshot.account.options_trading_level,
+                options_buying_power=(
+                    min(
+                        snapshot.account.options_buying_power,
+                        snapshot.account.equity * self.MAX_ENTRY_NOTIONAL_RATE,
+                    )
+                    if snapshot.account.options_buying_power is not None
+                    else None
+                ),
             )
             if risk.status is RiskDecisionStatus.VETOED:
                 return self._persist_risk_veto(intent, risk, expected_epoch)
@@ -379,6 +504,9 @@ class LiveTradingCycle:
             )
             return approvals + self._persist_execution(intent, risk, execution, expected_epoch)
         return ()
+
+    def manage(self, *, expected_epoch: str) -> tuple[DecisionRecord, ...]:
+        return self.run((), expected_epoch=expected_epoch)
 
     @staticmethod
     def _group_open_risk(tracked: dict[str, OrderExecution]) -> dict[str, Decimal]:
@@ -394,7 +522,19 @@ class LiveTradingCycle:
         self, snapshot: ReconciliationSnapshot, tracked: dict[str, OrderExecution]
     ) -> bool:
         protected: set[str] = set()
+        positions = {position.symbol: position for position in snapshot.positions}
         for client_order_id, execution in tracked.items():
+            if execution.plan.instrument_type is InstrumentType.OPTION:
+                position = positions.get(execution.plan.symbol)
+                expiration = execution.plan.option_expiration_date
+                if (
+                    position is not None
+                    and position.quantity > 0
+                    and expiration is not None
+                    and expiration > snapshot.clock.timestamp.date()
+                ):
+                    protected.add(execution.plan.symbol)
+                continue
             broker_order = self._broker.get_order_by_client_id(client_order_id)
             if (
                 broker_order is not None
@@ -403,6 +543,110 @@ class LiveTradingCycle:
             ):
                 protected.add(execution.plan.symbol)
         return all(position.symbol in protected for position in snapshot.positions)
+
+    def _manage_option_exits(
+        self,
+        snapshot: ReconciliationSnapshot,
+        tracked: dict[str, OrderExecution],
+        expected_epoch: str,
+    ) -> tuple[DecisionRecord, ...]:
+        positions = {position.symbol: position for position in snapshot.positions}
+        for client_order_id, execution in tracked.items():
+            plan = execution.plan
+            position = positions.get(plan.symbol)
+            if plan.instrument_type is not InstrumentType.OPTION or position is None:
+                continue
+            if self._option_quotes is None:
+                raise RuntimeError("option position supervision is not configured")
+            reason = None
+            quote: QuoteSnapshot | None = None
+            if snapshot.clock.timestamp >= plan.expires_at:
+                reason = "model horizon elapsed"
+            else:
+                try:
+                    quote = self._option_quotes.latest_quote(plan.symbol)
+                except Exception:
+                    self._halt_and_flatten(
+                        AgentMode.RISK_HALTED,
+                        f"option quote unavailable for managed position {plan.symbol}",
+                    )
+                    return ()
+                quote_age = snapshot.clock.timestamp - quote.timestamp
+                if quote.feed != "indicative" or not (
+                    -ModelStrategy.MAX_CLOCK_SKEW <= quote_age <= timedelta(seconds=5)
+                ):
+                    self._halt_and_flatten(
+                        AgentMode.RISK_HALTED,
+                        f"option quote failed quality gates for managed position {plan.symbol}",
+                    )
+                    return ()
+                if quote.bid_price <= plan.stop_price:
+                    reason = "premium stop reached"
+                elif quote.bid_price >= plan.take_profit_price:
+                    reason = "premium target reached"
+            if reason is None:
+                continue
+            exit_client_order_id = (
+                "crx-" + uuid5(NAMESPACE_URL, f"option-exit-v1:{plan.client_order_id}").hex
+            )
+            broker_exit = self._broker.get_order_by_client_id(exit_client_order_id)
+            if broker_exit is not None and self._is_terminal_rejection(broker_exit.status):
+                self._halt_and_flatten(
+                    AgentMode.RISK_HALTED,
+                    f"option exit {exit_client_order_id} was rejected or canceled",
+                )
+                return ()
+            if broker_exit is None:
+                try:
+                    broker_exit = self._broker.submit_option_exit(
+                        plan.symbol,
+                        int(position.quantity),
+                        exit_client_order_id,
+                    )
+                except Exception:
+                    self._halt_and_flatten(
+                        AgentMode.RISK_HALTED,
+                        f"option exit {exit_client_order_id} submission failed",
+                    )
+                    return ()
+                if self._is_terminal_rejection(broker_exit.status):
+                    self._halt_and_flatten(
+                        AgentMode.RISK_HALTED,
+                        f"option exit {exit_client_order_id} was rejected",
+                    )
+                    return ()
+            record = DecisionRecord.create(
+                decision_id=str(uuid5(NAMESPACE_URL, f"option-exit:{client_order_id}:{reason}")),
+                decision_type="OPTION_EXIT",
+                route=Route.MODEL_DIRECTIONAL,
+                symbol=plan.underlying_symbol or plan.symbol,
+                summary=f"closed {plan.symbol}: {reason}",
+                payload={
+                    "contract_symbol": plan.symbol,
+                    "reason": reason,
+                    "bid_price": str(quote.bid_price) if quote is not None else None,
+                    "exit_client_order_id": exit_client_order_id,
+                    "broker_status": broker_exit.status,
+                    "universe_id": plan.universe_id,
+                },
+                public=True,
+                public_summary=f"Closed option position: {reason}",
+            )
+            return (
+                (record,)
+                if self._store.append_decision_once(record, expected_epoch=expected_epoch)
+                else ()
+            )
+        return ()
+
+    @staticmethod
+    def _is_terminal_rejection(status: str) -> bool:
+        return status.rsplit(".", 1)[-1].lower() in {
+            "canceled",
+            "expired",
+            "rejected",
+            "replaced",
+        }
 
     def _release_terminal_orders(
         self, agent: AgentState, snapshot: ReconciliationSnapshot
@@ -463,9 +707,14 @@ class LiveTradingCycle:
             decision_id=str(uuid5(NAMESPACE_URL, f"risk-veto:{intent.intent_id}")),
             decision_type="RISK_VETO",
             route=intent.route,
-            symbol=intent.symbol,
+            symbol=intent.underlying_symbol or intent.symbol,
             summary="; ".join(risk.checks),
-            payload={"intent_id": intent.intent_id, "checks": risk.checks},
+            payload={
+                "intent_id": intent.intent_id,
+                "contract_symbol": intent.symbol,
+                "universe_id": intent.universe_id,
+                "checks": risk.checks,
+            },
             public=True,
             public_summary=f"Risk governor vetoed {intent.symbol}",
         )
@@ -486,14 +735,16 @@ class LiveTradingCycle:
             decision_id=str(uuid5(NAMESPACE_URL, f"risk-approval:{intent.intent_id}")),
             decision_type="RISK_APPROVAL",
             route=intent.route,
-            symbol=intent.symbol,
-            summary=f"approved {risk.quantity} shares with {risk.risk_amount} stop risk",
+            symbol=intent.underlying_symbol or intent.symbol,
+            summary=f"approved {risk.quantity} units with {risk.risk_amount} maximum risk",
             payload={
                 "intent_id": intent.intent_id,
                 "status": risk.status,
                 "quantity": risk.quantity,
                 "risk_amount": str(risk.risk_amount),
                 "checks": risk.checks,
+                "contract_symbol": intent.symbol,
+                "universe_id": intent.universe_id,
                 "account_snapshot": {
                     "equity": str(portfolio.equity),
                     "buying_power": str(portfolio.buying_power),
@@ -523,9 +774,9 @@ class LiveTradingCycle:
             ),
             decision_type="ORDER_EXECUTION",
             route=intent.route,
-            symbol=intent.symbol,
+            symbol=intent.underlying_symbol or intent.symbol,
             summary=(
-                f"{execution.status} paper bracket {execution.plan.client_order_id} "
+                f"{execution.status} paper order {execution.plan.client_order_id} "
                 f"for {execution.plan.quantity} {intent.symbol}"
             ),
             payload={
@@ -536,9 +787,11 @@ class LiveTradingCycle:
                 "limit_price": str(execution.plan.limit_price),
                 "stop_price": str(execution.plan.stop_price),
                 "take_profit_price": str(execution.plan.take_profit_price),
+                "contract_symbol": intent.symbol,
+                "universe_id": intent.universe_id,
             },
             public=True,
-            public_summary=f"Paper bracket order {execution.status.lower()} for {intent.symbol}",
+            public_summary=f"Paper order {execution.status.lower()} for {intent.symbol}",
         )
         return (
             (record,)
@@ -593,7 +846,7 @@ class ExecutionGateway:
     @staticmethod
     def _plan(intent: TradeIntent, risk: RiskDecision) -> OrderPlan:
         client_order_id = "cr-" + uuid5(NAMESPACE_URL, f"paper-order-v1:{intent.intent_id}").hex
-        take_profit = (
+        take_profit = intent.take_profit_price or (
             (intent.entry_price * Decimal("1.04")).quantize(_CENT, rounding=ROUND_CEILING)
             if intent.side is Side.BUY
             else (intent.entry_price * Decimal("0.96")).quantize(_CENT, rounding=ROUND_FLOOR)
@@ -610,23 +863,40 @@ class ExecutionGateway:
             take_profit_price=take_profit,
             risk_amount=risk.risk_amount,
             exposure_group=intent.exposure_group,
+            instrument_type=intent.instrument_type,
+            underlying_symbol=intent.underlying_symbol,
+            option_type=intent.option_type,
+            option_expiration_date=intent.option_expiration_date,
+            universe_id=intent.universe_id,
             created_at=created_at,
             expires_at=created_at + timedelta(minutes=intent.expected_horizon_minutes),
         )
 
     @staticmethod
     def _request_hash(plan: OrderPlan) -> str:
-        request = {
-            "client_order_id": plan.client_order_id,
-            "limit_price": str(plan.limit_price),
-            "quantity": plan.quantity,
-            "side": plan.side,
-            "stop_price": str(plan.stop_price),
-            "symbol": plan.symbol,
-            "take_profit_price": str(plan.take_profit_price),
-            "time_in_force": "day",
-            "type": "limit",
-        }
+        if plan.instrument_type is InstrumentType.OPTION:
+            request = {
+                "client_order_id": plan.client_order_id,
+                "limit_price": str(plan.limit_price),
+                "position_intent": "buy_to_open",
+                "quantity": plan.quantity,
+                "side": plan.side,
+                "symbol": plan.symbol,
+                "time_in_force": "day",
+                "type": "limit",
+            }
+        else:
+            request = {
+                "client_order_id": plan.client_order_id,
+                "limit_price": str(plan.limit_price),
+                "quantity": plan.quantity,
+                "side": plan.side,
+                "stop_price": str(plan.stop_price),
+                "symbol": plan.symbol,
+                "take_profit_price": str(plan.take_profit_price),
+                "time_in_force": "day",
+                "type": "limit",
+            }
         encoded = json.dumps(request, sort_keys=True, separators=(",", ":")).encode()
         return hashlib.sha256(encoded).hexdigest()
 
