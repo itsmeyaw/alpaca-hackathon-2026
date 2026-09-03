@@ -1,0 +1,5 @@
+IMplement the dynamic movers/most-active universe instead of fixed universe for trading options.
+
+---
+
+ask me the questions again
