@@ -1,0 +1,634 @@
+{
+  "info": {
+    "id": "ses_f9377c232ffexYsTEWt2Q1O285",
+    "slug": "crisp-meadow",
+    "projectID": "cdb1b2ca155067985326408a159253587dd4dc5a",
+    "directory": "/Users/itsmeyaw/projects/alpaca-hackathon",
+    "path": "",
+    "title": "Project description for judging criteria",
+    "agent": "build",
+    "model": {
+      "id": "gpt-5.6-terra",
+      "providerID": "openai",
+      "variant": "high"
+    },
+    "version": "1.18.27",
+    "summary": {
+      "additions": 0,
+      "deletions": 0,
+      "files": 0
+    },
+    "cost": 0.09079440000000001,
+    "tokens": {
+      "input": 9,
+      "output": 728,
+      "reasoning": 440,
+      "cache": {
+        "read": 43302,
+        "write": 27240
+      }
+    },
+    "time": {
+      "created": 1788527263182,
+      "updated": 1788527273036
+    }
+  },
+  "messages": [
+    {
+      "info": {
+        "role": "user",
+        "time": {
+          "created": 1788527263207
+        },
+        "agent": "build",
+        "model": {
+          "providerID": "openai",
+          "modelID": "gpt-5.6-terra",
+          "variant": "high"
+        },
+        "summary": {
+          "diffs": []
+        },
+        "id": "msg_06c883de70012pyvp9684rY0hK",
+        "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285"
+      },
+      "parts": [
+        {
+          "type": "text",
+          "text": "Create a short and long description for the project. Focus on fullfiling judging criteria.",
+          "id": "prt_06c883de7002QiHq1PguuHPT8A",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c883de70012pyvp9684rY0hK"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_06c883de70012pyvp9684rY0hK",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.050387,
+        "tokens": {
+          "total": 19270,
+          "input": 3,
+          "output": 197,
+          "reasoning": 36,
+          "cache": {
+            "write": 19034,
+            "read": 0
+          }
+        },
+        "modelID": "gpt-5.6-terra",
+        "providerID": "openai",
+        "time": {
+          "created": 1788527263498,
+          "completed": 1788527268273
+        },
+        "finish": "tool-calls",
+        "id": "msg_06c883f0a0011RJ3d75VynSruI",
+        "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285"
+      },
+      "parts": [
+        {
+          "snapshot": "a1e0786689b662df4d3e07ef979d49f7f8a693ac",
+          "type": "step-start",
+          "id": "prt_06c884872001eH8lLWSCFE7jQS",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c883f0a0011RJ3d75VynSruI"
+        },
+        {
+          "type": "reasoning",
+          "text": "**Inspecting project details**\n\nI need to take a closer look at the project and possibly the related documentation for context. I wonder if asking about the \"description\" could lead me to the README file? It seems the user wants to create some files, so I'll need to dig deeper into what's required. A brief update after my inspection could help clarify things for me and the user. Let's see what I find!",
+          "time": {
+            "start": 1788527265908,
+            "end": 1788527267015
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_0146cd83508e2af6016a9ac2a1d70487d2af788fbe119f8a1f",
+              "reasoningEncryptedContent": "REDACTED"
+            }
+          },
+          "id": "prt_06c8848740016WDx6Iat5D1XI3",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c883f0a0011RJ3d75VynSruI"
+        },
+        {
+          "type": "text",
+          "text": "I’ll review the project context and judging criteria, then add concise project descriptions where the repository presents the submission.",
+          "time": {
+            "start": 1788527267020,
+            "end": 1788527267967
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "msg_0146cd83508e2af6016a9ac2a2dfc887d2b3e9d5bbedceccd5",
+              "phase": "commentary"
+            }
+          },
+          "id": "prt_06c884ccc001lUh0L4x26rASIx",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c883f0a0011RJ3d75VynSruI"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_d9hElMMZtEDoxn7kF5oqUw1b",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md</path>\n<type>file</type>\n<content>\n1: # Catalyst Router Domain\n2: \n3: ## Purpose\n4: \n5: Catalyst Router is an autonomous paper-trading agent competing for terminal P&L over a one-week Alpaca hackathon. It uses an LLM to classify new information and deterministic code to select trades, size risk, submit orders, and enforce portfolio limits.\n6: \n7: ## Core Concepts\n8: \n9: ### Market Observation\n10: \n11: A timestamped price, quote, bar, news item, market status, or account update. Every downstream decision records the observations and data feed that supported it.\n12: \n13: ### Opportunity\n14: \n15: A symbol and time horizon selected for evaluation because of a new Event, unusual market-relative movement, or regime evidence. An Opportunity can expire without producing a Trade Intent.\n16: \n17: ### Event\n18: \n19: A structured interpretation of news that includes type, direction, magnitude, novelty, surprise, expected horizon, confidence, affected symbols, and invalidating evidence. An Event is evidence, not permission to trade.\n20: \n21: ### Expert Assessment\n22: \n23: A deterministic or structured assessment produced by the catalyst, momentum, reversion, regime, or risk expert.\n24: \n25: ### Incumbent Strategy\n26: \n27: The deterministic scoring and routing policy authorized to create live Trade Intents. Its parameters are versioned so every decision can be reproduced.\n28: \n29: ### Challenger Model\n30: \n31: A trained model evaluated against the Incumbent Strategy. It normally begins without order authority; ADR-0013 explicitly authorizes the current classifier for bounded Alpaca paper execution at a 0.52 directional gate.\n32: \n33: ### Adaptive Policy\n34: \n35: A bounded policy that may change route-allocation weights and entry-confidence thresholds within prevalidated ranges. It cannot change risk limits, execution safeguards, data-quality requirements, event schemas, or the available strategies.\n36: \n37: ### Policy Profile\n38: \n39: One of the prevalidated `CONSERVATIVE`, `BASE`, or `AGGRESSIVE` combinations of route allocation and entry threshold. Profiles use fixed, versioned parameter values established before judging; the Adaptive Policy selects profiles but cannot synthesize parameters.\n40: \n41: ### Resolved Thesis\n42: \n43: A Position Thesis whose exit and after-cost outcome are known. Its clipped return in units of initial risk is the reward supplied to the Adaptive Policy.\n44: \n45: ### Route\n46: \n47: The selected interpretation of an opportunity:\n48: \n49: - `CATALYST_CONTINUATION`: new information and market confirmation imply continuation.\n50: - `LIQUIDITY_REVERSION`: an unexplained, market-relative displacement implies reversion.\n51: - `REGIME_TREND`: broad market conditions justify a small index position.\n52: - `MODEL_DIRECTIONAL`: the paper-live classifier exceeds its long or short probability gate.\n53: - `NO_TRADE`: evidence, liquidity, data quality, or risk is insufficient.\n54: \n55: ### Trade Intent\n56: \n57: A typed proposal containing the route, thesis, instrument, direction, entry constraints, invalidation, expected horizon, and supporting evidence. It has no authority to place an order until approved by the Risk Governor.\n58: \n59: ### Risk Decision\n60: \n61: The Risk Governor's immutable record of approving, reducing, or vetoing a Trade Intent, including every evaluated invariant and the account snapshot used for sizing.\n62: \n63: ### Order Plan\n64: \n65: The deterministic translation of an approved Trade Intent into idempotent Alpaca orders and exit instructions. Alpaca trade updates, followed by reconciliation, are authoritative for order state.\n66: \n67: ### Risk Governor\n68: \n69: The deterministic authority that sizes positions and either approves, reduces, or vetoes a Trade Intent. The LLM cannot bypass it or choose order quantity.\n70: \n71: ### Position Thesis\n72: \n73: The accepted Trade Intent and invalidation conditions attached to an open position. Price stops, elapsed horizon, contradictory evidence, and portfolio limits can invalidate it.\n74: \n75: ### Exposure Group\n76: \n77: Positions expected to lose together because they share a sector, underlying driver, or market direction. The Risk Governor budgets an Exposure Group as one correlated risk rather than counting its positions as independent trades.\n78: \n79: ### Decision Record\n80: \n81: An immutable, timestamped account of observations, expert assessments, route selection, risk checks, order lifecycle, and outcome, including decisions that result in `NO_TRADE`.\n82: \n83: ### Agent Mode\n84: \n85: The operational authority state: `RUNNING`, `PAUSED`, `RISK_HALTED`, or `KILLED`. Only `RUNNING` permits new exposure. Restarting the process does not clear a halt or kill state.\n86: \n87: ## Decision Lifecycle\n88: \n89: ```text\n90: Market Observation\n91:   -> Opportunity\n92:   -> Event and Expert Assessments\n93:   -> Route\n94:   -> Trade Intent\n95:   -> Risk Decision\n96:   -> Order Plan\n97:   -> Position Thesis\n98:   -> Resolved Thesis\n99:   -> Adaptive Policy update\n100: ```\n101: \n102: Any stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an error.\n103: \n104: ## Module Boundaries\n105: \n106: - **Market Intelligence** owns feed normalization, point-in-time features, Opportunities, and Events.\n107: - **Decision Engine** owns Expert Assessments, route selection, Trade Intents, and Challenger Model predictions.\n108: - **Risk and Execution** owns Risk Decisions, Agent Mode, sizing, Order Plans, reconciliation, and exits.\n109: - **Portfolio Ledger** owns positions, realized and unrealized P&L, exposure groups, and performance attribution.\n110: - **Adaptation** owns Policy Profiles, priors, rewards, and versioned Adaptive Policy changes.\n111: - **Reporting** projects sanitized Decision Records into the public dashboard without controlling trading.\n112: \n113: ## Trading Mandate\n114: \n115: - Live opportunities use long or short equities with server-hosted protective brackets.\n116: - Directional options remain disabled after the ADR-0018 paper-trading review.\n117: - The system uses Alpaca's free IEX equity market-data plan initially.\n118: - Incomplete, stale, or contradictory data must produce `NO_TRADE` rather than an inferred price.\n119: - Execution is autonomous after deterministic approval, with an operator kill switch.\n120: - Trained models begin as Challenger Models. The current classifier has explicit paper-live authority under ADR-0013; deterministic risk and execution retain final authority.\n121: - Every Adaptive Policy change is versioned, attributable to evidence, and reversible.\n122: - The Adaptive Policy learns only from Resolved Theses and starts the competition with the `BASE` Policy Profile.\n123: \n124: ## Market Scope\n125: \n126: - Build and persist a daily universe of approximately 20 liquid option-enabled underlyings from\n127:   most-active stocks, gainers, and losers.\n128: - Reserve the remaining Basic-plan equity stream capacity for SPY, QQQ, and sector or regime references.\n129: - Do not subscribe to option contracts while live option execution is disabled.\n130: - Use Alpaca News as the initial catalyst source.\n131: - Evaluate Event opportunities on news arrival and price challengers on corrected five-minute bars; do not pursue sub-minute latency strategies on IEX data.\n132: \n133: ## Agent Authority\n134: \n135: - The Bedrock-hosted LLM emits typed Events and explanations only. Event output may influence the deterministic router in shadow mode, but has no order authority.\n136: - The deployed price classifier may emit paper Trade Intents at its versioned runtime gate. Under\n137:   ADR-0018, bullish predictions buy equities and bearish predictions sell equities short.\n138: - `alpaca-py` is the runtime integration for streams, account reconciliation, market data, and orders.\n139: - Alpaca MCP exposes read-oriented research and demonstration tools to the LLM; it does not grant the LLM an ungoverned order path.\n140: - The Alpaca CLI is an operator and judging demonstration surface, including dry runs and account inspection.\n141: - Only Risk and Execution can create an Order Plan or submit an order.\n142: \n143: ## Current Risk Posture\n144: \n145: The accepted posture is competition-aggressive but survival-aware:\n146: \n147: - Risk at most 1% of equity on one trade.\n148: - Hold at most six positions concurrently.\n149: - Limit total open stop-risk to 5% of equity.\n150: - Limit overnight stop-risk to 2% of equity.\n151: - Limit one Exposure Group to 5% of equity.\n152: - At a 2% daily drawdown, reduce new-trade risk to 0.5% of equity.\n153: - Stop opening risk and begin flattening at a 4% daily loss.\n154: - Kill autonomous trading at a 12% competition drawdown.\n155: \n156: ## Holding Policy\n157: \n158: - Model-directional and liquidity-reversion equity positions must close at their horizon or session cutoff.\n159: - Flatten all positions before the final judging cutoff.\n160: \n161: ## Option Research Policy\n162: \n163: - Live option execution is disabled.\n164: - Any future option evaluation remains shadow-only until separately authorized.\n165: - Target 14 to 30 calendar days to expiration and approximately 0.55 to 0.70 absolute delta.\n166: - Require price at least $5, prior-day underlying dollar volume at least $50M, underlying spread at\n167:   most 15 bps, option spread at most 10%, open interest at least 100, positive quote sizes, and a\n168:   quote no more than five seconds old.\n169: - Model full-premium loss and -30%, +50%, horizon, and session exits in shadow evidence.\n170: - Prohibit 0DTE contracts and short option legs.\n171: - Require complete, fresh quotes and strict liquidity checks; otherwise route to `NO_TRADE`.\n172: - Evaluate debit spreads in shadow mode until consolidated option quotes are available and validated.\n173: \n174: ## Dashboard Policy\n175: \n176: - The public dashboard is read-only and shows delayed, sanitized decisions, P&L, drawdown, routes, vetoes, and policy changes.\n177: - Account identifiers, secrets, raw prompts, internal logs, and operator actions are private.\n178: - Pause, resume, flatten, and kill controls require operator authentication.\n179: \n180: ## Persistence Policy\n181: \n182: - DynamoDB is the authoritative operational store for agent mode, opportunities, decisions, orders, positions, risk state, policies, idempotency records, and dashboard projections.\n183: - Use conditional writes and transactions for state transitions that must not be applied twice.\n184: - Archive raw and high-volume market observations to S3 rather than making DynamoDB a tick store.\n185: - Alpaca remains authoritative for external account, order, and position state; startup reconciliation repairs local projections before trading resumes.\n186: \n187: ## Operating Cycle\n188: \n189: - **Premarket:** reconcile Alpaca state, check Agent Mode, ingest news, and establish regime context;\n190:   finalize the daily universe at the open when the IEX spread gate has current quotes.\n191: - **Regular session:** evaluate Opportunities on events and corrected minute bars, manage orders and Position Theses, and publish delayed reporting projections.\n192: - **Before close:** close liquidity-reversion positions, reevaluate every overnight candidate, and enforce overnight risk limits.\n193: - **After close:** reconcile outcomes, resolve completed theses, update the Adaptive Policy once per new reward, archive observations, and produce the daily report.\n194: - **Final session:** stop new entries early enough to flatten and reconcile every position before the judging cutoff.\n195: \n196: ## Validation Policy\n197: \n198: - Validate with chronological walk-forward splits and purged overlapping labels.\n199: - Include point-in-time universe construction, inference and order latency, bid/ask execution, slippage, and estimated costs.\n200: - Compare against cash, SPY, equal-weight, basic momentum, and an incumbent without LLM event routing.\n201: - Freeze Policy Profile definitions, safety limits, features, and strategy code before judging; only profile selection adapts live.\n\n(End of file - total 201 lines)\n</content>",
+            "metadata": {
+              "preview": "# Catalyst Router Domain\n\n## Purpose\n\nCatalyst Router is an autonomous paper-trading agent competing for terminal P&L over a one-week Alpaca hackathon. It uses an LLM to classify new information and deterministic code to select trades, size risk, submit orders, and enforce portfolio limits.\n\n## Core Concepts\n\n### Market Observation\n\nA timestamped price, quote, bar, news item, market status, or account update. Every downstream decision records the observations and data feed that supported it.\n\n### Opportunity\n\nA symbol and time horizon selected for evaluation because of a new Event, unusual market-relative movement, or regime evidence. An Opportunity can expire without producing a Trade Intent.\n\n### Event\n\nA structured interpretation of news that includes type, direction, magnitude, novelty, surprise, expected horizon, confidence, affected symbols, and invalidating evidence. An Event is evidence, not permission to trade.\n",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md",
+                "text": "# Catalyst Router Domain\n\n## Purpose\n\nCatalyst Router is an autonomous paper-trading agent competing for terminal P&L over a one-week Alpaca hackathon. It uses an LLM to classify new information and deterministic code to select trades, size risk, submit orders, and enforce portfolio limits.\n\n## Core Concepts\n\n### Market Observation\n\nA timestamped price, quote, bar, news item, market status, or account update. Every downstream decision records the observations and data feed that supported it.\n\n### Opportunity\n\nA symbol and time horizon selected for evaluation because of a new Event, unusual market-relative movement, or regime evidence. An Opportunity can expire without producing a Trade Intent.\n\n### Event\n\nA structured interpretation of news that includes type, direction, magnitude, novelty, surprise, expected horizon, confidence, affected symbols, and invalidating evidence. An Event is evidence, not permission to trade.\n\n### Expert Assessment\n\nA deterministic or structured assessment produced by the catalyst, momentum, reversion, regime, or risk expert.\n\n### Incumbent Strategy\n\nThe deterministic scoring and routing policy authorized to create live Trade Intents. Its parameters are versioned so every decision can be reproduced.\n\n### Challenger Model\n\nA trained model evaluated against the Incumbent Strategy. It normally begins without order authority; ADR-0013 explicitly authorizes the current classifier for bounded Alpaca paper execution at a 0.52 directional gate.\n\n### Adaptive Policy\n\nA bounded policy that may change route-allocation weights and entry-confidence thresholds within prevalidated ranges. It cannot change risk limits, execution safeguards, data-quality requirements, event schemas, or the available strategies.\n\n### Policy Profile\n\nOne of the prevalidated `CONSERVATIVE`, `BASE`, or `AGGRESSIVE` combinations of route allocation and entry threshold. Profiles use fixed, versioned parameter values established before judging; the Adaptive Policy selects profiles but cannot synthesize parameters.\n\n### Resolved Thesis\n\nA Position Thesis whose exit and after-cost outcome are known. Its clipped return in units of initial risk is the reward supplied to the Adaptive Policy.\n\n### Route\n\nThe selected interpretation of an opportunity:\n\n- `CATALYST_CONTINUATION`: new information and market confirmation imply continuation.\n- `LIQUIDITY_REVERSION`: an unexplained, market-relative displacement implies reversion.\n- `REGIME_TREND`: broad market conditions justify a small index position.\n- `MODEL_DIRECTIONAL`: the paper-live classifier exceeds its long or short probability gate.\n- `NO_TRADE`: evidence, liquidity, data quality, or risk is insufficient.\n\n### Trade Intent\n\nA typed proposal containing the route, thesis, instrument, direction, entry constraints, invalidation, expected horizon, and supporting evidence. It has no authority to place an order until approved by the Risk Governor.\n\n### Risk Decision\n\nThe Risk Governor's immutable record of approving, reducing, or vetoing a Trade Intent, including every evaluated invariant and the account snapshot used for sizing.\n\n### Order Plan\n\nThe deterministic translation of an approved Trade Intent into idempotent Alpaca orders and exit instructions. Alpaca trade updates, followed by reconciliation, are authoritative for order state.\n\n### Risk Governor\n\nThe deterministic authority that sizes positions and either approves, reduces, or vetoes a Trade Intent. The LLM cannot bypass it or choose order quantity.\n\n### Position Thesis\n\nThe accepted Trade Intent and invalidation conditions attached to an open position. Price stops, elapsed horizon, contradictory evidence, and portfolio limits can invalidate it.\n\n### Exposure Group\n\nPositions expected to lose together because they share a sector, underlying driver, or market direction. The Risk Governor budgets an Exposure Group as one correlated risk rather than counting its positions as independent trades.\n\n### Decision Record\n\nAn immutable, timestamped account of observations, expert assessments, route selection, risk checks, order lifecycle, and outcome, including decisions that result in `NO_TRADE`.\n\n### Agent Mode\n\nThe operational authority state: `RUNNING`, `PAUSED`, `RISK_HALTED`, or `KILLED`. Only `RUNNING` permits new exposure. Restarting the process does not clear a halt or kill state.\n\n## Decision Lifecycle\n\n```text\nMarket Observation\n  -> Opportunity\n  -> Event and Expert Assessments\n  -> Route\n  -> Trade Intent\n  -> Risk Decision\n  -> Order Plan\n  -> Position Thesis\n  -> Resolved Thesis\n  -> Adaptive Policy update\n```\n\nAny stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an error.\n\n## Module Boundaries\n\n- **Market Intelligence** owns feed normalization, point-in-time features, Opportunities, and Events.\n- **Decision Engine** owns Expert Assessments, route selection, Trade Intents, and Challenger Model predictions.\n- **Risk and Execution** owns Risk Decisions, Agent Mode, sizing, Order Plans, reconciliation, and exits.\n- **Portfolio Ledger** owns positions, realized and unrealized P&L, exposure groups, and performance attribution.\n- **Adaptation** owns Policy Profiles, priors, rewards, and versioned Adaptive Policy changes.\n- **Reporting** projects sanitized Decision Records into the public dashboard without controlling trading.\n\n## Trading Mandate\n\n- Live opportunities use long or short equities with server-hosted protective brackets.\n- Directional options remain disabled after the ADR-0018 paper-trading review.\n- The system uses Alpaca's free IEX equity market-data plan initially.\n- Incomplete, stale, or contradictory data must produce `NO_TRADE` rather than an inferred price.\n- Execution is autonomous after deterministic approval, with an operator kill switch.\n- Trained models begin as Challenger Models. The current classifier has explicit paper-live authority under ADR-0013; deterministic risk and execution retain final authority.\n- Every Adaptive Policy change is versioned, attributable to evidence, and reversible.\n- The Adaptive Policy learns only from Resolved Theses and starts the competition with the `BASE` Policy Profile.\n\n## Market Scope\n\n- Build and persist a daily universe of approximately 20 liquid option-enabled underlyings from\n  most-active stocks, gainers, and losers.\n- Reserve the remaining Basic-plan equity stream capacity for SPY, QQQ, and sector or regime references.\n- Do not subscribe to option contracts while live option execution is disabled.\n- Use Alpaca News as the initial catalyst source.\n- Evaluate Event opportunities on news arrival and price challengers on corrected five-minute bars; do not pursue sub-minute latency strategies on IEX data.\n\n## Agent Authority\n\n- The Bedrock-hosted LLM emits typed Events and explanations only. Event output may influence the deterministic router in shadow mode, but has no order authority.\n- The deployed price classifier may emit paper Trade Intents at its versioned runtime gate. Under\n  ADR-0018, bullish predictions buy equities and bearish predictions sell equities short.\n- `alpaca-py` is the runtime integration for streams, account reconciliation, market data, and orders.\n- Alpaca MCP exposes read-oriented research and demonstration tools to the LLM; it does not grant the LLM an ungoverned order path.\n- The Alpaca CLI is an operator and judging demonstration surface, including dry runs and account inspection.\n- Only Risk and Execution can create an Order Plan or submit an order.\n\n## Current Risk Posture\n\nThe accepted posture is competition-aggressive but survival-aware:\n\n- Risk at most 1% of equity on one trade.\n- Hold at most six positions concurrently.\n- Limit total open stop-risk to 5% of equity.\n- Limit overnight stop-risk to 2% of equity.\n- Limit one Exposure Group to 5% of equity.\n- At a 2% daily drawdown, reduce new-trade risk to 0.5% of equity.\n- Stop opening risk and begin flattening at a 4% daily loss.\n- Kill autonomous trading at a 12% competition drawdown.\n\n## Holding Policy\n\n- Model-directional and liquidity-reversion equity positions must close at their horizon or session cutoff.\n- Flatten all positions before the final judging cutoff.\n\n## Option Research Policy\n\n- Live option execution is disabled.\n- Any future option evaluation remains shadow-only until separately authorized.\n- Target 14 to 30 calendar days to expiration and approximately 0.55 to 0.70 absolute delta.\n- Require price at least $5, prior-day underlying dollar volume at least $50M, underlying spread at\n  most 15 bps, option spread at most 10%, open interest at least 100, positive quote sizes, and a\n  quote no more than five seconds old.\n- Model full-premium loss and -30%, +50%, horizon, and session exits in shadow evidence.\n- Prohibit 0DTE contracts and short option legs.\n- Require complete, fresh quotes and strict liquidity checks; otherwise route to `NO_TRADE`.\n- Evaluate debit spreads in shadow mode until consolidated option quotes are available and validated.\n\n## Dashboard Policy\n\n- The public dashboard is read-only and shows delayed, sanitized decisions, P&L, drawdown, routes, vetoes, and policy changes.\n- Account identifiers, secrets, raw prompts, internal logs, and operator actions are private.\n- Pause, resume, flatten, and kill controls require operator authentication.\n\n## Persistence Policy\n\n- DynamoDB is the authoritative operational store for agent mode, opportunities, decisions, orders, positions, risk state, policies, idempotency records, and dashboard projections.\n- Use conditional writes and transactions for state transitions that must not be applied twice.\n- Archive raw and high-volume market observations to S3 rather than making DynamoDB a tick store.\n- Alpaca remains authoritative for external account, order, and position state; startup reconciliation repairs local projections before trading resumes.\n\n## Operating Cycle\n\n- **Premarket:** reconcile Alpaca state, check Agent Mode, ingest news, and establish regime context;\n  finalize the daily universe at the open when the IEX spread gate has current quotes.\n- **Regular session:** evaluate Opportunities on events and corrected minute bars, manage orders and Position Theses, and publish delayed reporting projections.\n- **Before close:** close liquidity-reversion positions, reevaluate every overnight candidate, and enforce overnight risk limits.\n- **After close:** reconcile outcomes, resolve completed theses, update the Adaptive Policy once per new reward, archive observations, and produce the daily report.\n- **Final session:** stop new entries early enough to flatten and reconcile every position before the judging cutoff.\n\n## Validation Policy\n\n- Validate with chronological walk-forward splits and purged overlapping labels.\n- Include point-in-time universe construction, inference and order latency, bid/ask execution, slippage, and estimated costs.\n- Compare against cash, SPY, equal-weight, basic momentum, and an incumbent without LLM event routing.\n- Freeze Policy Profile definitions, safety limits, features, and strategy code before judging; only profile selection adapts live.",
+                "lineStart": 1,
+                "lineEnd": 201,
+                "totalLines": 201,
+                "truncated": false
+              }
+            },
+            "title": "CONTEXT.md",
+            "time": {
+              "start": 1788527268023,
+              "end": 1788527268047
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0146cd83508e2af6016a9ac2a3cecc87d2b1dea09eaa90d4e0"
+            }
+          },
+          "id": "prt_06c88508f001EzTWJybJzaPCbj",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c883f0a0011RJ3d75VynSruI"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_xFIPiXJClAmA7TCWkIhMhhza",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/docs/agents/issue-tracker.md"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/docs/agents/issue-tracker.md</path>\n<type>file</type>\n<content>\n1: # Issue tracker: GitHub\n2: \n3: Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.\n4: \n5: ## Conventions\n6: \n7: - **Create an issue**: `gh issue create --title \"...\" --body \"...\"`. Use a heredoc for multi-line bodies.\n8: - **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.\n9: - **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.\n10: - **Comment on an issue**: `gh issue comment <number> --body \"...\"`\n11: - **Apply / remove labels**: `gh issue edit <number> --add-label \"...\"` / `--remove-label \"...\"`\n12: - **Close**: `gh issue close <number> --comment \"...\"`\n13: \n14: Infer the repo from `git remote -v` - `gh` does this automatically when run inside a clone.\n15: \n16: ## Pull requests as a triage surface\n17: \n18: **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_\n19: \n20: When set to `yes`, PRs run through the same labels and states as issues, using the `gh pr` equivalents:\n21: \n22: - **Read a PR**: `gh pr view <number> --comments` and `gh pr diff <number>` for the diff.\n23: - **List external PRs for triage**: `gh pr list --state open --json number,title,body,labels,author,authorAssociation,comments` then keep only `authorAssociation` of `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR`, or `NONE` (drop `OWNER`/`MEMBER`/`COLLABORATOR`).\n24: - **Comment / label / close**: `gh pr comment`, `gh pr edit --add-label`/`--remove-label`, `gh pr close`.\n25: \n26: GitHub shares one number space across issues and PRs, so a bare `#42` may be either - resolve with `gh pr view 42` and fall back to `gh issue view 42`.\n27: \n28: ## When a skill says \"publish to the issue tracker\"\n29: \n30: Create a GitHub issue.\n31: \n32: ## When a skill says \"fetch the relevant ticket\"\n33: \n34: Run `gh issue view <number> --comments`.\n35: \n36: ## Wayfinding operations\n37: \n38: Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.\n39: \n40: - **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh issue create --label wayfinder:map`.\n41: - **Child ticket**: an issue linked to the map as a GitHub sub-issue (`gh api` on the sub-issues endpoint). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.\n42: - **Blocking**: GitHub's **native issue dependencies** - the canonical, UI-visible representation. Add an edge with `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is the blocker's numeric **database id** (`gh api repos/<owner>/<repo>/issues/<n> --jq .id`, _not_ the `#number` or `node_id`). GitHub reports `issue_dependencies_summary.blocked_by` (open blockers only - the live gate). Where dependencies aren't available, fall back to a `Blocked by: #<n>, #<n>` line at the top of the child body. A ticket is unblocked when every blocker is closed.\n43: - **Frontier query**: list the map's open children (`gh issue list --state open`, scoped to the map's sub-issues / task list), drop any with an open blocker (`issue_dependencies_summary.blocked_by > 0`, or an open issue in the `Blocked by` line) or an assignee; first in map order wins.\n44: - **Claim**: `gh issue edit <n> --add-assignee @me` - the session's first write.\n45: - **Resolve**: `gh issue comment <n> --body \"<answer>\"`, then `gh issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.\n\n(End of file - total 45 lines)\n</content>",
+            "metadata": {
+              "preview": "# Issue tracker: GitHub\n\nIssues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.\n\n## Conventions\n\n- **Create an issue**: `gh issue create --title \"...\" --body \"...\"`. Use a heredoc for multi-line bodies.\n- **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.\n- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.\n- **Comment on an issue**: `gh issue comment <number> --body \"...\"`\n- **Apply / remove labels**: `gh issue edit <number> --add-label \"...\"` / `--remove-label \"...\"`\n- **Close**: `gh issue close <number> --comment \"...\"`\n\nInfer the repo from `git remote -v` - `gh` does this automatically when run inside a clone.\n\n## Pull requests as a triage surface\n\n**PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_\n\nWhen set to `yes`, PRs run through the same labels and states as issues, using the `gh pr` equivalents:",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/docs/agents/issue-tracker.md",
+                "text": "# Issue tracker: GitHub\n\nIssues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.\n\n## Conventions\n\n- **Create an issue**: `gh issue create --title \"...\" --body \"...\"`. Use a heredoc for multi-line bodies.\n- **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.\n- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.\n- **Comment on an issue**: `gh issue comment <number> --body \"...\"`\n- **Apply / remove labels**: `gh issue edit <number> --add-label \"...\"` / `--remove-label \"...\"`\n- **Close**: `gh issue close <number> --comment \"...\"`\n\nInfer the repo from `git remote -v` - `gh` does this automatically when run inside a clone.\n\n## Pull requests as a triage surface\n\n**PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_\n\nWhen set to `yes`, PRs run through the same labels and states as issues, using the `gh pr` equivalents:\n\n- **Read a PR**: `gh pr view <number> --comments` and `gh pr diff <number>` for the diff.\n- **List external PRs for triage**: `gh pr list --state open --json number,title,body,labels,author,authorAssociation,comments` then keep only `authorAssociation` of `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR`, or `NONE` (drop `OWNER`/`MEMBER`/`COLLABORATOR`).\n- **Comment / label / close**: `gh pr comment`, `gh pr edit --add-label`/`--remove-label`, `gh pr close`.\n\nGitHub shares one number space across issues and PRs, so a bare `#42` may be either - resolve with `gh pr view 42` and fall back to `gh issue view 42`.\n\n## When a skill says \"publish to the issue tracker\"\n\nCreate a GitHub issue.\n\n## When a skill says \"fetch the relevant ticket\"\n\nRun `gh issue view <number> --comments`.\n\n## Wayfinding operations\n\nUsed by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.\n\n- **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh issue create --label wayfinder:map`.\n- **Child ticket**: an issue linked to the map as a GitHub sub-issue (`gh api` on the sub-issues endpoint). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.\n- **Blocking**: GitHub's **native issue dependencies** - the canonical, UI-visible representation. Add an edge with `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is the blocker's numeric **database id** (`gh api repos/<owner>/<repo>/issues/<n> --jq .id`, _not_ the `#number` or `node_id`). GitHub reports `issue_dependencies_summary.blocked_by` (open blockers only - the live gate). Where dependencies aren't available, fall back to a `Blocked by: #<n>, #<n>` line at the top of the child body. A ticket is unblocked when every blocker is closed.\n- **Frontier query**: list the map's open children (`gh issue list --state open`, scoped to the map's sub-issues / task list), drop any with an open blocker (`issue_dependencies_summary.blocked_by > 0`, or an open issue in the `Blocked by` line) or an assignee; first in map order wins.\n- **Claim**: `gh issue edit <n> --add-assignee @me` - the session's first write.\n- **Resolve**: `gh issue comment <n> --body \"<answer>\"`, then `gh issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.",
+                "lineStart": 1,
+                "lineEnd": 45,
+                "totalLines": 45,
+                "truncated": false
+              }
+            },
+            "title": "docs/agents/issue-tracker.md",
+            "time": {
+              "start": 1788527268027,
+              "end": 1788527268050
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0146cd83508e2af6016a9ac2a3cedc87d2b41dd2130edfa788"
+            }
+          },
+          "id": "prt_06c8850b8001GfNcbmPjDqD7F1",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c883f0a0011RJ3d75VynSruI"
+        },
+        {
+          "type": "tool",
+          "tool": "glob",
+          "callID": "call_pNcpCmDbn88rZn6AmgtoNcDC",
+          "state": {
+            "status": "completed",
+            "input": {
+              "pattern": "**/{README,Readme,readme}*",
+              "path": "/Users/itsmeyaw/projects/alpaca-hackathon"
+            },
+            "output": "/Users/itsmeyaw/projects/alpaca-hackathon/README.md\n/Users/itsmeyaw/projects/alpaca-hackathon/infra/README.md",
+            "metadata": {
+              "count": 2,
+              "truncated": false
+            },
+            "title": "",
+            "time": {
+              "start": 1788527268031,
+              "end": 1788527268056
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0146cd83508e2af6016a9ac2a3cee887d2860da1fa3dfea40b"
+            }
+          },
+          "id": "prt_06c8850bd001sf0yP2iVZfjUyX",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c883f0a0011RJ3d75VynSruI"
+        },
+        {
+          "type": "tool",
+          "tool": "grep",
+          "callID": "call_cs5PuC7mhaeyAKLSac4bxoBS",
+          "state": {
+            "status": "completed",
+            "input": {
+              "pattern": "judg|criteria|submission|hackathon",
+              "path": "/Users/itsmeyaw/projects/alpaca-hackathon",
+              "include": "*.md"
+            },
+            "output": "Found 22 matches\n/Users/itsmeyaw/projects/alpaca-hackathon/RESEARCH.md:\n  Line 5: The project is judged on P&L in Alpaca paper trading, effective use of Alpaca's API/MCP/CLI, originality, and clear execution. The winning design should prioritize a robust live system and visible agent behavior over an impressive but unvalidated end-to-end model.\n\n  Line 40: For a hackathon, start with LightGBM or XGBoost plus well-defined features. They are quick to train, simple to explain, and robust enough to be a credible benchmark. Treat StockMixer/MASTER as optional challengers rather than mandatory infrastructure.\n\n  Line 155: Use a small regime-conditioned SPY/QQQ sleeve only if the judging period is long enough to make being entirely in cash an unacceptable benchmark risk. Retain most capital for high-conviction active trades.\n\n  Line 248: 7. Freeze parameters before the judged window.\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/CONTEXT.md:\n  Line 5: Catalyst Router is an autonomous paper-trading agent competing for terminal P&L over a one-week Alpaca hackathon. It uses an LLM to classify new information and deterministic code to select trades, size risk, submit orders, and enforce portfolio limits.\n\n  Line 39: One of the prevalidated `CONSERVATIVE`, `BASE`, or `AGGRESSIVE` combinations of route allocation and entry threshold. Profiles use fixed, versioned parameter values established before judging; the Adaptive Policy selects profiles but cannot synthesize parameters.\n\n  Line 140: - The Alpaca CLI is an operator and judging demonstration surface, including dry runs and account inspection.\n\n  Line 159: - Flatten all positions before the final judging cutoff.\n\n  Line 194: - **Final session:** stop new entries early enough to flatten and reconcile every position before the judging cutoff.\n\n  Line 201: - Freeze Policy Profile definitions, safety limits, features, and strategy code before judging; only profile selection adapts live.\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/training/local-benchmark.md:\n  Line 87: claim the original promotion criteria were met.\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0003-allow-controlled-overnight-catalyst-risk.md:\n  Line 8: The competition has five judged market sessions. Forcing every position to close each day would discard post-catalyst drift and reduce the number of useful holding periods, but overnight gaps make short-horizon reversion positions and expiring options unsafe.\n\n  Line 21: Liquidity-reversion equity positions remain intraday. The agent must not hold options through expiration and must flatten all positions before the final judging cutoff.\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0015-hold-concurrent-model-positions.md:\n  Line 16: names in the universe. The operator wants materially more paper trades across the hackathon week\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/README.md:\n  Line 124: | **Alpaca CLI** | Paper-account diagnostics and judge-friendly dry-run demonstrations through `scripts/alpaca-paper` | Read-only; submit is allowed only with `--dry-run` |\n\n  Line 203: COMPETITION_ID=alpaca-hackathon-2026\n\n  Line 313:    Ambiguous submissions are queried by client ID before the gateway changes local state.\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0001-use-a-hybrid-catalyst-router.md:\n  Line 8: The agent is judged primarily on Alpaca paper-trading P&L during a one-week competition. The research supports distinguishing information-driven continuation from temporary liquidity-driven reversal and cautions against unconstrained LLM trading. The options-focused challenge rewards an options component, while relying on options for every signal would add data, liquidity, and execution risk.\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0006-bound-live-strategy-adaptation.md:\n  Line 8: The team wants the agent to adapt during the five judged sessions. Unbounded optimization from a small live sample could increase risk, overfit recent outcomes, and make decisions irreproducible.\n\n  Line 29: Use a constrained contextual Thompson sampler to choose among three fixed Policy Profiles: `CONSERVATIVE`, `BASE`, and `AGGRESSIVE`. Establish their parameter values through pre-competition validation and start live judging with `BASE`.\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/docs/adr/0011-separate-alpaca-runtime-and-agent-tool-authority.md:\n  Line 14: - Use `alpaca-py` for runtime market streams, trading updates, account reconciliation, historical requests, and order submission.\n\n  Line 17: - Use the Alpaca CLI for operator inspection, dry runs, health checks, and the judging demonstration.\n",
+            "metadata": {
+              "matches": 22,
+              "truncated": false
+            },
+            "title": "judg|criteria|submission|hackathon",
+            "time": {
+              "start": 1788527268035,
+              "end": 1788527268055
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0146cd83508e2af6016a9ac2a3cef087d28d42f94f94f228bd"
+            }
+          },
+          "id": "prt_06c8850c0001qkKg53a3qcpSXa",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c883f0a0011RJ3d75VynSruI"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "a1e0786689b662df4d3e07ef979d49f7f8a693ac",
+          "type": "step-finish",
+          "tokens": {
+            "total": 19270,
+            "input": 3,
+            "output": 197,
+            "reasoning": 36,
+            "cache": {
+              "write": 19034,
+              "read": 0
+            }
+          },
+          "cost": 0.050387,
+          "id": "prt_06c885171001OcghLxExkUYQTm",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c883f0a0011RJ3d75VynSruI"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_06c883de70012pyvp9684rY0hK",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.0198978,
+        "tokens": {
+          "total": 24521,
+          "input": 3,
+          "output": 197,
+          "reasoning": 53,
+          "cache": {
+            "write": 5234,
+            "read": 19034
+          }
+        },
+        "modelID": "gpt-5.6-terra",
+        "providerID": "openai",
+        "time": {
+          "created": 1788527268275,
+          "completed": 1788527273033
+        },
+        "finish": "tool-calls",
+        "id": "msg_06c8851b3001RuinZmARM5P5Bz",
+        "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285"
+      },
+      "parts": [
+        {
+          "snapshot": "a1e0786689b662df4d3e07ef979d49f7f8a693ac",
+          "type": "step-start",
+          "id": "prt_06c885b67001Mcg42j8Lj7T6Pt",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c8851b3001RuinZmARM5P5Bz"
+        },
+        {
+          "type": "reasoning",
+          "text": "**Inspecting the README**\n\nI need to start by inspecting the relevant portions of the README. My first step is researching the criteria and possibly looking into GitHub issues. I have to focus on the main target of the README to ensure I'm not overlooking anything trivial. It seems like I should create a to-do list with three main steps: likely one edit, followed by verifying that nothing is missed. I’ll read through all the relevant sections carefully.",
+          "time": {
+            "start": 1788527270763,
+            "end": 1788527272214
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_0077ec6aa462855f016a9ac2a6af1487d286ccfa51bd73d5d2",
+              "reasoningEncryptedContent": "REDACTED"
+            }
+          },
+          "id": "prt_06c885b6b001GZqukkZBnkDuVH",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c8851b3001RuinZmARM5P5Bz"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_M7WKB3bLKZmNMCGkcx0xCHJ3",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/README.md",
+              "limit": 180
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/README.md</path>\n<type>file</type>\n<content>\n1: # Catalyst Router\n2: \n3: <div align=\"center\">\n4: \n5: **An autonomous, risk-bounded AI agent for Alpaca paper trading**\n6: \n7: `XGBoost signals` · `Dynamic equity universe` · `Long/short equities` · `Immutable decisions`\n8: \n9: </div>\n10: \n11: Catalyst Router turns completed market bars into directional trades, but keeps capital authority\n12: outside the model. A checksummed XGBoost classifier proposes long, short, or abstain; deterministic\n13: code validates market data, sizes risk, claims executable decisions exactly once, and submits\n14: server-protected equity brackets to Alpaca. Sanitized predictions, vetoes, routes, and executions feed a\n15: delayed public flight recorder.\n16: \n17: ## Trading Model\n18: \n19: The order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\n20: Alpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the\n21: probability of a positive four-hour move across a daily dynamic universe, an explicit distribution\n22: shift.\n23: \n24: | Model contract | Implemented behavior |\n25: | --- | --- |\n26: | Candidate | `xgboost_regularized` |\n27: | Artifact | Immutable run `20260828T175917Z`, loaded from S3 and verified by SHA-256 |\n28: | Input | Completed 15-minute regular-session bars, delayed one minute for corrections |\n29: | Horizon | 16 bars / 4 hours |\n30: | Features | Lagged returns, range, VWAP distance, volume ratio, realized volatility, SPY context, relative return, cross-sectional rank, range location, and time of day |\n31: | Runtime universe | Up to 20 liquid, option-enabled symbols ranked from the 100 most active stocks, 50 gainers, and 50 losers; SPY retained as market context |\n32: | Output | Probability mapped to `LONG`, `SHORT`, or `ABSTAIN` |\n33: | Runtime gate | Long at `p >= 0.52`; short at `p <= 0.48`; abstain otherwise |\n34: | Cadence | Poll every 15 seconds; score the latest completed vector per symbol and claim each symbol/bar/model tuple idempotently |\n35: | Portfolio | Rank candidates by confidence, enter at most one per cycle, hold at most six symbols |\n36: \n37: ### From prediction to trade\n38: \n39: ```text\n40: completed IEX bars\n41:         │\n42:         ▼\n43: point-in-time feature vector\n44:         │\n45:         ▼\n46: XGBoost probability ──► LONG / SHORT / ABSTAIN\n47:         │\n48:         ▼\n49: fresh quote + spread + market-hours gates\n50:         │\n51:         ▼\n52: deterministic Risk Governor\n53:         │\n54:         ▼\n55: idempotent Alpaca equity entry\n56:    long/short bracket + broker-hosted exits\n57: ```\n58: \n59: The separation is deliberate: the model chooses direction and confidence, never quantity. The Risk\n60: Governor can reduce or veto every proposal, and the execution gateway alone can construct an Alpaca\n61: order.\n62: \n63: ### Risk envelope\n64: \n65: | Control | Enforced limit |\n66: | --- | ---: |\n67: | Entry notional | 10% of account equity |\n68: | Equity risk per trade | Entry-to-stop loss capped at 1% of equity; reduced to 0.5% after a 2% daily loss |\n69: | Concurrent positions | 6 |\n70: | Total open stop-risk | 5% of equity |\n71: | One correlated exposure group | 5% of equity |\n72: | Freshness and liquidity | Quote at most 5 seconds old; spread at most 15 bps |\n73: | Daily circuit breaker | Halt and flatten at a 4% daily loss |\n74: | Competition circuit breaker | Kill and flatten at a 12% peak-to-current drawdown |\n75: | Session boundary | No entry in the final 15 minutes; flatten inside the final 10 minutes |\n76: \n77: Positions are rejected when the account is blocked, the market is closed, reconciliation is stale,\n78: data quality fails, or the account cannot support both the requested buying power and stop-risk.\n79: Equity entries use server-hosted stop-loss and take-profit brackets. The worker verifies protection on\n80: every poll and risk-halts if a held position loses either protective leg. Directional option execution\n81: is disabled.\n82: \n83: ### P&L and validation evidence\n84: \n85: Alpaca remains the source of truth for paper-account state. The public dashboard reports the equity\n86: curve against cash, net P&L, competition return, daily return, observed drawdown, current risk usage,\n87: and the public decisions that produced those results. Decision and portfolio records are sanitized\n88: and delayed by 15 minutes; current agent status and challenger metadata are sanitized but immediate.\n89: The reporting plane cannot control the agent.\n90: \n91: Historical evidence for the authorized artifact uses four expanding chronological folds, purges\n92: overlapping four-hour labels, and charges 12 bps round trip per selected position.\n93: \n94: | Evidence | Return | Sharpe | Max drawdown | Trades |\n95: | --- | ---: | ---: | ---: | ---: |\n96: | Mean walk-forward validation | **+1.60%** | **0.61** | See fold results | 394 across 4 folds |\n97: | Diagnostic holdout | **+8.38%** | **3.22** | **3.94%** | 76 |\n98: \n99: Only two of four validation folds were positive, and the holdout was inspected during development.\n100: These results are evidence, not a profitability guarantee; the model received explicit bounded\n101: paper-trading authority despite not meeting its original promotion gate. The full protocol, fold\n102: results, failed experiments, and limitations are documented in\n103: [`docs/training/local-benchmark.md`](docs/training/local-benchmark.md).\n104: \n105: ### Shadow AI research path\n106: \n107: Alongside the live classifier, an AWS Bedrock model converts recent Alpaca News into a typed financial\n108: Event: direction, magnitude, novelty, surprise, confidence, horizon, affected symbols, and invalidating\n109: evidence. A deterministic router combines that record with price confirmation.\n110: \n111: This path is intentionally `SHADOW_ONLY`. Bedrock cannot size positions, create orders, or affect the\n112: order-authorized model. Malformed, stale, or unbounded output fails closed to `NO_TRADE`. This creates\n113: forward evidence for a future event-aware model without risking competition capital on an unvalidated\n114: LLM strategy.\n115: \n116: ## Alpaca Services\n117: \n118: | Alpaca technology | How Catalyst Router uses it | Authority |\n119: | --- | --- | --- |\n120: | **Paper Trading API** | Reconciles account, clock, positions, and orders; submits equity brackets; closes and flattens exposure | Sole broker and P&L authority |\n121: | **Market Data API** | Fetches IEX bars and quotes plus market screeners | Read-only market evidence |\n122: | **News API** | Reads the latest symbol-scoped articles for Bedrock Event extraction | Shadow evidence only |\n123: | **`alpaca-py` SDK** | Typed runtime adapter for trading, account state, historical bars, quotes, and news | Private worker only |\n124: | **Alpaca CLI** | Paper-account diagnostics and judge-friendly dry-run demonstrations through `scripts/alpaca-paper` | Read-only; submit is allowed only with `--dry-run` |\n125: | **Alpaca MCP server** | Not connected in this version; the runtime does not expose an LLM-controlled broker tool path | No trading authority |\n126: \n127: The broker adapter is hard-pinned to `https://paper-api.alpaca.markets`. The CLI wrapper rejects\n128: `--live`, rejects mutating commands, and keeps production execution inside the tested Python gateway.\n129: \n130: ## Usage\n131: \n132: ### Prerequisites\n133: \n134: - Python 3.14+\n135: - [`uv`](https://docs.astral.sh/uv/)\n136: - Alpaca paper-trading credentials\n137: - Node.js and npm only when running the dashboard\n138: - Docker only for the DynamoDB integration test\n139: \n140: ### Install and verify\n141: \n142: ```bash\n143: uv sync --group inference\n144: uv run pytest\n145: ```\n146: \n147: Provide paper credentials through `.env` or the process environment:\n148: \n149: ```dotenv\n150: ALPACA_KEY=your-paper-key\n151: ALPACA_SECRET=your-paper-secret\n152: ```\n153: \n154: Confirm that the credentials resolve to a paper account and inspect sanitized state:\n155: \n156: ```bash\n157: uv run catalyst-router check-alpaca\n158: uv run catalyst-router reconcile\n159: ```\n160: \n161: ### Run the reporting experience\n162: \n163: Start the read-only API:\n164: \n165: ```bash\n166: uv run catalyst-router serve\n167: ```\n168: \n169: In another terminal, start the dashboard:\n170: \n171: ```bash\n172: npm --prefix dashboard ci\n173: npm --prefix dashboard run dev\n174: ```\n175: \n176: Open `http://localhost:3000`. Development uses the deployed CloudFront API configured in\n177: `dashboard/.env.development` by default. To point it at the local API instead, start it with:\n178: \n179: ```bash\n180: NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000 npm --prefix dashboard run dev\n\n(Showing lines 1-180 of 330. Use offset=181 to continue.)\n</content>",
+            "metadata": {
+              "preview": "# Catalyst Router\n\n<div align=\"center\">\n\n**An autonomous, risk-bounded AI agent for Alpaca paper trading**\n\n`XGBoost signals` · `Dynamic equity universe` · `Long/short equities` · `Immutable decisions`\n\n</div>\n\nCatalyst Router turns completed market bars into directional trades, but keeps capital authority\noutside the model. A checksummed XGBoost classifier proposes long, short, or abstain; deterministic\ncode validates market data, sizes risk, claims executable decisions exactly once, and submits\nserver-protected equity brackets to Alpaca. Sanitized predictions, vetoes, routes, and executions feed a\ndelayed public flight recorder.\n\n## Trading Model\n\nThe order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\nAlpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the",
+              "truncated": true,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/README.md",
+                "text": "# Catalyst Router\n\n<div align=\"center\">\n\n**An autonomous, risk-bounded AI agent for Alpaca paper trading**\n\n`XGBoost signals` · `Dynamic equity universe` · `Long/short equities` · `Immutable decisions`\n\n</div>\n\nCatalyst Router turns completed market bars into directional trades, but keeps capital authority\noutside the model. A checksummed XGBoost classifier proposes long, short, or abstain; deterministic\ncode validates market data, sizes risk, claims executable decisions exactly once, and submits\nserver-protected equity brackets to Alpaca. Sanitized predictions, vetoes, routes, and executions feed a\ndelayed public flight recorder.\n\n## Trading Model\n\nThe order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\nAlpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the\nprobability of a positive four-hour move across a daily dynamic universe, an explicit distribution\nshift.\n\n| Model contract | Implemented behavior |\n| --- | --- |\n| Candidate | `xgboost_regularized` |\n| Artifact | Immutable run `20260828T175917Z`, loaded from S3 and verified by SHA-256 |\n| Input | Completed 15-minute regular-session bars, delayed one minute for corrections |\n| Horizon | 16 bars / 4 hours |\n| Features | Lagged returns, range, VWAP distance, volume ratio, realized volatility, SPY context, relative return, cross-sectional rank, range location, and time of day |\n| Runtime universe | Up to 20 liquid, option-enabled symbols ranked from the 100 most active stocks, 50 gainers, and 50 losers; SPY retained as market context |\n| Output | Probability mapped to `LONG`, `SHORT`, or `ABSTAIN` |\n| Runtime gate | Long at `p >= 0.52`; short at `p <= 0.48`; abstain otherwise |\n| Cadence | Poll every 15 seconds; score the latest completed vector per symbol and claim each symbol/bar/model tuple idempotently |\n| Portfolio | Rank candidates by confidence, enter at most one per cycle, hold at most six symbols |\n\n### From prediction to trade\n\n```text\ncompleted IEX bars\n        │\n        ▼\npoint-in-time feature vector\n        │\n        ▼\nXGBoost probability ──► LONG / SHORT / ABSTAIN\n        │\n        ▼\nfresh quote + spread + market-hours gates\n        │\n        ▼\ndeterministic Risk Governor\n        │\n        ▼\nidempotent Alpaca equity entry\n   long/short bracket + broker-hosted exits\n```\n\nThe separation is deliberate: the model chooses direction and confidence, never quantity. The Risk\nGovernor can reduce or veto every proposal, and the execution gateway alone can construct an Alpaca\norder.\n\n### Risk envelope\n\n| Control | Enforced limit |\n| --- | ---: |\n| Entry notional | 10% of account equity |\n| Equity risk per trade | Entry-to-stop loss capped at 1% of equity; reduced to 0.5% after a 2% daily loss |\n| Concurrent positions | 6 |\n| Total open stop-risk | 5% of equity |\n| One correlated exposure group | 5% of equity |\n| Freshness and liquidity | Quote at most 5 seconds old; spread at most 15 bps |\n| Daily circuit breaker | Halt and flatten at a 4% daily loss |\n| Competition circuit breaker | Kill and flatten at a 12% peak-to-current drawdown |\n| Session boundary | No entry in the final 15 minutes; flatten inside the final 10 minutes |\n\nPositions are rejected when the account is blocked, the market is closed, reconciliation is stale,\ndata quality fails, or the account cannot support both the requested buying power and stop-risk.\nEquity entries use server-hosted stop-loss and take-profit brackets. The worker verifies protection on\nevery poll and risk-halts if a held position loses either protective leg. Directional option execution\nis disabled.\n\n### P&L and validation evidence\n\nAlpaca remains the source of truth for paper-account state. The public dashboard reports the equity\ncurve against cash, net P&L, competition return, daily return, observed drawdown, current risk usage,\nand the public decisions that produced those results. Decision and portfolio records are sanitized\nand delayed by 15 minutes; current agent status and challenger metadata are sanitized but immediate.\nThe reporting plane cannot control the agent.\n\nHistorical evidence for the authorized artifact uses four expanding chronological folds, purges\noverlapping four-hour labels, and charges 12 bps round trip per selected position.\n\n| Evidence | Return | Sharpe | Max drawdown | Trades |\n| --- | ---: | ---: | ---: | ---: |\n| Mean walk-forward validation | **+1.60%** | **0.61** | See fold results | 394 across 4 folds |\n| Diagnostic holdout | **+8.38%** | **3.22** | **3.94%** | 76 |\n\nOnly two of four validation folds were positive, and the holdout was inspected during development.\nThese results are evidence, not a profitability guarantee; the model received explicit bounded\npaper-trading authority despite not meeting its original promotion gate. The full protocol, fold\nresults, failed experiments, and limitations are documented in\n[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md).\n\n### Shadow AI research path\n\nAlongside the live classifier, an AWS Bedrock model converts recent Alpaca News into a typed financial\nEvent: direction, magnitude, novelty, surprise, confidence, horizon, affected symbols, and invalidating\nevidence. A deterministic router combines that record with price confirmation.\n\nThis path is intentionally `SHADOW_ONLY`. Bedrock cannot size positions, create orders, or affect the\norder-authorized model. Malformed, stale, or unbounded output fails closed to `NO_TRADE`. This creates\nforward evidence for a future event-aware model without risking competition capital on an unvalidated\nLLM strategy.\n\n## Alpaca Services\n\n| Alpaca technology | How Catalyst Router uses it | Authority |\n| --- | --- | --- |\n| **Paper Trading API** | Reconciles account, clock, positions, and orders; submits equity brackets; closes and flattens exposure | Sole broker and P&L authority |\n| **Market Data API** | Fetches IEX bars and quotes plus market screeners | Read-only market evidence |\n| **News API** | Reads the latest symbol-scoped articles for Bedrock Event extraction | Shadow evidence only |\n| **`alpaca-py` SDK** | Typed runtime adapter for trading, account state, historical bars, quotes, and news | Private worker only |\n| **Alpaca CLI** | Paper-account diagnostics and judge-friendly dry-run demonstrations through `scripts/alpaca-paper` | Read-only; submit is allowed only with `--dry-run` |\n| **Alpaca MCP server** | Not connected in this version; the runtime does not expose an LLM-controlled broker tool path | No trading authority |\n\nThe broker adapter is hard-pinned to `https://paper-api.alpaca.markets`. The CLI wrapper rejects\n`--live`, rejects mutating commands, and keeps production execution inside the tested Python gateway.\n\n## Usage\n\n### Prerequisites\n\n- Python 3.14+\n- [`uv`](https://docs.astral.sh/uv/)\n- Alpaca paper-trading credentials\n- Node.js and npm only when running the dashboard\n- Docker only for the DynamoDB integration test\n\n### Install and verify\n\n```bash\nuv sync --group inference\nuv run pytest\n```\n\nProvide paper credentials through `.env` or the process environment:\n\n```dotenv\nALPACA_KEY=your-paper-key\nALPACA_SECRET=your-paper-secret\n```\n\nConfirm that the credentials resolve to a paper account and inspect sanitized state:\n\n```bash\nuv run catalyst-router check-alpaca\nuv run catalyst-router reconcile\n```\n\n### Run the reporting experience\n\nStart the read-only API:\n\n```bash\nuv run catalyst-router serve\n```\n\nIn another terminal, start the dashboard:\n\n```bash\nnpm --prefix dashboard ci\nnpm --prefix dashboard run dev\n```\n\nOpen `http://localhost:3000`. Development uses the deployed CloudFront API configured in\n`dashboard/.env.development` by default. To point it at the local API instead, start it with:\n\n```bash\nNEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000 npm --prefix dashboard run dev",
+                "lineStart": 1,
+                "lineEnd": 180,
+                "totalLines": 330,
+                "truncated": true
+              }
+            },
+            "title": "README.md",
+            "time": {
+              "start": 1788527272220,
+              "end": 1788527272257
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0077ec6aa462855f016a9ac2a8131c87d2a7f2932da650d5f9"
+            }
+          },
+          "id": "prt_06c886119001JKJRWSuXJjkfDj",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c8851b3001RuinZmARM5P5Bz"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_NqurDkKVjGHenR9L2aX8ZPDR",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/RESEARCH.md",
+              "limit": 25
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/RESEARCH.md</path>\n<type>file</type>\n<content>\n1: # AI Trading Agent Research Brief\n2: \n3: ## Hackathon Objective\n4: \n5: The project is judged on P&L in Alpaca paper trading, effective use of Alpaca's API/MCP/CLI, originality, and clear execution. The winning design should prioritize a robust live system and visible agent behavior over an impressive but unvalidated end-to-end model.\n6: \n7: ## Executive Recommendation\n8: \n9: Build **Catalyst Router**: an event-driven, regime-aware mixture-of-experts agent that decides whether an unusual move is driven by new information or temporary liquidity/noise.\n10: \n11: - A credible catalyst plus price and volume confirmation routes to a continuation strategy.\n12: - An unexplained, extreme market-relative move routes to a mean-reversion strategy.\n13: - Ambiguous, contradictory, illiquid, stale, or high-risk cases route to `NO_TRADE`.\n14: \n15: The LLM performs structured news/event extraction and explains decisions. Deterministic quantitative code produces forecasts, sizes positions, enforces risk limits, and submits orders. This is materially more defensible than allowing an LLM to freely predict prices or execute arbitrary trades.\n16: \n17: ## What State of the Art Actually Says\n18: \n19: ### LLM agents\n20: \n21: Multi-agent frameworks such as TradingAgents use specialized fundamental, sentiment, technical, bull/bear, trader, and risk roles, reporting stronger backtest results than simpler agents [1]. FinMem reports benefits from a layered memory that prioritizes information by relevance and timescale [2].\n22: \n23: The strongest recent evidence is cautionary:\n24: \n25: - AI-Trader finds that general LLM capability does not automatically create trading capability; most tested agents had poor returns and weak risk management [3].\n\n(Showing lines 1-25 of 338. Use offset=26 to continue.)\n</content>",
+            "metadata": {
+              "preview": "# AI Trading Agent Research Brief\n\n## Hackathon Objective\n\nThe project is judged on P&L in Alpaca paper trading, effective use of Alpaca's API/MCP/CLI, originality, and clear execution. The winning design should prioritize a robust live system and visible agent behavior over an impressive but unvalidated end-to-end model.\n\n## Executive Recommendation\n\nBuild **Catalyst Router**: an event-driven, regime-aware mixture-of-experts agent that decides whether an unusual move is driven by new information or temporary liquidity/noise.\n\n- A credible catalyst plus price and volume confirmation routes to a continuation strategy.\n- An unexplained, extreme market-relative move routes to a mean-reversion strategy.\n- Ambiguous, contradictory, illiquid, stale, or high-risk cases route to `NO_TRADE`.\n\nThe LLM performs structured news/event extraction and explains decisions. Deterministic quantitative code produces forecasts, sizes positions, enforces risk limits, and submits orders. This is materially more defensible than allowing an LLM to freely predict prices or execute arbitrary trades.\n\n## What State of the Art Actually Says\n\n### LLM agents\n",
+              "truncated": true,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/RESEARCH.md",
+                "text": "# AI Trading Agent Research Brief\n\n## Hackathon Objective\n\nThe project is judged on P&L in Alpaca paper trading, effective use of Alpaca's API/MCP/CLI, originality, and clear execution. The winning design should prioritize a robust live system and visible agent behavior over an impressive but unvalidated end-to-end model.\n\n## Executive Recommendation\n\nBuild **Catalyst Router**: an event-driven, regime-aware mixture-of-experts agent that decides whether an unusual move is driven by new information or temporary liquidity/noise.\n\n- A credible catalyst plus price and volume confirmation routes to a continuation strategy.\n- An unexplained, extreme market-relative move routes to a mean-reversion strategy.\n- Ambiguous, contradictory, illiquid, stale, or high-risk cases route to `NO_TRADE`.\n\nThe LLM performs structured news/event extraction and explains decisions. Deterministic quantitative code produces forecasts, sizes positions, enforces risk limits, and submits orders. This is materially more defensible than allowing an LLM to freely predict prices or execute arbitrary trades.\n\n## What State of the Art Actually Says\n\n### LLM agents\n\nMulti-agent frameworks such as TradingAgents use specialized fundamental, sentiment, technical, bull/bear, trader, and risk roles, reporting stronger backtest results than simpler agents [1]. FinMem reports benefits from a layered memory that prioritizes information by relevance and timescale [2].\n\nThe strongest recent evidence is cautionary:\n\n- AI-Trader finds that general LLM capability does not automatically create trading capability; most tested agents had poor returns and weak risk management [3].",
+                "lineStart": 1,
+                "lineEnd": 25,
+                "totalLines": 338,
+                "truncated": true
+              }
+            },
+            "title": "RESEARCH.md",
+            "time": {
+              "start": 1788527272224,
+              "end": 1788527272255
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0077ec6aa462855f016a9ac2a8132c87d2aea83a990c55dc1d"
+            }
+          },
+          "id": "prt_06c88611e001eY178rsjTfZRHy",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c8851b3001RuinZmARM5P5Bz"
+        },
+        {
+          "type": "tool",
+          "tool": "bash",
+          "callID": "call_AKyihcO3d2SUSEJa1MhADIT6",
+          "state": {
+            "status": "completed",
+            "input": {
+              "command": "gh issue list --state open --json number,title,body,labels --jq '[.[] | {number,title,body,labels:[.labels[].name]}]'",
+              "workdir": "/Users/itsmeyaw/projects/alpaca-hackathon",
+              "timeout": 120000
+            },
+            "output": "[]\n",
+            "metadata": {
+              "output": "[]\n",
+              "exit": 0,
+              "truncated": false
+            },
+            "title": "gh issue list --state open --json number,title,body,labels --jq '[.[] | {number,title,body,labels:[.labels[].name]}]'",
+            "time": {
+              "start": 1788527272230,
+              "end": 1788527272905
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0077ec6aa462855f016a9ac2a8133487d28be872654e1c2aa1"
+            }
+          },
+          "id": "prt_06c886122001Oxpbrd4Lst1nMg",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c8851b3001RuinZmARM5P5Bz"
+        },
+        {
+          "type": "tool",
+          "tool": "bash",
+          "callID": "call_QJF1fUWqaTqWcExP53mo62Rj",
+          "state": {
+            "status": "completed",
+            "input": {
+              "command": "git status --short",
+              "workdir": "/Users/itsmeyaw/projects/alpaca-hackathon",
+              "timeout": 120000
+            },
+            "output": " M README.md\n?? Catalyst-Router-Alpaca-Hackathon.pdf\n?? presentation.html\n",
+            "metadata": {
+              "output": " M README.md\n?? Catalyst-Router-Alpaca-Hackathon.pdf\n?? presentation.html\n",
+              "exit": 0,
+              "truncated": false
+            },
+            "title": "git status --short",
+            "time": {
+              "start": 1788527272236,
+              "end": 1788527272290
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0077ec6aa462855f016a9ac2a8133c87d2918a974f74ca87bb"
+            }
+          },
+          "id": "prt_06c886129001f2eG2PCnoj6JMR",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c8851b3001RuinZmARM5P5Bz"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "a1e0786689b662df4d3e07ef979d49f7f8a693ac",
+          "type": "step-finish",
+          "tokens": {
+            "total": 24521,
+            "input": 3,
+            "output": 197,
+            "reasoning": 53,
+            "cache": {
+              "write": 5234,
+              "read": 19034
+            }
+          },
+          "cost": 0.0198978,
+          "id": "prt_06c88640d001YiWSxdkGtb623e",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c8851b3001RuinZmARM5P5Bz"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_06c883de70012pyvp9684rY0hK",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.0205096,
+        "tokens": {
+          "total": 27928,
+          "input": 3,
+          "output": 334,
+          "reasoning": 351,
+          "cache": {
+            "write": 2972,
+            "read": 24268
+          }
+        },
+        "modelID": "gpt-5.6-terra",
+        "providerID": "openai",
+        "time": {
+          "created": 1788527273035,
+          "completed": 1788527284878
+        },
+        "finish": "stop",
+        "id": "msg_06c88644b001HJh3csCd4eKLPW",
+        "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285"
+      },
+      "parts": [
+        {
+          "snapshot": "a1e0786689b662df4d3e07ef979d49f7f8a693ac",
+          "type": "step-start",
+          "id": "prt_06c8870b9001jaHP6bwsDaGJeq",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c88644b001HJh3csCd4eKLPW"
+        },
+        {
+          "type": "reasoning",
+          "text": "**Analyzing README changes**\n\nI’ve noticed that the README has been altered, and I'm considering proposing descriptions for it. Perhaps we could create both a short and a long description for the project, especially since metadata might be lacking. I need to inspect the changes so I don’t accidentally interfere with the presentation. I also want to check the git diff and review any relevant documents to see what adjustments we should make for the frontend.",
+          "time": {
+            "start": 1788527276218,
+            "end": 1788527278251
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_0bdd870360a744ba016a9ac2abe93087d2af0cc3410bf62b03",
+              "reasoningEncryptedContent": "REDACTED"
+            }
+          },
+          "id": "prt_06c8870ba001zmwfW0BYsSpdM3",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c88644b001HJh3csCd4eKLPW"
+        },
+        {
+          "type": "reasoning",
+          "text": "**Evaluating API and CLI usage**\n\nI’m thinking about mentioning effective use of API and CLI while avoiding any false claims related to MCP. I recognize that focusing on the \"Alpaca API/MCP/CLI\" might mean I need to include descriptions of the CLI. It could be worth considering MCP in any future shadow research, but the README indicates that MCP isn’t connected. So, I shouldn't say to use MCP effectively. I might need to analyze the README differences, especially in light of potential user changes.",
+          "time": {
+            "start": 1788527278259,
+            "end": 1788527281567
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_0bdd870360a744ba016a9ac2ae025487d2b21f91996403ab08",
+              "reasoningEncryptedContent": "REDACTED"
+            }
+          },
+          "id": "prt_06c8878b3001EcyKPHKpB1Ty0G",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c88644b001HJh3csCd4eKLPW"
+        },
+        {
+          "type": "text",
+          "text": "**Short description**\n\nCatalyst Router is an autonomous, risk-bounded AI trading agent for Alpaca paper trading. It uses point-in-time Alpaca market data, an XGBoost directional model, and deterministic risk controls to place protected long and short equity trades, while exposing every prediction, veto, and P&L result through a transparent public dashboard.\n\n**Long description**\n\nCatalyst Router is built to compete on paper-trading P&L without treating an LLM as an ungoverned trader. It screens a daily universe of liquid equities with Alpaca IEX data, scores completed 15-minute bars using a checksummed XGBoost model, and converts only high-confidence long or short signals into trade proposals. Every proposal must pass fresh-quote, spread, buying-power, exposure, drawdown, and position-limit checks before the deterministic Risk Governor can submit an idempotent Alpaca bracket order with broker-hosted exits.\n\nThe project demonstrates deep Alpaca integration across Paper Trading, Market Data, News, `alpaca-py`, and a judge-friendly CLI for safe paper-account inspection and dry-run demonstrations. Its differentiator is a clear separation of intelligence from capital authority: Bedrock extracts structured news events in shadow mode, the model supplies direction and confidence, and deterministic code retains all sizing and execution authority. A delayed, sanitized public flight recorder makes live agent behavior auditable, showing decisions, abstentions, vetoes, route selection, risk usage, drawdown, and P&L against cash. This makes Catalyst Router a credible, transparent, and operationally robust autonomous trading system rather than a backtest-only demo.",
+          "time": {
+            "start": 1788527281573,
+            "end": 1788527284559
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "msg_0bdd870360a744ba016a9ac2b10fe087d2b8abc60a6764ea54",
+              "phase": "final_answer"
+            }
+          },
+          "id": "prt_06c8885a4001E3YAwmb60511KF",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c88644b001HJh3csCd4eKLPW"
+        },
+        {
+          "reason": "stop",
+          "snapshot": "a1e0786689b662df4d3e07ef979d49f7f8a693ac",
+          "type": "step-finish",
+          "tokens": {
+            "total": 27928,
+            "input": 3,
+            "output": 334,
+            "reasoning": 351,
+            "cache": {
+              "write": 2972,
+              "read": 24268
+            }
+          },
+          "cost": 0.0205096,
+          "id": "prt_06c88924a001Pse2vfF0x9fQLA",
+          "sessionID": "ses_f9377c232ffexYsTEWt2Q1O285",
+          "messageID": "msg_06c88644b001HJh3csCd4eKLPW"
+        }
+      ]
+    }
+  ]
+}
