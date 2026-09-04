@@ -1,0 +1,157 @@
+{
+  "cli_version": "0.10.4",
+  "checkpoint_id": "01M1NSE2F08Z6ZTB53T806SVND",
+  "session_id": "ses_f97b1c541ffe0BOHM4R60q9My9",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-04T08:44:16.935869Z",
+  "branch": "main",
+  "checkpoints_count": 12,
+  "save_step_count": 12,
+  "files_touched": [
+    "CONTEXT.md",
+    "README.md",
+    "dashboard/components/dashboard.tsx",
+    "docs/adr/0004-budget-correlated-portfolio-risk.md",
+    "docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md",
+    "docs/adr/0017-increase-concurrent-risk-capacity.md",
+    "docs/adr/0018-return-directional-execution-to-equities.md",
+    "infra/README.md",
+    "infra/environments/prod/variables.tf",
+    "src/catalyst_router/adapters/bedrock.py",
+    "src/catalyst_router/execution.py",
+    "src/catalyst_router/risk.py",
+    "tests/unit/test_events.py",
+    "tests/unit/test_execution.py",
+    "tests/unit/test_risk.py"
+  ],
+  "agent": "OpenCode",
+  "model": "openai.gpt-5.6-sol",
+  "turn_id": "3460ed5c84c2",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 144,
+    "cache_creation_tokens": 393868,
+    "cache_read_tokens": 7174652,
+    "output_tokens": 17673,
+    "api_call_count": 73
+  },
+  "session_metrics": {
+    "turn_count": 12
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-04T08:44:16.823464Z",
+    "agent_lines": 42,
+    "agent_removed": 30,
+    "human_added": 0,
+    "human_modified": 23,
+    "human_removed": 35,
+    "total_committed": 65,
+    "total_lines_changed": 130,
+    "agent_percentage": 55.38461538461539,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 279,
+      "user_lines_removed": 54,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "README.md": 279
+      },
+      "user_removed_per_file": {
+        "README.md": 54
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 284,
+      "agent_lines_removed": 54
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 6,
+      "user_lines_removed": 0,
+      "agent_lines_added": 338,
+      "agent_lines_removed": 69,
+      "user_added_per_file": {
+        "src/catalyst_router/adapters/bedrock.py": 4,
+        "tests/unit/test_events.py": 2
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 344,
+      "agent_lines_removed": 69
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 344,
+      "agent_lines_removed": 69
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 344,
+      "agent_lines_removed": 69
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 344,
+      "agent_lines_removed": 69
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 344,
+      "agent_lines_removed": 69
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 344,
+      "agent_lines_removed": 69
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 12,
+      "user_lines_added": 17,
+      "user_lines_removed": 4,
+      "agent_lines_added": 344,
+      "agent_lines_removed": 69,
+      "user_added_per_file": {
+        "src/catalyst_router/execution.py": 2,
+        "tests/unit/test_execution.py": 15
+      },
+      "user_removed_per_file": {
+        "src/catalyst_router/execution.py": 1,
+        "tests/unit/test_execution.py": 3
+      }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.10.4",
+  "checkpoint_id": "01M1NSE2F08Z6ZTB53T806SVND",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 12,
+  "files_touched": [
+    "CONTEXT.md",
+    "README.md",
+    "dashboard/components/dashboard.tsx",
+    "docs/adr/0004-budget-correlated-portfolio-risk.md",
+    "docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md",
+    "docs/adr/0017-increase-concurrent-risk-capacity.md",
+    "docs/adr/0018-return-directional-execution-to-equities.md",
+    "infra/README.md",
+    "infra/environments/prod/variables.tf",
+    "src/catalyst_router/adapters/bedrock.py",
+    "src/catalyst_router/execution.py",
+    "src/catalyst_router/risk.py",
+    "tests/unit/test_events.py",
+    "tests/unit/test_execution.py",
+    "tests/unit/test_risk.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 144,
+    "cache_creation_tokens": 393868,
+    "cache_read_tokens": 7174652,
+    "output_tokens": 17673,
+    "api_call_count": 73
+  }
+}
