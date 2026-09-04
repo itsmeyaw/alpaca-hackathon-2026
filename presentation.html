@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Catalyst Router | Alpaca Hackathon</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23fcd72b'/%3E%3Cpath d='M7 22 16 6l9 16' fill='none' stroke='%23000' stroke-width='3'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="https://files.alpaca.markets/fonts/BROmega/stylesheet.css" />
+    <link rel="stylesheet" href="https://files.alpaca.markets/fonts/Formular/stylesheet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" />
+    <style>
+      :root {
+        --yellow: #fcd72b;
+        --black: #000000;
+        --paper: #fbfaf7;
+        --soft: #f2f0eb;
+        --line: #d4d0c8;
+        --muted: #615f58;
+      }
+
+      .reveal {
+        background: var(--paper);
+        color: var(--black);
+        font-family: Formular, Arial, sans-serif;
+      }
+
+      .reveal .slides { text-align: left; }
+      .reveal .slides section { box-sizing: border-box; height: 100%; padding: 1.1em 1.25em; }
+      .reveal .slides section:not(.brand-cover) { background: var(--paper); }
+      .reveal h1, .reveal h2, .reveal h3, .reveal p { color: var(--black); text-transform: none; letter-spacing: normal; }
+      .reveal h1, .reveal h2 { font-family: BROmega, Arial, sans-serif; }
+      .reveal h1 { font-size: 2.65em; line-height: 0.95; margin: 0.22em 0; font-weight: 700; }
+      .reveal h2 { font-size: 1.86em; line-height: 1.02; margin: 0.08em 0 0.34em; font-weight: 700; }
+      .reveal h3 { color: var(--black); font-size: 0.48em; font-weight: 700; letter-spacing: 0.12em; margin: 0; text-transform: uppercase; }
+      .reveal p { font-size: 0.72em; line-height: 1.35; }
+      .reveal strong { font-weight: 700; }
+      .reveal .progress { color: var(--yellow); height: 5px; }
+      .reveal .slide-number { color: var(--muted); font-size: 0.42em; }
+      .reveal .controls { color: var(--black); }
+
+      .eyebrow { background: var(--black); color: var(--yellow); display: inline-block; font-size: 0.43em; font-weight: 700; letter-spacing: 0.12em; padding: 0.26em 0.48em; text-transform: uppercase; }
+      .lede { color: var(--black); font-size: 0.82em !important; max-width: 20em; }
+      .muted { color: var(--muted); }
+      .accent { background: var(--yellow); color: var(--black); padding: 0 0.08em; }
+      .center { align-items: center; display: flex !important; flex-direction: column; justify-content: center; }
+      .brand-cover { background: var(--yellow) !important; }
+      .brand-cover .eyebrow { background: var(--black); color: var(--yellow); }
+      .title-rule { background: var(--black); height: 5px; margin: 0.48em 0; width: 2.2em; }
+      .title-footer { bottom: 0.8em; color: var(--black); font-size: 0.39em; font-weight: 700; left: 1.25em; letter-spacing: 0.06em; position: absolute; text-transform: uppercase; }
+
+      .statement { border-left: 7px solid var(--yellow); color: var(--black); font-family: BROmega, Arial, sans-serif; font-size: 1.18em !important; line-height: 1.17 !important; margin: 0.72em 0 !important; max-width: 18em; padding-left: 0.55em; }
+      .three-up, .metrics, .service-grid { display: grid; gap: 0.28em; }
+      .three-up { grid-template-columns: repeat(3, 1fr); }
+      .metrics { grid-template-columns: repeat(4, 1fr); margin-top: 0.5em; }
+      .service-grid { grid-template-columns: repeat(2, 1fr); }
+      .card { background: transparent; border: 1.5px solid var(--black); border-radius: 0; box-sizing: border-box; min-height: 3.15em; padding: 0.34em 0.46em; }
+      .card .label { color: var(--muted); font-size: 0.36em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+      .card .value { color: var(--black); font-size: 0.63em; font-weight: 700; line-height: 1.15; margin-top: 0.22em; }
+      .card .detail { color: var(--muted); font-size: 0.4em; line-height: 1.24; margin-top: 0.28em; }
+      .card.mint, .card.blue, .card.coral { border-color: var(--black); }
+      .card.mint { background: var(--yellow); }
+
+      .architecture { margin-top: 0.22em; }
+      .architecture .mermaid { background: #ffffff; border: 1.5px solid var(--black); border-radius: 0; padding: 0.22em; }
+      .architecture svg { max-height: 415px; max-width: 100%; }
+      .architecture .mermaid .nodeLabel, .architecture .mermaid .edgeLabel { font-size: 28px; }
+      .architecture-note { color: var(--muted); font-size: 0.42em !important; margin-top: 0.4em !important; text-align: center; }
+      .model-note { color: #89867e; font-size: 0.35em !important; margin: 0.7em auto 0 !important; max-width: 62em; text-align: center; }
+      .model-spec { display: grid; gap: 0.22em; grid-template-columns: repeat(4, 1fr); margin: 0.32em auto 0; max-width: 40em; }
+      .model-spec .card { color: var(--muted); font-size: 0.28em; font-weight: 700; letter-spacing: 0.06em; min-height: 2.5em; padding: 0.3em 0.42em; text-transform: uppercase; }
+      .model-spec span { display: block; }
+      .model-spec strong { color: var(--black); display: block; font-family: BROmega, Arial, sans-serif; font-size: 1.65em; letter-spacing: 0; line-height: 1; margin-top: 0.32em; }
+
+      .number { color: var(--black); font-family: BROmega, Arial, sans-serif; font-size: 1.25em; font-variant-numeric: tabular-nums; font-weight: 700; line-height: 0.9; }
+      .metric-label { color: var(--muted); font-size: 0.34em; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.45em; text-transform: uppercase; }
+      .placeholder { color: var(--black); font-size: 0.58em; font-style: normal; }
+      .result-callout { background: var(--yellow); border: 1.5px solid var(--black); border-radius: 0; margin-top: 0.45em; padding: 0.35em 0.55em; }
+      .result-callout p { font-size: 0.58em; margin: 0; }
+      .result-note { background: var(--soft); }
+
+      @media print {
+        html, body, .reveal .slides .pdf-page { background: var(--paper) !important; }
+      }
+
+      .closing { max-width: 17em; text-align: center; }
+      .closing h2 { font-size: 2.12em; }
+      .closing p { color: var(--black); }
+      .closing .tagline { border-top: 2px solid var(--black); font-size: 0.61em; font-weight: 700; margin-top: 1em; padding-top: 0.7em; }
+
+      @media (max-width: 700px) {
+        .three-up, .metrics, .service-grid { gap: 0.18em; }
+        .card { padding: 0.25em 0.3em; }
+        .architecture svg { max-height: 330px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section class="center brand-cover" data-transition="fade">
+          <div>
+            <div class="eyebrow">Alpaca Hackathon 2026</div>
+            <h1>Catalyst<br /><span class="accent">Router</span></h1>
+            <div class="title-rule"></div>
+            <p class="lede">An autonomous paper-trading agent where AI finds a signal and deterministic systems protect the capital.</p>
+          </div>
+        </section>
+
+        <section>
+          <h3>The Thesis</h3>
+          <h2>Make the model useful,<br />not <span class="accent">all-powerful.</span></h2>
+          <p class="statement">AI proposes direction and confidence. Deterministic code owns every dollar of risk.</p>
+          <div class="three-up">
+            <div class="card mint">
+              <div class="label">Observe</div>
+              <div class="value">Dynamic universe</div>
+              <div class="detail">Liquid equities, IEX prices, and fresh market context.</div>
+            </div>
+            <div class="card blue">
+              <div class="label">Decide</div>
+              <div class="value">Long / Short / Abstain</div>
+              <div class="detail">XGBoost scores completed 15-minute bars.</div>
+            </div>
+            <div class="card coral">
+              <div class="label">Govern</div>
+              <div class="value">Risk first</div>
+              <div class="detail">The model cannot size, submit, or bypass a veto.</div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3>Model Architecture</h3>
+          <h2>One narrow path to an order.</h2>
+          <div class="architecture">
+            <pre class="mermaid">
+flowchart LR
+  MD[Alpaca Market Data API] --> U[Universe] --> M[XGBoost] -->|Signal| R[Risk Governor] --> E[Execution] --> PT[Alpaca Paper Trading API]
+  N[Alpaca News API] -. shadow events .-> L[(Ledger)]
+  PT -->|Reconcile| E
+  M --> L
+  R --> L
+  E --> L
+            </pre>
+          </div>
+          <p class="architecture-note">The XGBoost model can propose a trade. Only the Risk Governor can approve an Alpaca order.</p>
+          <div class="model-spec" aria-label="Deployed model specification">
+            <div class="card"><span>Boosted trees</span><strong>350</strong></div>
+            <div class="card"><span>Max depth</span><strong>4</strong></div>
+            <div class="card"><span>Point-in-time inputs</span><strong>16</strong></div>
+            <div class="card"><span>Prediction horizon</span><strong>4h</strong></div>
+          </div>
+          <p class="model-note">The classifier estimates a positive four-hour move. A probability of 52% or higher indicates enough upside edge for a long position. A probability of 48% or lower indicates the corresponding downside edge for a short position. The 48-52% band abstains from weak signals. This narrow symmetric gate permits more paper trading opportunities while deterministic risk controls retain final authority.</p>
+        </section>
+
+        <section>
+          <h3>Alpaca, End To End</h3>
+          <h2>Alpaca is the market interface<br />and the <span class="accent">source of truth.</span></h2>
+          <div class="service-grid">
+            <div class="card mint">
+              <div class="label">Market Data API</div>
+              <div class="value">IEX bars, quotes, screeners</div>
+              <div class="detail">Point-in-time model features plus freshness and spread gates.</div>
+            </div>
+            <div class="card blue">
+              <div class="label">News API</div>
+              <div class="value">Catalyst evidence</div>
+              <div class="detail">Symbol news feeds a shadow-only Bedrock event extractor.</div>
+            </div>
+            <div class="card coral">
+              <div class="label">Paper Trading API</div>
+              <div class="value">Brackets and reconciliation</div>
+              <div class="detail">Broker-hosted exits; account, order, and P&amp;L authority.</div>
+            </div>
+            <div class="card">
+              <div class="label">alpaca-py + CLI</div>
+              <div class="value">Typed runtime and safe demo</div>
+              <div class="detail">Python worker executes; CLI supports read-only diagnostics and dry runs.</div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3>Built To Survive</h3>
+          <h2>Every trade must earn<br />permission to exist.</h2>
+          <div class="three-up">
+            <div class="card mint">
+              <div class="label">Market gates</div>
+              <div class="value">Freshness, spread, hours</div>
+              <div class="detail">Bad or stale data resolves to no trade.</div>
+            </div>
+            <div class="card blue">
+              <div class="label">Portfolio limits</div>
+              <div class="value">1% risk per trade</div>
+              <div class="detail">Six positions max, 5% total stop-risk.</div>
+            </div>
+            <div class="card coral">
+              <div class="label">Failure containment</div>
+              <div class="value">Brackets + circuit breakers</div>
+              <div class="detail">Risk halt at 4% daily loss; kill at 12% drawdown.</div>
+            </div>
+          </div>
+          <div class="result-callout"><p><strong>Auditable by design:</strong> immutable decisions, idempotent order claims, and Alpaca reconciliation after every restart.</p></div>
+        </section>
+
+        <section>
+          <h3>Results</h3>
+          <h2>Paper-trading performance.</h2>
+          <div class="metrics">
+            <div class="card">
+              <div class="metric-label">Net P&amp;L</div>
+              <div class="number">+$115.01</div>
+            </div>
+            <div class="card">
+              <div class="metric-label">Return</div>
+              <div class="number">+0.12%</div>
+            </div>
+            <div class="card">
+              <div class="metric-label">Filled Orders</div>
+              <div class="number">42</div>
+            </div>
+            <div class="card">
+              <div class="metric-label">Max Drawdown</div>
+              <div class="number">-0.19%</div>
+            </div>
+          </div>
+          <div class="result-callout">
+            <p><strong>Measured against Alpaca's $100,000 baseline:</strong> the account ended September 3 at $100,115.01.</p>
+          </div>
+          <div class="result-callout result-note">
+            <p><strong>Peak before options.</strong> The account reached $100,309.97 on September 2, or +$309.97 from baseline. The first option session on September 3 lost approximately $194 after stale indicative quotes triggered a risk halt and flatten. Option execution is now disabled.</p>
+          </div>
+        </section>
+
+        <section class="center brand-cover" data-transition="fade">
+          <div class="closing">
+            <div class="eyebrow">Catalyst Router</div>
+            <h2>Intelligence with<br /><span class="accent">boundaries.</span></h2>
+            <p>We are not asking an LLM to trade. We are building a verifiable system that uses models where they help and controls where they matter.</p>
+            <p class="tagline">AI proposes. Deterministic code disposes. Alpaca reconciles.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: "base",
+        themeVariables: {
+          primaryColor: "#fcd72b",
+          primaryTextColor: "#000000",
+          primaryBorderColor: "#000000",
+          lineColor: "#000000",
+          secondaryColor: "#ffffff",
+          tertiaryColor: "#f2f0eb",
+          clusterBkg: "#fbfaf7",
+          clusterBorder: "#000000",
+          fontFamily: "Arial, sans-serif"
+        },
+        flowchart: { curve: "basis", htmlLabels: true }
+      });
+
+      Reveal.initialize({
+        controls: true,
+        controlsLayout: "bottom-right",
+        hash: true,
+        progress: true,
+        slideNumber: "c/t",
+        transition: "slide",
+        transitionSpeed: "fast",
+        center: false,
+        width: 1280,
+        height: 720,
+        margin: 0.08
+      });
+
+      async function renderDiagrams() {
+        const diagrams = document.querySelectorAll(".mermaid:not([data-processed])");
+        if (diagrams.length) {
+          await mermaid.run({ nodes: diagrams });
+          document.querySelector(".mermaidTooltip")?.remove();
+        }
+      }
+
+      Reveal.on("ready", () => window.setTimeout(renderDiagrams, 100));
+    </script>
+  </body>
+</html>

@@ -19,7 +19,7 @@ delayed public flight recorder.
 The order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time
 Alpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the
 probability of a positive four-hour move across a daily dynamic universe, an explicit distribution
-shift accepted by [`ADR-0016`](docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md).
+shift.
 
 | Model contract | Implemented behavior |
 | --- | --- |
@@ -78,7 +78,7 @@ Positions are rejected when the account is blocked, the market is closed, reconc
 data quality fails, or the account cannot support both the requested buying power and stop-risk.
 Equity entries use server-hosted stop-loss and take-profit brackets. The worker verifies protection on
 every poll and risk-halts if a held position loses either protective leg. Directional option execution
-is disabled under [`ADR-0018`](docs/adr/0018-return-directional-execution-to-equities.md).
+is disabled.
 
 ### P&L and validation evidence
 
@@ -100,8 +100,7 @@ Only two of four validation folds were positive, and the holdout was inspected d
 These results are evidence, not a profitability guarantee; the model received explicit bounded
 paper-trading authority despite not meeting its original promotion gate. The full protocol, fold
 results, failed experiments, and limitations are documented in
-[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md) and
-[`ADR-0013`](docs/adr/0013-authorize-the-model-for-paper-execution.md).
+[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md).
 
 ### Shadow AI research path
 
@@ -327,6 +326,5 @@ flowchart LR
 | `src/catalyst_router/reporting.py` | Sanitized public portfolio projections |
 | `dashboard/` | Statically exported Next.js public flight recorder |
 | `infra/environments/prod/` | OpenTofu for ECS, App Runner, DynamoDB, S3, CloudFront, IAM, and observability |
-| `docs/adr/` | Versioned model, authority, risk, and infrastructure decisions |
 
 The central design rule is simple: **AI proposes; deterministic code disposes; Alpaca reconciles.**
