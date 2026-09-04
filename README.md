@@ -14,8 +14,6 @@ code validates market data, sizes risk, claims executable decisions exactly once
 server-protected equity brackets to Alpaca. Sanitized predictions, vetoes, routes, and executions feed a
 delayed public flight recorder.
 
-![Catalyst Router public trading dashboard](catalyst-router-dashboard.png)
-
 ## Trading Model
 
 The order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time
