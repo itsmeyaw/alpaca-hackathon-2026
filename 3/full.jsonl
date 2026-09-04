@@ -1,0 +1,647 @@
+{
+  "info": {
+    "id": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+    "slug": "crisp-harbor",
+    "projectID": "cdb1b2ca155067985326408a159253587dd4dc5a",
+    "directory": "/Users/itsmeyaw/projects/alpaca-hackathon",
+    "path": "",
+    "title": "Remove ADR references from README.md",
+    "agent": "build",
+    "model": {
+      "id": "gpt-5.6-terra",
+      "providerID": "openai",
+      "variant": "high"
+    },
+    "version": "1.18.27",
+    "summary": {
+      "additions": 0,
+      "deletions": 0,
+      "files": 0
+    },
+    "cost": 0.08564580000000001,
+    "tokens": {
+      "input": 12,
+      "output": 652,
+      "reasoning": 232,
+      "cache": {
+        "read": 66494,
+        "write": 24686
+      }
+    },
+    "time": {
+      "created": 1788512394478,
+      "updated": 1788512411504
+    }
+  },
+  "messages": [
+    {
+      "info": {
+        "role": "user",
+        "time": {
+          "created": 1788512394506
+        },
+        "agent": "build",
+        "model": {
+          "providerID": "openai",
+          "modelID": "gpt-5.6-terra",
+          "variant": "high"
+        },
+        "summary": {
+          "diffs": [
+            {
+              "file": "README.md",
+              "patch": "Index: README.md\n===================================================================\n--- README.md\t\n+++ README.md\t\n@@ -1,332 +1,330 @@\n # Catalyst Router\n \n <div align=\"center\">\n \n **An autonomous, risk-bounded AI agent for Alpaca paper trading**\n \n `XGBoost signals` · `Dynamic equity universe` · `Long/short equities` · `Immutable decisions`\n \n </div>\n \n Catalyst Router turns completed market bars into directional trades, but keeps capital authority\n outside the model. A checksummed XGBoost classifier proposes long, short, or abstain; deterministic\n code validates market data, sizes risk, claims executable decisions exactly once, and submits\n server-protected equity brackets to Alpaca. Sanitized predictions, vetoes, routes, and executions feed a\n delayed public flight recorder.\n \n ## Trading Model\n \n The order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\n Alpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the\n probability of a positive four-hour move across a daily dynamic universe, an explicit distribution\n-shift accepted by [`ADR-0016`](docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md).\n+shift.\n \n | Model contract | Implemented behavior |\n | --- | --- |\n | Candidate | `xgboost_regularized` |\n | Artifact | Immutable run `20260828T175917Z`, loaded from S3 and verified by SHA-256 |\n | Input | Completed 15-minute regular-session bars, delayed one minute for corrections |\n | Horizon | 16 bars / 4 hours |\n | Features | Lagged returns, range, VWAP distance, volume ratio, realized volatility, SPY context, relative return, cross-sectional rank, range location, and time of day |\n | Runtime universe | Up to 20 liquid, option-enabled symbols ranked from the 100 most active stocks, 50 gainers, and 50 losers; SPY retained as market context |\n | Output | Probability mapped to `LONG`, `SHORT`, or `ABSTAIN` |\n | Runtime gate | Long at `p >= 0.52`; short at `p <= 0.48`; abstain otherwise |\n | Cadence | Poll every 15 seconds; score the latest completed vector per symbol and claim each symbol/bar/model tuple idempotently |\n | Portfolio | Rank candidates by confidence, enter at most one per cycle, hold at most six symbols |\n \n ### From prediction to trade\n \n ```text\n completed IEX bars\n         │\n         ▼\n point-in-time feature vector\n         │\n         ▼\n XGBoost probability ──► LONG / SHORT / ABSTAIN\n         │\n         ▼\n fresh quote + spread + market-hours gates\n         │\n         ▼\n deterministic Risk Governor\n         │\n         ▼\n idempotent Alpaca equity entry\n    long/short bracket + broker-hosted exits\n ```\n \n The separation is deliberate: the model chooses direction and confidence, never quantity. The Risk\n Governor can reduce or veto every proposal, and the execution gateway alone can construct an Alpaca\n order.\n \n ### Risk envelope\n \n | Control | Enforced limit |\n | --- | ---: |\n | Entry notional | 10% of account equity |\n | Equity risk per trade | Entry-to-stop loss capped at 1% of equity; reduced to 0.5% after a 2% daily loss |\n | Concurrent positions | 6 |\n | Total open stop-risk | 5% of equity |\n | One correlated exposure group | 5% of equity |\n | Freshness and liquidity | Quote at most 5 seconds old; spread at most 15 bps |\n | Daily circuit breaker | Halt and flatten at a 4% daily loss |\n | Competition circuit breaker | Kill and flatten at a 12% peak-to-current drawdown |\n | Session boundary | No entry in the final 15 minutes; flatten inside the final 10 minutes |\n \n Positions are rejected when the account is blocked, the market is closed, reconciliation is stale,\n data quality fails, or the account cannot support both the requested buying power and stop-risk.\n Equity entries use server-hosted stop-loss and take-profit brackets. The worker verifies protection on\n every poll and risk-halts if a held position loses either protective leg. Directional option execution\n-is disabled under [`ADR-0018`](docs/adr/0018-return-directional-execution-to-equities.md).\n+is disabled.\n \n ### P&L and validation evidence\n \n Alpaca remains the source of truth for paper-account state. The public dashboard reports the equity\n curve against cash, net P&L, competition return, daily return, observed drawdown, current risk usage,\n and the public decisions that produced those results. Decision and portfolio records are sanitized\n and delayed by 15 minutes; current agent status and challenger metadata are sanitized but immediate.\n The reporting plane cannot control the agent.\n \n Historical evidence for the authorized artifact uses four expanding chronological folds, purges\n overlapping four-hour labels, and charges 12 bps round trip per selected position.\n \n | Evidence | Return | Sharpe | Max drawdown | Trades |\n | --- | ---: | ---: | ---: | ---: |\n | Mean walk-forward validation | **+1.60%** | **0.61** | See fold results | 394 across 4 folds |\n | Diagnostic holdout | **+8.38%** | **3.22** | **3.94%** | 76 |\n \n Only two of four validation folds were positive, and the holdout was inspected during development.\n These results are evidence, not a profitability guarantee; the model received explicit bounded\n paper-trading authority despite not meeting its original promotion gate. The full protocol, fold\n results, failed experiments, and limitations are documented in\n-[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md) and\n-[`ADR-0013`](docs/adr/0013-authorize-the-model-for-paper-execution.md).\n+[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md).\n \n ### Shadow AI research path\n \n Alongside the live classifier, an AWS Bedrock model converts recent Alpaca News into a typed financial\n Event: direction, magnitude, novelty, surprise, confidence, horizon, affected symbols, and invalidating\n evidence. A deterministic router combines that record with price confirmation.\n \n This path is intentionally `SHADOW_ONLY`. Bedrock cannot size positions, create orders, or affect the\n order-authorized model. Malformed, stale, or unbounded output fails closed to `NO_TRADE`. This creates\n forward evidence for a future event-aware model without risking competition capital on an unvalidated\n LLM strategy.\n \n ## Alpaca Services\n \n | Alpaca technology | How Catalyst Router uses it | Authority |\n | --- | --- | --- |\n | **Paper Trading API** | Reconciles account, clock, positions, and orders; submits equity brackets; closes and flattens exposure | Sole broker and P&L authority |\n | **Market Data API** | Fetches IEX bars and quotes plus market screeners | Read-only market evidence |\n | **News API** | Reads the latest symbol-scoped articles for Bedrock Event extraction | Shadow evidence only |\n | **`alpaca-py` SDK** | Typed runtime adapter for trading, account state, historical bars, quotes, and news | Private worker only |\n | **Alpaca CLI** | Paper-account diagnostics and judge-friendly dry-run demonstrations through `scripts/alpaca-paper` | Read-only; submit is allowed only with `--dry-run` |\n | **Alpaca MCP server** | Not connected in this version; the runtime does not expose an LLM-controlled broker tool path | No trading authority |\n \n The broker adapter is hard-pinned to `https://paper-api.alpaca.markets`. The CLI wrapper rejects\n `--live`, rejects mutating commands, and keeps production execution inside the tested Python gateway.\n \n ## Usage\n \n ### Prerequisites\n \n - Python 3.14+\n - [`uv`](https://docs.astral.sh/uv/)\n - Alpaca paper-trading credentials\n - Node.js and npm only when running the dashboard\n - Docker only for the DynamoDB integration test\n \n ### Install and verify\n \n ```bash\n uv sync --group inference\n uv run pytest\n ```\n \n Provide paper credentials through `.env` or the process environment:\n \n ```dotenv\n ALPACA_KEY=your-paper-key\n ALPACA_SECRET=your-paper-secret\n ```\n \n Confirm that the credentials resolve to a paper account and inspect sanitized state:\n \n ```bash\n uv run catalyst-router check-alpaca\n uv run catalyst-router reconcile\n ```\n \n ### Run the reporting experience\n \n Start the read-only API:\n \n ```bash\n uv run catalyst-router serve\n ```\n \n In another terminal, start the dashboard:\n \n ```bash\n npm --prefix dashboard ci\n npm --prefix dashboard run dev\n ```\n \n Open `http://localhost:3000`. Development uses the deployed CloudFront API configured in\n `dashboard/.env.development` by default. To point it at the local API instead, start it with:\n \n ```bash\n NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000 npm --prefix dashboard run dev\n ```\n \n API documentation is available at\n `http://127.0.0.1:8000/docs`; useful probes include:\n \n ```bash\n curl http://127.0.0.1:8000/health\n curl http://127.0.0.1:8000/ready\n curl http://127.0.0.1:8000/api/public/status\n ```\n \n `/ready` returns `503` until the current state-store epoch has been reconciled.\n \n ### Run the autonomous paper worker\n \n Paper execution is disabled by default. A trading worker needs the authorized artifact in S3, shared\n DynamoDB state, and explicit execution authority:\n \n ```dotenv\n AWS_REGION=us-east-1\n STATE_BACKEND=dynamodb\n DYNAMODB_TABLE=catalyst-router-local\n COMPETITION_ID=alpaca-hackathon-2026\n RUNTIME_ROLE=worker\n \n CHALLENGER_MANIFEST_URI=s3://your-bucket/models/20260828T175917Z/manifest.json\n REDACTED\n PAPER_EXECUTION_ENABLED=true\n MODEL_EXECUTION_ENABLED=true\n MODEL_OPTIONS_EXECUTION_ENABLED=false\n MODEL_AUTHORITY=PAPER_LIVE\n MODEL_DECISION_GATE=0.52\n ```\n \n To also enable the shadow news path, configure `LLM_EVENTS_ENABLED=true`, `BEDROCK_MODEL_ID`, and\n `BEDROCK_PROMPT_VERSION=event-v1`. It still has no order authority.\n \n The default in-memory backend is process-local, so separate API, control, and worker processes do not\n share it. Reconcile the DynamoDB store, grant authority, then start the worker:\n \n ```bash\n uv run catalyst-router reconcile\n uv run catalyst-router resume --reason \"paper competition start\"\n uv run catalyst-router worker\n ```\n \n `resume` refuses whenever Alpaca has an existing position or open order. Operator controls are\n authenticated through local/AWS execution identity and are never exposed by the public API:\n \n ```bash\n uv run catalyst-router pause --reason \"operator review\"\n uv run catalyst-router flatten --reason \"close all paper exposure\"\n uv run catalyst-router kill --reason \"disable autonomous execution\"\n ```\n \n ### Inspect with the Alpaca CLI\n \n ```bash\n brew install alpacahq/tap/cli\n scripts/alpaca-paper doctor\n scripts/alpaca-paper account get --jq '{status, trading_blocked, options_trading_level}'\n scripts/alpaca-paper order submit --symbol AAPL --side buy --qty 1 --type market --dry-run\n ```\n \n ### Train a challenger\n \n ```bash\n make train-local\n ```\n \n The current runner compares deterministic baselines, linear models, histogram boosting, and XGBoost\n on five-minute bars with a 48-bar/four-hour horizon using purged chronological walk-forward\n validation. It stores cached bars, checksummed Parquet datasets, manifests, and models under ignored\n `.local/training/` paths. These `bar-features-v3` artifacts remain `SHADOW_ONLY`; this command does not\n reproduce or replace the authorized 15-minute `bar-features-v2` artifact. See\n [`docs/training/five-minute-pipeline.md`](docs/training/five-minute-pipeline.md).\n \n Run the complete quality gate with `make check`.\n \n ## Architecture\n \n ```mermaid\n flowchart LR\n     subgraph Alpaca\n         Bars[IEX bars + quotes]\n         News[News API]\n         Paper[Paper Trading API]\n     end\n \n     subgraph Private[Private execution plane]\n         Worker[ECS Fargate worker]\n         Model[XGBoost model]\n         Event[Bedrock Event extractor]\n         Risk[Risk Governor]\n         Gateway[Idempotent execution gateway]\n     end\n \n     subgraph State[Durable state]\n         S3[S3 model artifacts]\n         DDB[(DynamoDB decisions + orders)]\n         Secrets[Secrets Manager]\n     end\n \n     subgraph Public[Read-only reporting plane]\n         API[App Runner API]\n         CDN[CloudFront]\n         UI[Static dashboard]\n     end\n \n     Bars --> Worker\n     News --> Event\n     Event -. shadow records .-> DDB\n     S3 --> Model --> Worker\n     Secrets --> Worker\n     Worker --> Risk --> Gateway --> Paper\n     Paper -->|reconciliation| Worker\n     Worker --> DDB\n     DDB --> API --> CDN --> UI\n ```\n \n ### Execution lifecycle\n \n 1. **Reconcile.** Alpaca is authoritative for account, position, and order state. Startup creates a\n    fenced execution epoch before any new exposure is allowed.\n 2. **Observe.** The worker polls Alpaca every 15 seconds, accepts bars one minute after completion, and\n    builds the latest point-in-time vector for each runtime-universe symbol.\n 3. **Predict once.** A deterministic decision ID claims each latest symbol/bar/model tuple in DynamoDB\n    so retries and restarts cannot execute it twice. Intermediate bars missed during downtime are not\n    backfilled.\n 4. **Govern.** Fresh quotes, spread, market hours, buying power, stop-risk, group exposure, daily loss,\n    and competition drawdown are evaluated outside model authority.\n 5. **Execute safely.** A UUID5 client order ID and SHA-256 request hash claim one Alpaca equity bracket.\n    Ambiguous submissions are queried by client ID before the gateway changes local state.\n 6. **Report.** Immutable records feed a separate read-only API and delayed public dashboard. Public\n    infrastructure has no Alpaca credentials or write permission to operational state.\n \n ### Repository map\n \n | Path | Responsibility |\n | --- | --- |\n | `src/catalyst_router/challenger.py` | Artifact verification and XGBoost inference |\n | `src/catalyst_router/training.py` | Feature construction, labels, walk-forward training |\n | `src/catalyst_router/risk.py` | Deterministic sizing, limits, and vetoes |\n | `src/catalyst_router/execution.py` | Signal ranking, order planning, idempotency, circuit breakers |\n | `src/catalyst_router/adapters/` | Alpaca, Bedrock, DynamoDB, and in-memory adapters |\n | `src/catalyst_router/reporting.py` | Sanitized public portfolio projections |\n | `dashboard/` | Statically exported Next.js public flight recorder |\n | `infra/environments/prod/` | OpenTofu for ECS, App Runner, DynamoDB, S3, CloudFront, IAM, and observability |\n-| `docs/adr/` | Versioned model, authority, risk, and infrastructure decisions |\n \n The central design rule is simple: **AI proposes; deterministic code disposes; Alpaca reconciles.**\n",
+              "additions": 3,
+              "deletions": 5,
+              "status": "modified"
+            }
+          ]
+        },
+        "id": "msg_06ba55d0a001TIdv4wEJBA9q1t",
+        "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK"
+      },
+      "parts": [
+        {
+          "type": "text",
+          "text": "<system-reminder>Note: The user opened the file \"/Users/itsmeyaw/projects/alpaca-hackathon/README.md\". This may or may not be relevant to the current task.</system-reminder>\n",
+          "synthetic": true,
+          "metadata": {
+            "kind": "editor_context",
+            "source": "websocket",
+            "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/README.md",
+            "ranges": [
+              {
+                "text": "",
+                "selection": {
+                  "start": {
+                    "line": 38,
+                    "character": 6
+                  },
+                  "end": {
+                    "line": 38,
+                    "character": 6
+                  }
+                }
+              }
+            ]
+          },
+          "id": "prt_06ba55d0c0015A2KNNxaDpcbau",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba55d0a001TIdv4wEJBA9q1t"
+        },
+        {
+          "type": "text",
+          "text": "Remove ADR referneces inside the readme because the judge wonmt read them anyway.",
+          "id": "prt_06ba55d0c002sQfMa3GNr0XwNL",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba55d0a001TIdv4wEJBA9q1t"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_06ba55d0a001TIdv4wEJBA9q1t",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.0497675,
+        "tokens": {
+          "total": 19254,
+          "input": 3,
+          "output": 124,
+          "reasoning": 48,
+          "cache": {
+            "write": 19079,
+            "read": 0
+          }
+        },
+        "modelID": "gpt-5.6-terra",
+        "providerID": "openai",
+        "time": {
+          "created": 1788512394794,
+          "completed": 1788512400411
+        },
+        "finish": "tool-calls",
+        "id": "msg_06ba55e2a001wgMKnYjBUYCEaI",
+        "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK"
+      },
+      "parts": [
+        {
+          "snapshot": "af75fb643e9e805c8a1048fd32b252568173fa29",
+          "type": "step-start",
+          "id": "prt_06ba56c2f0013KYAqsfzZUhF6I",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba55e2a001wgMKnYjBUYCEaI"
+        },
+        {
+          "type": "reasoning",
+          "text": "**Inspecting README for typos**\n\nI need to check for typos in the README since the user mentioned there are some references that aren't correct. I might not need a detailed plan here; maybe I can simply update my commentary and then read the root documentation. The domain docs mention using context, which could be related to the issue, but that should be easy enough to tackle. I’ll start by reviewing the README and looking up any ADR references.",
+          "time": {
+            "start": 1788512398385,
+            "end": 1788512399902
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_0e4362907b11a00a016a9a888e59a487d2b6ff04ae0843b9dd",
+              "reasoningEncryptedContent": "REDACTED"
+            }
+          },
+          "id": "prt_06ba56c310013aG9Rb0RjXxYTx",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba55e2a001wgMKnYjBUYCEaI"
+        },
+        {
+          "type": "text",
+          "text": "I’ll remove the README’s ADR-specific references while preserving the project guidance that remains useful to judges.",
+          "time": {
+            "start": 1788512399906,
+            "end": 1788512400100
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "msg_0e4362907b11a00a016a9a888fbe0487d29828a7a7a4f6e3bd",
+              "phase": "commentary"
+            }
+          },
+          "id": "prt_06ba57222001vXc1z8s7QzMzWZ",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba55e2a001wgMKnYjBUYCEaI"
+        },
+        {
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_cNbrlcGewJWgrp4Wg42Ef14n",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/README.md"
+            },
+            "output": "<path>/Users/itsmeyaw/projects/alpaca-hackathon/README.md</path>\n<type>file</type>\n<content>\n1: # Catalyst Router\n2: \n3: <div align=\"center\">\n4: \n5: **An autonomous, risk-bounded AI agent for Alpaca paper trading**\n6: \n7: `XGBoost signals` · `Dynamic equity universe` · `Long/short equities` · `Immutable decisions`\n8: \n9: </div>\n10: \n11: Catalyst Router turns completed market bars into directional trades, but keeps capital authority\n12: outside the model. A checksummed XGBoost classifier proposes long, short, or abstain; deterministic\n13: code validates market data, sizes risk, claims executable decisions exactly once, and submits\n14: server-protected equity brackets to Alpaca. Sanitized predictions, vetoes, routes, and executions feed a\n15: delayed public flight recorder.\n16: \n17: ## Trading Model\n18: \n19: The order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\n20: Alpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the\n21: probability of a positive four-hour move across a daily dynamic universe, an explicit distribution\n22: shift accepted by [`ADR-0016`](docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md).\n23: \n24: | Model contract | Implemented behavior |\n25: | --- | --- |\n26: | Candidate | `xgboost_regularized` |\n27: | Artifact | Immutable run `20260828T175917Z`, loaded from S3 and verified by SHA-256 |\n28: | Input | Completed 15-minute regular-session bars, delayed one minute for corrections |\n29: | Horizon | 16 bars / 4 hours |\n30: | Features | Lagged returns, range, VWAP distance, volume ratio, realized volatility, SPY context, relative return, cross-sectional rank, range location, and time of day |\n31: | Runtime universe | Up to 20 liquid, option-enabled symbols ranked from the 100 most active stocks, 50 gainers, and 50 losers; SPY retained as market context |\n32: | Output | Probability mapped to `LONG`, `SHORT`, or `ABSTAIN` |\n33: | Runtime gate | Long at `p >= 0.52`; short at `p <= 0.48`; abstain otherwise |\n34: | Cadence | Poll every 15 seconds; score the latest completed vector per symbol and claim each symbol/bar/model tuple idempotently |\n35: | Portfolio | Rank candidates by confidence, enter at most one per cycle, hold at most six symbols |\n36: \n37: ### From prediction to trade\n38: \n39: ```text\n40: completed IEX bars\n41:         │\n42:         ▼\n43: point-in-time feature vector\n44:         │\n45:         ▼\n46: XGBoost probability ──► LONG / SHORT / ABSTAIN\n47:         │\n48:         ▼\n49: fresh quote + spread + market-hours gates\n50:         │\n51:         ▼\n52: deterministic Risk Governor\n53:         │\n54:         ▼\n55: idempotent Alpaca equity entry\n56:    long/short bracket + broker-hosted exits\n57: ```\n58: \n59: The separation is deliberate: the model chooses direction and confidence, never quantity. The Risk\n60: Governor can reduce or veto every proposal, and the execution gateway alone can construct an Alpaca\n61: order.\n62: \n63: ### Risk envelope\n64: \n65: | Control | Enforced limit |\n66: | --- | ---: |\n67: | Entry notional | 10% of account equity |\n68: | Equity risk per trade | Entry-to-stop loss capped at 1% of equity; reduced to 0.5% after a 2% daily loss |\n69: | Concurrent positions | 6 |\n70: | Total open stop-risk | 5% of equity |\n71: | One correlated exposure group | 5% of equity |\n72: | Freshness and liquidity | Quote at most 5 seconds old; spread at most 15 bps |\n73: | Daily circuit breaker | Halt and flatten at a 4% daily loss |\n74: | Competition circuit breaker | Kill and flatten at a 12% peak-to-current drawdown |\n75: | Session boundary | No entry in the final 15 minutes; flatten inside the final 10 minutes |\n76: \n77: Positions are rejected when the account is blocked, the market is closed, reconciliation is stale,\n78: data quality fails, or the account cannot support both the requested buying power and stop-risk.\n79: Equity entries use server-hosted stop-loss and take-profit brackets. The worker verifies protection on\n80: every poll and risk-halts if a held position loses either protective leg. Directional option execution\n81: is disabled under [`ADR-0018`](docs/adr/0018-return-directional-execution-to-equities.md).\n82: \n83: ### P&L and validation evidence\n84: \n85: Alpaca remains the source of truth for paper-account state. The public dashboard reports the equity\n86: curve against cash, net P&L, competition return, daily return, observed drawdown, current risk usage,\n87: and the public decisions that produced those results. Decision and portfolio records are sanitized\n88: and delayed by 15 minutes; current agent status and challenger metadata are sanitized but immediate.\n89: The reporting plane cannot control the agent.\n90: \n91: Historical evidence for the authorized artifact uses four expanding chronological folds, purges\n92: overlapping four-hour labels, and charges 12 bps round trip per selected position.\n93: \n94: | Evidence | Return | Sharpe | Max drawdown | Trades |\n95: | --- | ---: | ---: | ---: | ---: |\n96: | Mean walk-forward validation | **+1.60%** | **0.61** | See fold results | 394 across 4 folds |\n97: | Diagnostic holdout | **+8.38%** | **3.22** | **3.94%** | 76 |\n98: \n99: Only two of four validation folds were positive, and the holdout was inspected during development.\n100: These results are evidence, not a profitability guarantee; the model received explicit bounded\n101: paper-trading authority despite not meeting its original promotion gate. The full protocol, fold\n102: results, failed experiments, and limitations are documented in\n103: [`docs/training/local-benchmark.md`](docs/training/local-benchmark.md) and\n104: [`ADR-0013`](docs/adr/0013-authorize-the-model-for-paper-execution.md).\n105: \n106: ### Shadow AI research path\n107: \n108: Alongside the live classifier, an AWS Bedrock model converts recent Alpaca News into a typed financial\n109: Event: direction, magnitude, novelty, surprise, confidence, horizon, affected symbols, and invalidating\n110: evidence. A deterministic router combines that record with price confirmation.\n111: \n112: This path is intentionally `SHADOW_ONLY`. Bedrock cannot size positions, create orders, or affect the\n113: order-authorized model. Malformed, stale, or unbounded output fails closed to `NO_TRADE`. This creates\n114: forward evidence for a future event-aware model without risking competition capital on an unvalidated\n115: LLM strategy.\n116: \n117: ## Alpaca Services\n118: \n119: | Alpaca technology | How Catalyst Router uses it | Authority |\n120: | --- | --- | --- |\n121: | **Paper Trading API** | Reconciles account, clock, positions, and orders; submits equity brackets; closes and flattens exposure | Sole broker and P&L authority |\n122: | **Market Data API** | Fetches IEX bars and quotes plus market screeners | Read-only market evidence |\n123: | **News API** | Reads the latest symbol-scoped articles for Bedrock Event extraction | Shadow evidence only |\n124: | **`alpaca-py` SDK** | Typed runtime adapter for trading, account state, historical bars, quotes, and news | Private worker only |\n125: | **Alpaca CLI** | Paper-account diagnostics and judge-friendly dry-run demonstrations through `scripts/alpaca-paper` | Read-only; submit is allowed only with `--dry-run` |\n126: | **Alpaca MCP server** | Not connected in this version; the runtime does not expose an LLM-controlled broker tool path | No trading authority |\n127: \n128: The broker adapter is hard-pinned to `https://paper-api.alpaca.markets`. The CLI wrapper rejects\n129: `--live`, rejects mutating commands, and keeps production execution inside the tested Python gateway.\n130: \n131: ## Usage\n132: \n133: ### Prerequisites\n134: \n135: - Python 3.14+\n136: - [`uv`](https://docs.astral.sh/uv/)\n137: - Alpaca paper-trading credentials\n138: - Node.js and npm only when running the dashboard\n139: - Docker only for the DynamoDB integration test\n140: \n141: ### Install and verify\n142: \n143: ```bash\n144: uv sync --group inference\n145: uv run pytest\n146: ```\n147: \n148: Provide paper credentials through `.env` or the process environment:\n149: \n150: ```dotenv\n151: ALPACA_KEY=your-paper-key\n152: ALPACA_SECRET=your-paper-secret\n153: ```\n154: \n155: Confirm that the credentials resolve to a paper account and inspect sanitized state:\n156: \n157: ```bash\n158: uv run catalyst-router check-alpaca\n159: uv run catalyst-router reconcile\n160: ```\n161: \n162: ### Run the reporting experience\n163: \n164: Start the read-only API:\n165: \n166: ```bash\n167: uv run catalyst-router serve\n168: ```\n169: \n170: In another terminal, start the dashboard:\n171: \n172: ```bash\n173: npm --prefix dashboard ci\n174: npm --prefix dashboard run dev\n175: ```\n176: \n177: Open `http://localhost:3000`. Development uses the deployed CloudFront API configured in\n178: `dashboard/.env.development` by default. To point it at the local API instead, start it with:\n179: \n180: ```bash\n181: NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000 npm --prefix dashboard run dev\n182: ```\n183: \n184: API documentation is available at\n185: `http://127.0.0.1:8000/docs`; useful probes include:\n186: \n187: ```bash\n188: curl http://127.0.0.1:8000/health\n189: curl http://127.0.0.1:8000/ready\n190: curl http://127.0.0.1:8000/api/public/status\n191: ```\n192: \n193: `/ready` returns `503` until the current state-store epoch has been reconciled.\n194: \n195: ### Run the autonomous paper worker\n196: \n197: Paper execution is disabled by default. A trading worker needs the authorized artifact in S3, shared\n198: DynamoDB state, and explicit execution authority:\n199: \n200: ```dotenv\n201: AWS_REGION=us-east-1\n202: STATE_BACKEND=dynamodb\n203: DYNAMODB_TABLE=catalyst-router-local\n204: COMPETITION_ID=alpaca-hackathon-2026\n205: RUNTIME_ROLE=worker\n206: \n207: CHALLENGER_MANIFEST_URI=s3://your-bucket/models/20260828T175917Z/manifest.json\n208: REDACTED\n209: PAPER_EXECUTION_ENABLED=true\n210: MODEL_EXECUTION_ENABLED=true\n211: MODEL_OPTIONS_EXECUTION_ENABLED=false\n212: MODEL_AUTHORITY=PAPER_LIVE\n213: MODEL_DECISION_GATE=0.52\n214: ```\n215: \n216: To also enable the shadow news path, configure `LLM_EVENTS_ENABLED=true`, `BEDROCK_MODEL_ID`, and\n217: `BEDROCK_PROMPT_VERSION=event-v1`. It still has no order authority.\n218: \n219: The default in-memory backend is process-local, so separate API, control, and worker processes do not\n220: share it. Reconcile the DynamoDB store, grant authority, then start the worker:\n221: \n222: ```bash\n223: uv run catalyst-router reconcile\n224: uv run catalyst-router resume --reason \"paper competition start\"\n225: uv run catalyst-router worker\n226: ```\n227: \n228: `resume` refuses whenever Alpaca has an existing position or open order. Operator controls are\n229: authenticated through local/AWS execution identity and are never exposed by the public API:\n230: \n231: ```bash\n232: uv run catalyst-router pause --reason \"operator review\"\n233: uv run catalyst-router flatten --reason \"close all paper exposure\"\n234: uv run catalyst-router kill --reason \"disable autonomous execution\"\n235: ```\n236: \n237: ### Inspect with the Alpaca CLI\n238: \n239: ```bash\n240: brew install alpacahq/tap/cli\n241: scripts/alpaca-paper doctor\n242: scripts/alpaca-paper account get --jq '{status, trading_blocked, options_trading_level}'\n243: scripts/alpaca-paper order submit --symbol AAPL --side buy --qty 1 --type market --dry-run\n244: ```\n245: \n246: ### Train a challenger\n247: \n248: ```bash\n249: make train-local\n250: ```\n251: \n252: The current runner compares deterministic baselines, linear models, histogram boosting, and XGBoost\n253: on five-minute bars with a 48-bar/four-hour horizon using purged chronological walk-forward\n254: validation. It stores cached bars, checksummed Parquet datasets, manifests, and models under ignored\n255: `.local/training/` paths. These `bar-features-v3` artifacts remain `SHADOW_ONLY`; this command does not\n256: reproduce or replace the authorized 15-minute `bar-features-v2` artifact. See\n257: [`docs/training/five-minute-pipeline.md`](docs/training/five-minute-pipeline.md).\n258: \n259: Run the complete quality gate with `make check`.\n260: \n261: ## Architecture\n262: \n263: ```mermaid\n264: flowchart LR\n265:     subgraph Alpaca\n266:         Bars[IEX bars + quotes]\n267:         News[News API]\n268:         Paper[Paper Trading API]\n269:     end\n270: \n271:     subgraph Private[Private execution plane]\n272:         Worker[ECS Fargate worker]\n273:         Model[XGBoost model]\n274:         Event[Bedrock Event extractor]\n275:         Risk[Risk Governor]\n276:         Gateway[Idempotent execution gateway]\n277:     end\n278: \n279:     subgraph State[Durable state]\n280:         S3[S3 model artifacts]\n281:         DDB[(DynamoDB decisions + orders)]\n282:         Secrets[Secrets Manager]\n283:     end\n284: \n285:     subgraph Public[Read-only reporting plane]\n286:         API[App Runner API]\n287:         CDN[CloudFront]\n288:         UI[Static dashboard]\n289:     end\n290: \n291:     Bars --> Worker\n292:     News --> Event\n293:     Event -. shadow records .-> DDB\n294:     S3 --> Model --> Worker\n295:     Secrets --> Worker\n296:     Worker --> Risk --> Gateway --> Paper\n297:     Paper -->|reconciliation| Worker\n298:     Worker --> DDB\n299:     DDB --> API --> CDN --> UI\n300: ```\n301: \n302: ### Execution lifecycle\n303: \n304: 1. **Reconcile.** Alpaca is authoritative for account, position, and order state. Startup creates a\n305:    fenced execution epoch before any new exposure is allowed.\n306: 2. **Observe.** The worker polls Alpaca every 15 seconds, accepts bars one minute after completion, and\n307:    builds the latest point-in-time vector for each runtime-universe symbol.\n308: 3. **Predict once.** A deterministic decision ID claims each latest symbol/bar/model tuple in DynamoDB\n309:    so retries and restarts cannot execute it twice. Intermediate bars missed during downtime are not\n310:    backfilled.\n311: 4. **Govern.** Fresh quotes, spread, market hours, buying power, stop-risk, group exposure, daily loss,\n312:    and competition drawdown are evaluated outside model authority.\n313: 5. **Execute safely.** A UUID5 client order ID and SHA-256 request hash claim one Alpaca equity bracket.\n314:    Ambiguous submissions are queried by client ID before the gateway changes local state.\n315: 6. **Report.** Immutable records feed a separate read-only API and delayed public dashboard. Public\n316:    infrastructure has no Alpaca credentials or write permission to operational state.\n317: \n318: ### Repository map\n319: \n320: | Path | Responsibility |\n321: | --- | --- |\n322: | `src/catalyst_router/challenger.py` | Artifact verification and XGBoost inference |\n323: | `src/catalyst_router/training.py` | Feature construction, labels, walk-forward training |\n324: | `src/catalyst_router/risk.py` | Deterministic sizing, limits, and vetoes |\n325: | `src/catalyst_router/execution.py` | Signal ranking, order planning, idempotency, circuit breakers |\n326: | `src/catalyst_router/adapters/` | Alpaca, Bedrock, DynamoDB, and in-memory adapters |\n327: | `src/catalyst_router/reporting.py` | Sanitized public portfolio projections |\n328: | `dashboard/` | Statically exported Next.js public flight recorder |\n329: | `infra/environments/prod/` | OpenTofu for ECS, App Runner, DynamoDB, S3, CloudFront, IAM, and observability |\n330: | `docs/adr/` | Versioned model, authority, risk, and infrastructure decisions |\n331: \n332: The central design rule is simple: **AI proposes; deterministic code disposes; Alpaca reconciles.**\n\n(End of file - total 332 lines)\n</content>",
+            "metadata": {
+              "preview": "# Catalyst Router\n\n<div align=\"center\">\n\n**An autonomous, risk-bounded AI agent for Alpaca paper trading**\n\n`XGBoost signals` · `Dynamic equity universe` · `Long/short equities` · `Immutable decisions`\n\n</div>\n\nCatalyst Router turns completed market bars into directional trades, but keeps capital authority\noutside the model. A checksummed XGBoost classifier proposes long, short, or abstain; deterministic\ncode validates market data, sizes risk, claims executable decisions exactly once, and submits\nserver-protected equity brackets to Alpaca. Sanitized predictions, vetoes, routes, and executions feed a\ndelayed public flight recorder.\n\n## Trading Model\n\nThe order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\nAlpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the",
+              "truncated": false,
+              "loaded": [],
+              "display": {
+                "type": "file",
+                "path": "/Users/itsmeyaw/projects/alpaca-hackathon/README.md",
+                "text": "# Catalyst Router\n\n<div align=\"center\">\n\n**An autonomous, risk-bounded AI agent for Alpaca paper trading**\n\n`XGBoost signals` · `Dynamic equity universe` · `Long/short equities` · `Immutable decisions`\n\n</div>\n\nCatalyst Router turns completed market bars into directional trades, but keeps capital authority\noutside the model. A checksummed XGBoost classifier proposes long, short, or abstain; deterministic\ncode validates market data, sizes risk, claims executable decisions exactly once, and submits\nserver-protected equity brackets to Alpaca. Sanitized predictions, vetoes, routes, and executions feed a\ndelayed public flight recorder.\n\n## Trading Model\n\nThe order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\nAlpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the\nprobability of a positive four-hour move across a daily dynamic universe, an explicit distribution\nshift accepted by [`ADR-0016`](docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md).\n\n| Model contract | Implemented behavior |\n| --- | --- |\n| Candidate | `xgboost_regularized` |\n| Artifact | Immutable run `20260828T175917Z`, loaded from S3 and verified by SHA-256 |\n| Input | Completed 15-minute regular-session bars, delayed one minute for corrections |\n| Horizon | 16 bars / 4 hours |\n| Features | Lagged returns, range, VWAP distance, volume ratio, realized volatility, SPY context, relative return, cross-sectional rank, range location, and time of day |\n| Runtime universe | Up to 20 liquid, option-enabled symbols ranked from the 100 most active stocks, 50 gainers, and 50 losers; SPY retained as market context |\n| Output | Probability mapped to `LONG`, `SHORT`, or `ABSTAIN` |\n| Runtime gate | Long at `p >= 0.52`; short at `p <= 0.48`; abstain otherwise |\n| Cadence | Poll every 15 seconds; score the latest completed vector per symbol and claim each symbol/bar/model tuple idempotently |\n| Portfolio | Rank candidates by confidence, enter at most one per cycle, hold at most six symbols |\n\n### From prediction to trade\n\n```text\ncompleted IEX bars\n        │\n        ▼\npoint-in-time feature vector\n        │\n        ▼\nXGBoost probability ──► LONG / SHORT / ABSTAIN\n        │\n        ▼\nfresh quote + spread + market-hours gates\n        │\n        ▼\ndeterministic Risk Governor\n        │\n        ▼\nidempotent Alpaca equity entry\n   long/short bracket + broker-hosted exits\n```\n\nThe separation is deliberate: the model chooses direction and confidence, never quantity. The Risk\nGovernor can reduce or veto every proposal, and the execution gateway alone can construct an Alpaca\norder.\n\n### Risk envelope\n\n| Control | Enforced limit |\n| --- | ---: |\n| Entry notional | 10% of account equity |\n| Equity risk per trade | Entry-to-stop loss capped at 1% of equity; reduced to 0.5% after a 2% daily loss |\n| Concurrent positions | 6 |\n| Total open stop-risk | 5% of equity |\n| One correlated exposure group | 5% of equity |\n| Freshness and liquidity | Quote at most 5 seconds old; spread at most 15 bps |\n| Daily circuit breaker | Halt and flatten at a 4% daily loss |\n| Competition circuit breaker | Kill and flatten at a 12% peak-to-current drawdown |\n| Session boundary | No entry in the final 15 minutes; flatten inside the final 10 minutes |\n\nPositions are rejected when the account is blocked, the market is closed, reconciliation is stale,\ndata quality fails, or the account cannot support both the requested buying power and stop-risk.\nEquity entries use server-hosted stop-loss and take-profit brackets. The worker verifies protection on\nevery poll and risk-halts if a held position loses either protective leg. Directional option execution\nis disabled under [`ADR-0018`](docs/adr/0018-return-directional-execution-to-equities.md).\n\n### P&L and validation evidence\n\nAlpaca remains the source of truth for paper-account state. The public dashboard reports the equity\ncurve against cash, net P&L, competition return, daily return, observed drawdown, current risk usage,\nand the public decisions that produced those results. Decision and portfolio records are sanitized\nand delayed by 15 minutes; current agent status and challenger metadata are sanitized but immediate.\nThe reporting plane cannot control the agent.\n\nHistorical evidence for the authorized artifact uses four expanding chronological folds, purges\noverlapping four-hour labels, and charges 12 bps round trip per selected position.\n\n| Evidence | Return | Sharpe | Max drawdown | Trades |\n| --- | ---: | ---: | ---: | ---: |\n| Mean walk-forward validation | **+1.60%** | **0.61** | See fold results | 394 across 4 folds |\n| Diagnostic holdout | **+8.38%** | **3.22** | **3.94%** | 76 |\n\nOnly two of four validation folds were positive, and the holdout was inspected during development.\nThese results are evidence, not a profitability guarantee; the model received explicit bounded\npaper-trading authority despite not meeting its original promotion gate. The full protocol, fold\nresults, failed experiments, and limitations are documented in\n[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md) and\n[`ADR-0013`](docs/adr/0013-authorize-the-model-for-paper-execution.md).\n\n### Shadow AI research path\n\nAlongside the live classifier, an AWS Bedrock model converts recent Alpaca News into a typed financial\nEvent: direction, magnitude, novelty, surprise, confidence, horizon, affected symbols, and invalidating\nevidence. A deterministic router combines that record with price confirmation.\n\nThis path is intentionally `SHADOW_ONLY`. Bedrock cannot size positions, create orders, or affect the\norder-authorized model. Malformed, stale, or unbounded output fails closed to `NO_TRADE`. This creates\nforward evidence for a future event-aware model without risking competition capital on an unvalidated\nLLM strategy.\n\n## Alpaca Services\n\n| Alpaca technology | How Catalyst Router uses it | Authority |\n| --- | --- | --- |\n| **Paper Trading API** | Reconciles account, clock, positions, and orders; submits equity brackets; closes and flattens exposure | Sole broker and P&L authority |\n| **Market Data API** | Fetches IEX bars and quotes plus market screeners | Read-only market evidence |\n| **News API** | Reads the latest symbol-scoped articles for Bedrock Event extraction | Shadow evidence only |\n| **`alpaca-py` SDK** | Typed runtime adapter for trading, account state, historical bars, quotes, and news | Private worker only |\n| **Alpaca CLI** | Paper-account diagnostics and judge-friendly dry-run demonstrations through `scripts/alpaca-paper` | Read-only; submit is allowed only with `--dry-run` |\n| **Alpaca MCP server** | Not connected in this version; the runtime does not expose an LLM-controlled broker tool path | No trading authority |\n\nThe broker adapter is hard-pinned to `https://paper-api.alpaca.markets`. The CLI wrapper rejects\n`--live`, rejects mutating commands, and keeps production execution inside the tested Python gateway.\n\n## Usage\n\n### Prerequisites\n\n- Python 3.14+\n- [`uv`](https://docs.astral.sh/uv/)\n- Alpaca paper-trading credentials\n- Node.js and npm only when running the dashboard\n- Docker only for the DynamoDB integration test\n\n### Install and verify\n\n```bash\nuv sync --group inference\nuv run pytest\n```\n\nProvide paper credentials through `.env` or the process environment:\n\n```dotenv\nALPACA_KEY=your-paper-key\nALPACA_SECRET=your-paper-secret\n```\n\nConfirm that the credentials resolve to a paper account and inspect sanitized state:\n\n```bash\nuv run catalyst-router check-alpaca\nuv run catalyst-router reconcile\n```\n\n### Run the reporting experience\n\nStart the read-only API:\n\n```bash\nuv run catalyst-router serve\n```\n\nIn another terminal, start the dashboard:\n\n```bash\nnpm --prefix dashboard ci\nnpm --prefix dashboard run dev\n```\n\nOpen `http://localhost:3000`. Development uses the deployed CloudFront API configured in\n`dashboard/.env.development` by default. To point it at the local API instead, start it with:\n\n```bash\nNEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000 npm --prefix dashboard run dev\n```\n\nAPI documentation is available at\n`http://127.0.0.1:8000/docs`; useful probes include:\n\n```bash\ncurl http://127.0.0.1:8000/health\ncurl http://127.0.0.1:8000/ready\ncurl http://127.0.0.1:8000/api/public/status\n```\n\n`/ready` returns `503` until the current state-store epoch has been reconciled.\n\n### Run the autonomous paper worker\n\nPaper execution is disabled by default. A trading worker needs the authorized artifact in S3, shared\nDynamoDB state, and explicit execution authority:\n\n```dotenv\nAWS_REGION=us-east-1\nSTATE_BACKEND=dynamodb\nDYNAMODB_TABLE=catalyst-router-local\nCOMPETITION_ID=alpaca-hackathon-2026\nRUNTIME_ROLE=worker\n\nCHALLENGER_MANIFEST_URI=s3://your-bucket/models/20260828T175917Z/manifest.json\nREDACTED\nPAPER_EXECUTION_ENABLED=true\nMODEL_EXECUTION_ENABLED=true\nMODEL_OPTIONS_EXECUTION_ENABLED=false\nMODEL_AUTHORITY=PAPER_LIVE\nMODEL_DECISION_GATE=0.52\n```\n\nTo also enable the shadow news path, configure `LLM_EVENTS_ENABLED=true`, `BEDROCK_MODEL_ID`, and\n`BEDROCK_PROMPT_VERSION=event-v1`. It still has no order authority.\n\nThe default in-memory backend is process-local, so separate API, control, and worker processes do not\nshare it. Reconcile the DynamoDB store, grant authority, then start the worker:\n\n```bash\nuv run catalyst-router reconcile\nuv run catalyst-router resume --reason \"paper competition start\"\nuv run catalyst-router worker\n```\n\n`resume` refuses whenever Alpaca has an existing position or open order. Operator controls are\nauthenticated through local/AWS execution identity and are never exposed by the public API:\n\n```bash\nuv run catalyst-router pause --reason \"operator review\"\nuv run catalyst-router flatten --reason \"close all paper exposure\"\nuv run catalyst-router kill --reason \"disable autonomous execution\"\n```\n\n### Inspect with the Alpaca CLI\n\n```bash\nbrew install alpacahq/tap/cli\nscripts/alpaca-paper doctor\nscripts/alpaca-paper account get --jq '{status, trading_blocked, options_trading_level}'\nscripts/alpaca-paper order submit --symbol AAPL --side buy --qty 1 --type market --dry-run\n```\n\n### Train a challenger\n\n```bash\nmake train-local\n```\n\nThe current runner compares deterministic baselines, linear models, histogram boosting, and XGBoost\non five-minute bars with a 48-bar/four-hour horizon using purged chronological walk-forward\nvalidation. It stores cached bars, checksummed Parquet datasets, manifests, and models under ignored\n`.local/training/` paths. These `bar-features-v3` artifacts remain `SHADOW_ONLY`; this command does not\nreproduce or replace the authorized 15-minute `bar-features-v2` artifact. See\n[`docs/training/five-minute-pipeline.md`](docs/training/five-minute-pipeline.md).\n\nRun the complete quality gate with `make check`.\n\n## Architecture\n\n```mermaid\nflowchart LR\n    subgraph Alpaca\n        Bars[IEX bars + quotes]\n        News[News API]\n        Paper[Paper Trading API]\n    end\n\n    subgraph Private[Private execution plane]\n        Worker[ECS Fargate worker]\n        Model[XGBoost model]\n        Event[Bedrock Event extractor]\n        Risk[Risk Governor]\n        Gateway[Idempotent execution gateway]\n    end\n\n    subgraph State[Durable state]\n        S3[S3 model artifacts]\n        DDB[(DynamoDB decisions + orders)]\n        Secrets[Secrets Manager]\n    end\n\n    subgraph Public[Read-only reporting plane]\n        API[App Runner API]\n        CDN[CloudFront]\n        UI[Static dashboard]\n    end\n\n    Bars --> Worker\n    News --> Event\n    Event -. shadow records .-> DDB\n    S3 --> Model --> Worker\n    Secrets --> Worker\n    Worker --> Risk --> Gateway --> Paper\n    Paper -->|reconciliation| Worker\n    Worker --> DDB\n    DDB --> API --> CDN --> UI\n```\n\n### Execution lifecycle\n\n1. **Reconcile.** Alpaca is authoritative for account, position, and order state. Startup creates a\n   fenced execution epoch before any new exposure is allowed.\n2. **Observe.** The worker polls Alpaca every 15 seconds, accepts bars one minute after completion, and\n   builds the latest point-in-time vector for each runtime-universe symbol.\n3. **Predict once.** A deterministic decision ID claims each latest symbol/bar/model tuple in DynamoDB\n   so retries and restarts cannot execute it twice. Intermediate bars missed during downtime are not\n   backfilled.\n4. **Govern.** Fresh quotes, spread, market hours, buying power, stop-risk, group exposure, daily loss,\n   and competition drawdown are evaluated outside model authority.\n5. **Execute safely.** A UUID5 client order ID and SHA-256 request hash claim one Alpaca equity bracket.\n   Ambiguous submissions are queried by client ID before the gateway changes local state.\n6. **Report.** Immutable records feed a separate read-only API and delayed public dashboard. Public\n   infrastructure has no Alpaca credentials or write permission to operational state.\n\n### Repository map\n\n| Path | Responsibility |\n| --- | --- |\n| `src/catalyst_router/challenger.py` | Artifact verification and XGBoost inference |\n| `src/catalyst_router/training.py` | Feature construction, labels, walk-forward training |\n| `src/catalyst_router/risk.py` | Deterministic sizing, limits, and vetoes |\n| `src/catalyst_router/execution.py` | Signal ranking, order planning, idempotency, circuit breakers |\n| `src/catalyst_router/adapters/` | Alpaca, Bedrock, DynamoDB, and in-memory adapters |\n| `src/catalyst_router/reporting.py` | Sanitized public portfolio projections |\n| `dashboard/` | Statically exported Next.js public flight recorder |\n| `infra/environments/prod/` | OpenTofu for ECS, App Runner, DynamoDB, S3, CloudFront, IAM, and observability |\n| `docs/adr/` | Versioned model, authority, risk, and infrastructure decisions |\n\nThe central design rule is simple: **AI proposes; deterministic code disposes; Alpaca reconciles.**",
+                "lineStart": 1,
+                "lineEnd": 332,
+                "totalLines": 332,
+                "truncated": false
+              }
+            },
+            "title": "README.md",
+            "time": {
+              "start": 1788512400144,
+              "end": 1788512400173
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0e4362907b11a00a016a9a888ff67087d28844535872f41057"
+            }
+          },
+          "id": "prt_06ba572e70013n0TUW09Iahmlh",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba55e2a001wgMKnYjBUYCEaI"
+        },
+        {
+          "type": "tool",
+          "tool": "grep",
+          "callID": "call_DDZBa9Tz2ygVoxLp6TxZYrH3",
+          "state": {
+            "status": "completed",
+            "input": {
+              "pattern": "(?i)\\badr\\b|docs/adr",
+              "path": "/Users/itsmeyaw/projects/alpaca-hackathon",
+              "include": "README.md"
+            },
+            "output": "Found 5 matches\n/Users/itsmeyaw/projects/alpaca-hackathon/README.md:\n  Line 22: shift accepted by [`ADR-0016`](docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md).\n\n  Line 81: is disabled under [`ADR-0018`](docs/adr/0018-return-directional-execution-to-equities.md).\n\n  Line 104: [`ADR-0013`](docs/adr/0013-authorize-the-model-for-paper-execution.md).\n\n  Line 330: | `docs/adr/` | Versioned model, authority, risk, and infrastructure decisions |\n\n\n/Users/itsmeyaw/projects/alpaca-hackathon/infra/README.md:\n  Line 48: Set `model_paper_execution_enabled=true` only for an artifact matching the ADR-0013 15-minute\n",
+            "metadata": {
+              "matches": 5,
+              "truncated": false
+            },
+            "title": "(?i)\\badr\\b|docs/adr",
+            "time": {
+              "start": 1788512400150,
+              "end": 1788512400202
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0e4362907b11a00a016a9a888ff68487d28904205f8dbd9dba"
+            }
+          },
+          "id": "prt_06ba57312001d6N5Uk18xABiCu",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba55e2a001wgMKnYjBUYCEaI"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "af75fb643e9e805c8a1048fd32b252568173fa29",
+          "type": "step-finish",
+          "tokens": {
+            "total": 19254,
+            "input": 3,
+            "output": 124,
+            "reasoning": 48,
+            "cache": {
+              "write": 19079,
+              "read": 0
+            }
+          },
+          "cost": 0.0497675,
+          "id": "prt_06ba573d3001tUivgfCK3J6sjb",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba55e2a001wgMKnYjBUYCEaI"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_06ba55d0a001TIdv4wEJBA9q1t",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.0203548,
+        "tokens": {
+          "total": 23932,
+          "input": 3,
+          "output": 396,
+          "reasoning": 68,
+          "cache": {
+            "write": 4386,
+            "read": 19079
+          }
+        },
+        "modelID": "gpt-5.6-terra",
+        "providerID": "openai",
+        "time": {
+          "created": 1788512400413,
+          "completed": 1788512407256
+        },
+        "finish": "tool-calls",
+        "id": "msg_06ba5741d0010uQNQD0XLFbv1G",
+        "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK"
+      },
+      "parts": [
+        {
+          "snapshot": "af75fb643e9e805c8a1048fd32b252568173fa29",
+          "type": "step-start",
+          "id": "prt_06ba57d720015DJiEg3F61Y8v9",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba5741d0010uQNQD0XLFbv1G"
+        },
+        {
+          "type": "reasoning",
+          "text": "**Editing README content**\n\nI need to decide whether to remove certain references and reword sentences within the README. Specifically, at line 22, I should mention \"explicit distribution shift\" and drop the link suffix. At line 81, I’ll remove the reference to \"disabled.\" Line 101 discusses full protocol documentation for training and ADR, so I’ll adjust that as needed. I should also remove the entire map row and make comments before making these edits.",
+          "time": {
+            "start": 1788512402805,
+            "end": 1788512404660
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_05185f1acc51a159016a9a8892a89c87d28cb9cb288efe11a1",
+              "reasoningEncryptedContent": "REDACTED"
+            }
+          },
+          "id": "prt_06ba57d750014J2DjZl2MznAX3",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba5741d0010uQNQD0XLFbv1G"
+        },
+        {
+          "type": "text",
+          "text": "The README contains four ADR-only references: three linked justifications and the `docs/adr/` repository-map entry. I’ll remove those references and make the surrounding prose stand alone.",
+          "time": {
+            "start": 1788512404671,
+            "end": 1788512405483
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "msg_05185f1acc51a159016a9a889486c087d29dfe514e4c79546f",
+              "phase": "commentary"
+            }
+          },
+          "id": "prt_06ba584bf00183M1urd4bTn0aG",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba5741d0010uQNQD0XLFbv1G"
+        },
+        {
+          "type": "tool",
+          "tool": "apply_patch",
+          "callID": "call_bQ7rTI3TMemq2hpG1zBVYlUk",
+          "state": {
+            "status": "completed",
+            "input": {
+              "patchText": "*** Begin Patch\n*** Update File: /Users/itsmeyaw/projects/alpaca-hackathon/README.md\n@@\n probability of a positive four-hour move across a daily dynamic universe, an explicit distribution\n-shift accepted by [`ADR-0016`](docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md).\n+shift.\n@@\n every poll and risk-halts if a held position loses either protective leg. Directional option execution\n-is disabled under [`ADR-0018`](docs/adr/0018-return-directional-execution-to-equities.md).\n+is disabled.\n@@\n paper-trading authority despite not meeting its original promotion gate. The full protocol, fold\n results, failed experiments, and limitations are documented in\n-[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md) and\n-[`ADR-0013`](docs/adr/0013-authorize-the-model-for-paper-execution.md).\n+[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md).\n@@\n | `dashboard/` | Statically exported Next.js public flight recorder |\n | `infra/environments/prod/` | OpenTofu for ECS, App Runner, DynamoDB, S3, CloudFront, IAM, and observability |\n-| `docs/adr/` | Versioned model, authority, risk, and infrastructure decisions |\n \n The central design rule is simple: **AI proposes; deterministic code disposes; Alpaca reconciles.**\n*** End Patch"
+            },
+            "output": "Success. Updated the following files:\nM README.md",
+            "metadata": {
+              "diff": "Index: /Users/itsmeyaw/projects/alpaca-hackathon/README.md\n===================================================================\n--- /Users/itsmeyaw/projects/alpaca-hackathon/README.md\n+++ /Users/itsmeyaw/projects/alpaca-hackathon/README.md\n@@ -18,9 +18,9 @@\n \n The order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\n Alpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the\n probability of a positive four-hour move across a daily dynamic universe, an explicit distribution\n-shift accepted by [`ADR-0016`](docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md).\n+shift.\n \n | Model contract | Implemented behavior |\n | --- | --- |\n | Candidate | `xgboost_regularized` |\n@@ -77,9 +77,9 @@\n Positions are rejected when the account is blocked, the market is closed, reconciliation is stale,\n data quality fails, or the account cannot support both the requested buying power and stop-risk.\n Equity entries use server-hosted stop-loss and take-profit brackets. The worker verifies protection on\n every poll and risk-halts if a held position loses either protective leg. Directional option execution\n-is disabled under [`ADR-0018`](docs/adr/0018-return-directional-execution-to-equities.md).\n+is disabled.\n \n ### P&L and validation evidence\n \n Alpaca remains the source of truth for paper-account state. The public dashboard reports the equity\n@@ -99,10 +99,9 @@\n Only two of four validation folds were positive, and the holdout was inspected during development.\n These results are evidence, not a profitability guarantee; the model received explicit bounded\n paper-trading authority despite not meeting its original promotion gate. The full protocol, fold\n results, failed experiments, and limitations are documented in\n-[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md) and\n-[`ADR-0013`](docs/adr/0013-authorize-the-model-for-paper-execution.md).\n+[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md).\n \n ### Shadow AI research path\n \n Alongside the live classifier, an AWS Bedrock model converts recent Alpaca News into a typed financial\n@@ -326,7 +325,6 @@\n | `src/catalyst_router/adapters/` | Alpaca, Bedrock, DynamoDB, and in-memory adapters |\n | `src/catalyst_router/reporting.py` | Sanitized public portfolio projections |\n | `dashboard/` | Statically exported Next.js public flight recorder |\n | `infra/environments/prod/` | OpenTofu for ECS, App Runner, DynamoDB, S3, CloudFront, IAM, and observability |\n-| `docs/adr/` | Versioned model, authority, risk, and infrastructure decisions |\n \n The central design rule is simple: **AI proposes; deterministic code disposes; Alpaca reconciles.**\n\n",
+              "files": [
+                {
+                  "filePath": "/Users/itsmeyaw/projects/alpaca-hackathon/README.md",
+                  "relativePath": "README.md",
+                  "type": "update",
+                  "patch": "Index: /Users/itsmeyaw/projects/alpaca-hackathon/README.md\n===================================================================\n--- /Users/itsmeyaw/projects/alpaca-hackathon/README.md\n+++ /Users/itsmeyaw/projects/alpaca-hackathon/README.md\n@@ -18,9 +18,9 @@\n \n The order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\n Alpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the\n probability of a positive four-hour move across a daily dynamic universe, an explicit distribution\n-shift accepted by [`ADR-0016`](docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md).\n+shift.\n \n | Model contract | Implemented behavior |\n | --- | --- |\n | Candidate | `xgboost_regularized` |\n@@ -77,9 +77,9 @@\n Positions are rejected when the account is blocked, the market is closed, reconciliation is stale,\n data quality fails, or the account cannot support both the requested buying power and stop-risk.\n Equity entries use server-hosted stop-loss and take-profit brackets. The worker verifies protection on\n every poll and risk-halts if a held position loses either protective leg. Directional option execution\n-is disabled under [`ADR-0018`](docs/adr/0018-return-directional-execution-to-equities.md).\n+is disabled.\n \n ### P&L and validation evidence\n \n Alpaca remains the source of truth for paper-account state. The public dashboard reports the equity\n@@ -99,10 +99,9 @@\n Only two of four validation folds were positive, and the holdout was inspected during development.\n These results are evidence, not a profitability guarantee; the model received explicit bounded\n paper-trading authority despite not meeting its original promotion gate. The full protocol, fold\n results, failed experiments, and limitations are documented in\n-[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md) and\n-[`ADR-0013`](docs/adr/0013-authorize-the-model-for-paper-execution.md).\n+[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md).\n \n ### Shadow AI research path\n \n Alongside the live classifier, an AWS Bedrock model converts recent Alpaca News into a typed financial\n@@ -326,7 +325,6 @@\n | `src/catalyst_router/adapters/` | Alpaca, Bedrock, DynamoDB, and in-memory adapters |\n | `src/catalyst_router/reporting.py` | Sanitized public portfolio projections |\n | `dashboard/` | Statically exported Next.js public flight recorder |\n | `infra/environments/prod/` | OpenTofu for ECS, App Runner, DynamoDB, S3, CloudFront, IAM, and observability |\n-| `docs/adr/` | Versioned model, authority, risk, and infrastructure decisions |\n \n The central design rule is simple: **AI proposes; deterministic code disposes; Alpaca reconciles.**\n",
+                  "additions": 3,
+                  "deletions": 5
+                }
+              ],
+              "diagnostics": {},
+              "truncated": false
+            },
+            "title": "Success. Updated the following files:\nM README.md",
+            "time": {
+              "start": 1788512407035,
+              "end": 1788512407048
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_05185f1acc51a159016a9a889495d087d2bb7567198cc4ed0c"
+            }
+          },
+          "id": "prt_06ba587f1001lni9FMxlIlshOd",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba5741d0010uQNQD0XLFbv1G"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "77b2d5a1ea88017252fde37553028b837a0ffdc9",
+          "type": "step-finish",
+          "tokens": {
+            "total": 23932,
+            "input": 3,
+            "output": 396,
+            "reasoning": 68,
+            "cache": {
+              "write": 4386,
+              "read": 19079
+            }
+          },
+          "cost": 0.0203548,
+          "id": "prt_06ba58e83001xSYBujIFyqeONb",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba5741d0010uQNQD0XLFbv1G"
+        },
+        {
+          "type": "patch",
+          "hash": "af75fb643e9e805c8a1048fd32b252568173fa29",
+          "files": [
+            "/Users/itsmeyaw/projects/alpaca-hackathon/README.md"
+          ],
+          "id": "prt_06ba58ed60018OdU6CGmoYQisE",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba5741d0010uQNQD0XLFbv1G"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_06ba55d0a001TIdv4wEJBA9q1t",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.0073035,
+        "tokens": {
+          "total": 24069,
+          "input": 3,
+          "output": 108,
+          "reasoning": 8,
+          "cache": {
+            "write": 485,
+            "read": 23465
+          }
+        },
+        "modelID": "gpt-5.6-terra",
+        "providerID": "openai",
+        "time": {
+          "created": 1788512407257,
+          "completed": 1788512411500
+        },
+        "finish": "tool-calls",
+        "id": "msg_06ba58ed9001jDq0bg02YN3uQe",
+        "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK"
+      },
+      "parts": [
+        {
+          "snapshot": "77b2d5a1ea88017252fde37553028b837a0ffdc9",
+          "type": "step-start",
+          "id": "prt_06ba59aff0018XM6m82JOWHGDR",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba58ed9001jDq0bg02YN3uQe"
+        },
+        {
+          "type": "reasoning",
+          "text": "",
+          "time": {
+            "start": 1788512410372,
+            "end": 1788512411216
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_0e84c4769ff94be1016a9a889a566c87d28d92072d2662b90b",
+              "reasoningEncryptedContent": "REDACTED"
+            }
+          },
+          "id": "prt_06ba59b04001yPYFo4UiBJRX62",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba58ed9001jDq0bg02YN3uQe"
+        },
+        {
+          "type": "tool",
+          "tool": "grep",
+          "callID": "call_eQjOAkfNZdTnIiQ5nqPaLjvS",
+          "state": {
+            "status": "completed",
+            "input": {
+              "pattern": "(?i)\\badr\\b|docs/adr",
+              "path": "/Users/itsmeyaw/projects/alpaca-hackathon",
+              "include": "README.md"
+            },
+            "output": "Found 1 matches\n/Users/itsmeyaw/projects/alpaca-hackathon/infra/README.md:\n  Line 48: Set `model_paper_execution_enabled=true` only for an artifact matching the ADR-0013 15-minute\n",
+            "metadata": {
+              "matches": 1,
+              "truncated": false
+            },
+            "title": "(?i)\\badr\\b|docs/adr",
+            "time": {
+              "start": 1788512411244,
+              "end": 1788512411264
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0e84c4769ff94be1016a9a889b25f887d297ae6bb29276ca23"
+            }
+          },
+          "id": "prt_06ba59e5e00125Wtg4FDnmRzEK",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba58ed9001jDq0bg02YN3uQe"
+        },
+        {
+          "type": "tool",
+          "tool": "bash",
+          "callID": "call_sjTKiEs8hn8Skt0CeTxWZ4OP",
+          "state": {
+            "status": "completed",
+            "input": {
+              "command": "git diff --check && git diff -- README.md",
+              "workdir": "/Users/itsmeyaw/projects/alpaca-hackathon"
+            },
+            "output": "diff --git a/README.md b/README.md\nindex 0252838..8bdc7cf 100644\n--- a/README.md\n+++ b/README.md\n@@ -19,7 +19,7 @@ delayed public flight recorder.\n The order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\n Alpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the\n probability of a positive four-hour move across a daily dynamic universe, an explicit distribution\n-shift accepted by [`ADR-0016`](docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md).\n+shift.\n \n | Model contract | Implemented behavior |\n | --- | --- |\n@@ -78,7 +78,7 @@ Positions are rejected when the account is blocked, the market is closed, reconc\n data quality fails, or the account cannot support both the requested buying power and stop-risk.\n Equity entries use server-hosted stop-loss and take-profit brackets. The worker verifies protection on\n every poll and risk-halts if a held position loses either protective leg. Directional option execution\n-is disabled under [`ADR-0018`](docs/adr/0018-return-directional-execution-to-equities.md).\n+is disabled.\n \n ### P&L and validation evidence\n \n@@ -100,8 +100,7 @@ Only two of four validation folds were positive, and the holdout was inspected d\n These results are evidence, not a profitability guarantee; the model received explicit bounded\n paper-trading authority despite not meeting its original promotion gate. The full protocol, fold\n results, failed experiments, and limitations are documented in\n-[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md) and\n-[`ADR-0013`](docs/adr/0013-authorize-the-model-for-paper-execution.md).\n+[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md).\n \n ### Shadow AI research path\n \n@@ -327,6 +326,5 @@ flowchart LR\n | `src/catalyst_router/reporting.py` | Sanitized public portfolio projections |\n | `dashboard/` | Statically exported Next.js public flight recorder |\n | `infra/environments/prod/` | OpenTofu for ECS, App Runner, DynamoDB, S3, CloudFront, IAM, and observability |\n-| `docs/adr/` | Versioned model, authority, risk, and infrastructure decisions |\n \n The central design rule is simple: **AI proposes; deterministic code disposes; Alpaca reconciles.**\n",
+            "metadata": {
+              "output": "diff --git a/README.md b/README.md\nindex 0252838..8bdc7cf 100644\n--- a/README.md\n+++ b/README.md\n@@ -19,7 +19,7 @@ delayed public flight recorder.\n The order-authorized model is a regularized **XGBoost binary classifier** trained on point-in-time\n Alpaca IEX bars for a fixed panel of 12 liquid US equities and ETFs. At runtime it predicts the\n probability of a positive four-hour move across a daily dynamic universe, an explicit distribution\n-shift accepted by [`ADR-0016`](docs/adr/0016-use-a-dynamic-universe-for-long-directional-options.md).\n+shift.\n \n | Model contract | Implemented behavior |\n | --- | --- |\n@@ -78,7 +78,7 @@ Positions are rejected when the account is blocked, the market is closed, reconc\n data quality fails, or the account cannot support both the requested buying power and stop-risk.\n Equity entries use server-hosted stop-loss and take-profit brackets. The worker verifies protection on\n every poll and risk-halts if a held position loses either protective leg. Directional option execution\n-is disabled under [`ADR-0018`](docs/adr/0018-return-directional-execution-to-equities.md).\n+is disabled.\n \n ### P&L and validation evidence\n \n@@ -100,8 +100,7 @@ Only two of four validation folds were positive, and the holdout was inspected d\n These results are evidence, not a profitability guarantee; the model received explicit bounded\n paper-trading authority despite not meeting its original promotion gate. The full protocol, fold\n results, failed experiments, and limitations are documented in\n-[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md) and\n-[`ADR-0013`](docs/adr/0013-authorize-the-model-for-paper-execution.md).\n+[`docs/training/local-benchmark.md`](docs/training/local-benchmark.md).\n \n ### Shadow AI research path\n \n@@ -327,6 +326,5 @@ flowchart LR\n | `src/catalyst_router/reporting.py` | Sanitized public portfolio projections |\n | `dashboard/` | Statically exported Next.js public flight recorder |\n | `infra/environments/prod/` | OpenTofu for ECS, App Runner, DynamoDB, S3, CloudFront, IAM, and observability |\n-| `docs/adr/` | Versioned model, authority, risk, and infrastructure decisions |\n \n The central design rule is simple: **AI proposes; deterministic code disposes; Alpaca reconciles.**\n",
+              "exit": 0,
+              "truncated": false
+            },
+            "title": "git diff --check && git diff -- README.md",
+            "time": {
+              "start": 1788512411275,
+              "end": 1788512411357
+            }
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "fc_0e84c4769ff94be1016a9a889b260487d29cd0150df23097e1"
+            }
+          },
+          "id": "prt_06ba59e6e0012HWQst07wJn5bG",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba58ed9001jDq0bg02YN3uQe"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "77b2d5a1ea88017252fde37553028b837a0ffdc9",
+          "type": "step-finish",
+          "tokens": {
+            "total": 24069,
+            "input": 3,
+            "output": 108,
+            "reasoning": 8,
+            "cache": {
+              "write": 485,
+              "read": 23465
+            }
+          },
+          "cost": 0.0073035,
+          "id": "prt_06ba59f2b0011zg4cfT5cE1l3W",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba58ed9001jDq0bg02YN3uQe"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_06ba55d0a001TIdv4wEJBA9q1t",
+        "role": "assistant",
+        "mode": "build",
+        "agent": "build",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/alpaca-hackathon",
+          "root": "/Users/itsmeyaw/projects/alpaca-hackathon"
+        },
+        "cost": 0.00822,
+        "tokens": {
+          "total": 24821,
+          "input": 3,
+          "output": 24,
+          "reasoning": 108,
+          "cache": {
+            "write": 736,
+            "read": 23950
+          }
+        },
+        "modelID": "gpt-5.6-terra",
+        "providerID": "openai",
+        "time": {
+          "created": 1788512411503,
+          "completed": 1788512415974
+        },
+        "finish": "stop",
+        "id": "msg_06ba59f6f0010icnddFpYdkDOG",
+        "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK"
+      },
+      "parts": [
+        {
+          "snapshot": "77b2d5a1ea88017252fde37553028b837a0ffdc9",
+          "type": "step-start",
+          "id": "prt_06ba5a624001LT3tfj0IBbxGcw",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba59f6f0010icnddFpYdkDOG"
+        },
+        {
+          "type": "reasoning",
+          "text": "",
+          "time": {
+            "start": 1788512413222,
+            "end": 1788512415204
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "rs_01053cb8ea6f5da2016a9a889d307c87d29af00e2456224fae",
+              "reasoningEncryptedContent": "REDACTED"
+            }
+          },
+          "id": "prt_06ba5a6260010sVLtnmnWxhuP9",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba59f6f0010icnddFpYdkDOG"
+        },
+        {
+          "type": "text",
+          "text": "Removed all ADR references from the root `README.md` and verified the diff is clean.",
+          "time": {
+            "start": 1788512415236,
+            "end": 1788512415678
+          },
+          "metadata": {
+            "openai": {
+              "itemId": "msg_01053cb8ea6f5da2016a9a889ef34487d2b860f2aded9b5e15",
+              "phase": "final_answer"
+            }
+          },
+          "id": "prt_06ba5ae04001T9Sf3hIYxSJqlD",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba59f6f0010icnddFpYdkDOG"
+        },
+        {
+          "reason": "stop",
+          "snapshot": "77b2d5a1ea88017252fde37553028b837a0ffdc9",
+          "type": "step-finish",
+          "tokens": {
+            "total": 24821,
+            "input": 3,
+            "output": 24,
+            "reasoning": 108,
+            "cache": {
+              "write": 736,
+              "read": 23950
+            }
+          },
+          "cost": 0.00822,
+          "id": "prt_06ba5b0a5001YxHRxosvAnKNaK",
+          "sessionID": "ses_f945aa311ffeOIj0C4cK8SRAPK",
+          "messageID": "msg_06ba59f6f0010icnddFpYdkDOG"
+        }
+      ]
+    }
+  ]
+}

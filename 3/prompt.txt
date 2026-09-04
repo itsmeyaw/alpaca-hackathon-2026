@@ -1,0 +1,1 @@
+Remove ADR referneces inside the readme because the judge wonmt read them anyway.
