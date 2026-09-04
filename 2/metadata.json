@@ -1,0 +1,61 @@
+{
+  "cli_version": "0.10.4",
+  "checkpoint_id": "01M1NSE2F08Z6ZTB53T806SVND",
+  "session_id": "ses_f97b7f0c5ffe2JN1HY4mI4kiv4",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-04T08:44:19.139144Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "README.md"
+  ],
+  "agent": "OpenCode",
+  "model": "gpt-5.6-sol",
+  "turn_id": "d10953c8ec74",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 45,
+    "cache_creation_tokens": 145161,
+    "cache_read_tokens": 1117797,
+    "output_tokens": 11213,
+    "api_call_count": 15
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-04T08:44:19.072294Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 44,
+    "human_modified": 55,
+    "human_removed": 0,
+    "total_committed": 61,
+    "total_lines_changed": 110,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 267,
+      "user_lines_removed": 55,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "README.md": 267
+      },
+      "user_removed_per_file": {
+        "README.md": 55
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 267,
+      "agent_lines_removed": 55
+    }
+  ]
+}
