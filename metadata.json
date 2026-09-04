@@ -3,9 +3,11 @@
   "checkpoint_id": "01M1PCVQJSQFK7SHK8HYYJHHEB",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 2,
+  "checkpoints_count": 30,
   "files_touched": [
-    "README.md"
+    "Catalyst-Router-Alpaca-Hackathon.pdf",
+    "README.md",
+    "presentation.html"
   ],
   "sessions": [
     {
@@ -21,13 +23,20 @@
       "compact_transcript": "/1/transcript.jsonl",
       "content_hash": "/1/content_hash.txt",
       "prompt": "/1/prompt.txt"
+    },
+    {
+      "metadata": "/2/metadata.json",
+      "transcript": "/2/full.jsonl",
+      "compact_transcript": "/2/transcript.jsonl",
+      "content_hash": "/2/content_hash.txt",
+      "prompt": "/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 21,
-    "cache_creation_tokens": 53304,
-    "cache_read_tokens": 109172,
-    "output_tokens": 1228,
-    "api_call_count": 7
+    "input_tokens": 675,
+    "cache_creation_tokens": 496491,
+    "cache_read_tokens": 12701293,
+    "output_tokens": 36129,
+    "api_call_count": 225
   }
 }
