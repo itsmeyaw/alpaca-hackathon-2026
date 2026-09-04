@@ -354,6 +354,7 @@ class LiveTradingCycle:
 
     MAX_ENTRY_NOTIONAL_RATE = Decimal("0.10")
     MAX_CONCURRENT_POSITIONS = RiskGovernor.MAX_POSITIONS
+    MAX_MANAGED_OPTION_QUOTE_AGE = timedelta(minutes=5)
     MANAGED_OPTION_QUOTE_GRACE = timedelta(seconds=60)
 
     def __init__(
@@ -590,7 +591,7 @@ class LiveTradingCycle:
                     continue
                 quote_age = snapshot.clock.timestamp - quote.timestamp
                 if quote.feed != "indicative" or not (
-                    -ModelStrategy.MAX_CLOCK_SKEW <= quote_age <= timedelta(seconds=5)
+                    -ModelStrategy.MAX_CLOCK_SKEW <= quote_age <= self.MAX_MANAGED_OPTION_QUOTE_AGE
                 ):
                     if self._record_option_quote_failure(
                         execution,

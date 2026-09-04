@@ -65,6 +65,7 @@ variable "challenger_manifest_sha256" {
 variable "bedrock_model_id" {
   type        = string
   description = "Bedrock model or inference-profile ID used for shadow Event extraction."
+  default     = "us.openai.gpt-5.6-terra"
 
   validation {
     condition     = length(var.bedrock_model_id) > 0
@@ -75,6 +76,7 @@ variable "bedrock_model_id" {
 variable "bedrock_model_arn" {
   type        = string
   description = "Exact Bedrock foundation-model or inference-profile ARN allowed to receive Events."
+  default     = "arn:aws:bedrock:us-east-1:109850456914:inference-profile/us.openai.gpt-5.6-terra"
 
   validation {
     condition     = startswith(var.bedrock_model_arn, "arn:aws:bedrock:")

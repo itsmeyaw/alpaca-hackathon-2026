@@ -73,6 +73,10 @@ class BedrockEventExtractor:
                     "text": (
                         "You extract factual financial events from supplied news only. "
                         "Do not predict prices, invent symbols, or provide trading instructions. "
+                        "Call record_event exactly once. Use enum values exactly as defined in "
+                        "the tool schema, including uppercase spelling, and keep every numeric "
+                        "value within its schema bounds. expected_horizon_minutes must be an "
+                        "integer from 1 through 10080; cap longer horizons at 10080. "
                         f"Prompt version: {self.prompt_version}."
                     )
                 }
@@ -91,7 +95,7 @@ class BedrockEventExtractor:
                     ],
                 }
             ],
-            "inferenceConfig": {"maxTokens": 700, "temperature": 0},
+            "inferenceConfig": {"maxTokens": 700},
             "toolConfig": {
                 "tools": [
                     {

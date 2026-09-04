@@ -110,6 +110,9 @@ def test_bedrock_extractor_returns_typed_event_with_provenance() -> None:
     assert event.input_tokens == 120
     assert event.output_tokens == 35
     assert event.request_id == "request-1"
+    assert client.calls[0]["inferenceConfig"] == {"maxTokens": 700}
+    assert "Use enum values exactly as defined" in client.calls[0]["system"][0]["text"]
+    assert "1 through 10080" in client.calls[0]["system"][0]["text"]
     assert client.calls[0]["toolConfig"]["toolChoice"] == {"tool": {"name": "record_event"}}
 
 

@@ -320,9 +320,9 @@ export function Dashboard() {
             <CardContent className="grid gap-5 pt-5 sm:grid-cols-2 lg:grid-cols-3">
               {[
                 { label: "Per trade", value: Number(latestPortfolio?.max_trade_risk_rate ?? 0), limit: 0.01, unit: "rate" },
-                { label: "Open stop-risk", value: Number(latestPortfolio?.total_open_risk_rate ?? 0), limit: 0.04, unit: "rate" },
+                { label: "Open stop-risk", value: Number(latestPortfolio?.total_open_risk_rate ?? 0), limit: 0.05, unit: "rate" },
                 { label: "Overnight", value: Number(latestPortfolio?.overnight_open_risk_rate ?? 0), limit: 0.02, unit: "rate" },
-                { label: "Exposure group", value: Number(latestPortfolio?.max_group_open_risk_rate ?? 0), limit: 0.02, unit: "rate" },
+                { label: "Exposure group", value: Number(latestPortfolio?.max_group_open_risk_rate ?? 0), limit: 0.05, unit: "rate" },
                 { label: "Positions", value: latestPortfolio?.position_count ?? 0, limit: 6, unit: "count" },
                 { label: "Competition kill", value: Number(latestPortfolio?.drawdown ?? 0), limit: 0.12, unit: "rate" },
               ].map(({ label, value, limit, unit }) => (

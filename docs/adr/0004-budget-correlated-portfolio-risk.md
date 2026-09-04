@@ -1,6 +1,6 @@
 # ADR-0004: Budget Correlated Portfolio Risk
 
-- Status: Accepted
+- Status: Superseded by ADR-0017
 - Date: 2026-08-27
 
 ## Context

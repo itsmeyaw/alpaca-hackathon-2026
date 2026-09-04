@@ -1,6 +1,6 @@
 # ADR-0016: Use a Dynamic Universe for Long Directional Options
 
-- Status: Accepted
+- Status: Amended by ADR-0018
 - Date: 2026-09-03
 
 ## Context

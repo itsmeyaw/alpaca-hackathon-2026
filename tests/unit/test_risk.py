@@ -164,9 +164,9 @@ def test_vetoes_invalid_stop_direction_and_stale_quotes() -> None:
 def test_vetoes_exhausted_portfolio_group_and_overnight_capacity() -> None:
     governor = RiskGovernor()
     full = portfolio(
-        total_open_risk=Decimal("4000"),
+        total_open_risk=Decimal("5000"),
         overnight_open_risk=Decimal("2000"),
-        group_open_risk={"technology:long": Decimal("2000")},
+        group_open_risk={"technology:long": Decimal("5000")},
     )
 
     regular = governor.evaluate(intent(), agent(), full, market_is_open=True)
@@ -174,6 +174,21 @@ def test_vetoes_exhausted_portfolio_group_and_overnight_capacity() -> None:
 
     assert regular.status is RiskDecisionStatus.VETOED
     assert overnight.status is RiskDecisionStatus.VETOED
+
+
+def test_allows_group_and_total_risk_up_to_five_percent() -> None:
+    decision = RiskGovernor().evaluate(
+        intent(),
+        agent(),
+        portfolio(
+            total_open_risk=Decimal("4000"),
+            group_open_risk={"technology:long": Decimal("4000")},
+        ),
+        market_is_open=True,
+    )
+
+    assert decision.status is RiskDecisionStatus.APPROVED
+    assert decision.risk_amount == Decimal("1000")
 
 
 def test_option_contract_multiplier_is_enforced_and_used_for_sizing() -> None:

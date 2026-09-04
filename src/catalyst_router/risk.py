@@ -17,9 +17,9 @@ class RiskGovernor:
     MAX_POSITIONS = 6
     MAX_TRADE_RISK_RATE = Decimal("0.01")
     REDUCED_TRADE_RISK_RATE = Decimal("0.005")
-    MAX_TOTAL_RISK_RATE = Decimal("0.04")
+    MAX_TOTAL_RISK_RATE = Decimal("0.05")
     MAX_OVERNIGHT_RISK_RATE = Decimal("0.02")
-    MAX_GROUP_RISK_RATE = Decimal("0.02")
+    MAX_GROUP_RISK_RATE = Decimal("0.05")
     DE_RISK_DAILY_LOSS_RATE = Decimal("0.02")
     MAX_DAILY_LOSS_RATE = Decimal("0.04")
     MAX_COMPETITION_DRAWDOWN_RATE = Decimal("0.12")

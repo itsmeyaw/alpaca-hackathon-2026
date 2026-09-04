@@ -38,9 +38,7 @@ tofu -chdir=infra/environments/prod apply \
   -var='challenger_run_id=<run-id>' \
   -var='challenger_manifest_sha256=<manifest-sha256>' \
   -var='model_paper_execution_enabled=true' \
-  -var='model_options_execution_enabled=true' \
-  -var='bedrock_model_id=<model-or-inference-profile-id>' \
-  -var='bedrock_model_arn=<exact-model-or-inference-profile-arn>'
+  -var='model_options_execution_enabled=false'
 ```
 
 The App Runner service injects the runtime secret as `ALPACA_CREDENTIALS`, parses its
@@ -48,8 +46,9 @@ The App Runner service injects the runtime secret as `ALPACA_CREDENTIALS`, parse
 at `https://paper-api.alpaca.markets/v2`. It loads and verifies the private S3 manifest and model
 at startup. The API exposes only sanitized model metadata. Model execution defaults to shadow-only.
 Set `model_paper_execution_enabled=true` only for an artifact matching the ADR-0013 15-minute
-contract; runtime rejects this override for five-minute artifacts. Bedrock access is restricted to
-the exact configured ARN. The task retains HTTPS egress because it must reach AWS and Alpaca APIs.
+contract; runtime rejects this override for five-minute artifacts. Shadow Event extraction uses the
+US `gpt-5.6-terra` inference profile by default, with Bedrock access restricted to that profile and
+its destination models. The task retains HTTPS egress because it must reach AWS and Alpaca APIs.
 Directional long-option execution is separately gated by `model_options_execution_enabled`, which
 defaults off and requires model paper execution.
 

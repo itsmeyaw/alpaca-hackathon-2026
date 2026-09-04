@@ -1061,7 +1061,13 @@ def test_sustained_stale_managed_option_quote_risk_halts_and_flattens() -> None:
 
     class StaleOptionQuotes:
         def latest_quote(self, symbol: str) -> QuoteSnapshot:
-            return quote(symbol=symbol, timestamp=broker.now - timedelta(seconds=6))
+            return quote(
+                symbol=symbol,
+                bid_price=Decimal("3.00"),
+                ask_price=Decimal("3.10"),
+                timestamp=broker.now - timedelta(minutes=5, seconds=1),
+                feed="indicative",
+            )
 
     cycle = LiveTradingCycle(
         store=store,
@@ -1115,7 +1121,7 @@ def test_sustained_missing_managed_option_quote_survives_restart_and_risk_halts(
     assert broker.flattened
 
 
-def test_transient_stale_managed_option_quote_does_not_flatten() -> None:
+def test_managed_option_accepts_a_quote_older_than_the_entry_limit() -> None:
     store = reconciled_store()
     now = datetime.now(UTC)
     broker = FakeBroker(track_positions=True, now=now)
@@ -1130,7 +1136,13 @@ def test_transient_stale_managed_option_quote_does_not_flatten() -> None:
 
     class StaleOptionQuotes:
         def latest_quote(self, symbol: str) -> QuoteSnapshot:
-            return quote(symbol=symbol, timestamp=broker.now - timedelta(seconds=6))
+            return quote(
+                symbol=symbol,
+                bid_price=Decimal("3.00"),
+                ask_price=Decimal("3.10"),
+                timestamp=broker.now - timedelta(seconds=6),
+                feed="indicative",
+            )
 
     cycle = LiveTradingCycle(
         store=store,

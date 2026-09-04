@@ -112,10 +112,9 @@ Any stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an 
 
 ## Trading Mandate
 
-- Strong catalyst-continuation opportunities may use defined-risk options.
-- Liquidity-reversion opportunities use equities.
-- Naked short options are prohibited.
-- The system uses Alpaca's free market-data plan initially: IEX equities and indicative options pricing.
+- Live opportunities use long or short equities with server-hosted protective brackets.
+- Directional options remain disabled after the ADR-0018 paper-trading review.
+- The system uses Alpaca's free IEX equity market-data plan initially.
 - Incomplete, stale, or contradictory data must produce `NO_TRADE` rather than an inferred price.
 - Execution is autonomous after deterministic approval, with an operator kill switch.
 - Trained models begin as Challenger Models. The current classifier has explicit paper-live authority under ADR-0013; deterministic risk and execution retain final authority.
@@ -127,15 +126,15 @@ Any stage may terminate in `NO_TRADE`. Termination is a Decision Record, not an 
 - Build and persist a daily universe of approximately 20 liquid option-enabled underlyings from
   most-active stocks, gainers, and losers.
 - Reserve the remaining Basic-plan equity stream capacity for SPY, QQQ, and sector or regime references.
-- Dynamically subscribe only to option contracts under active evaluation and remain within the Basic-plan stream limit.
+- Do not subscribe to option contracts while live option execution is disabled.
 - Use Alpaca News as the initial catalyst source.
-- Evaluate Event opportunities on news arrival and price challengers on corrected five-minute bars; do not pursue sub-minute latency strategies on IEX and indicative option data.
+- Evaluate Event opportunities on news arrival and price challengers on corrected five-minute bars; do not pursue sub-minute latency strategies on IEX data.
 
 ## Agent Authority
 
 - The Bedrock-hosted LLM emits typed Events and explanations only. Event output may influence the deterministic router in shadow mode, but has no order authority.
 - The deployed price classifier may emit paper Trade Intents at its versioned runtime gate. Under
-  ADR-0016's explicit option gate, bullish predictions buy calls and bearish predictions buy puts.
+  ADR-0018, bullish predictions buy equities and bearish predictions sell equities short.
 - `alpaca-py` is the runtime integration for streams, account reconciliation, market data, and orders.
 - Alpaca MCP exposes read-oriented research and demonstration tools to the LLM; it does not grant the LLM an ungoverned order path.
 - The Alpaca CLI is an operator and judging demonstration surface, including dry runs and account inspection.
@@ -147,29 +146,27 @@ The accepted posture is competition-aggressive but survival-aware:
 
 - Risk at most 1% of equity on one trade.
 - Hold at most six positions concurrently.
-- Limit total open stop-risk to 4% of equity.
+- Limit total open stop-risk to 5% of equity.
 - Limit overnight stop-risk to 2% of equity.
-- Limit one Exposure Group to 2% of equity.
+- Limit one Exposure Group to 5% of equity.
 - At a 2% daily drawdown, reduce new-trade risk to 0.5% of equity.
 - Stop opening risk and begin flattening at a 4% daily loss.
 - Kill autonomous trading at a 12% competition drawdown.
 
 ## Holding Policy
 
-- A catalyst option position may remain open overnight only when the catalyst has already occurred, confidence is high, and the expected horizon extends beyond the close.
-- Liquidity-reversion equity positions must close during the entry session.
-- Do not hold an option through expiration.
+- Model-directional and liquidity-reversion equity positions must close at their horizon or session cutoff.
 - Flatten all positions before the final judging cutoff.
 
-## Option Contract Policy
+## Option Research Policy
 
-- Live option trades are long calls or long puts only.
+- Live option execution is disabled.
+- Any future option evaluation remains shadow-only until separately authorized.
 - Target 14 to 30 calendar days to expiration and approximately 0.55 to 0.70 absolute delta.
 - Require price at least $5, prior-day underlying dollar volume at least $50M, underlying spread at
   most 15 bps, option spread at most 10%, open interest at least 100, positive quote sizes, and a
   quote no more than five seconds old.
-- Budget the full premium as maximum loss and actively exit at -30%, +50%, the model horizon, or the
-  session cutoff.
+- Model full-premium loss and -30%, +50%, horizon, and session exits in shadow evidence.
 - Prohibit 0DTE contracts and short option legs.
 - Require complete, fresh quotes and strict liquidity checks; otherwise route to `NO_TRADE`.
 - Evaluate debit spreads in shadow mode until consolidated option quotes are available and validated.
