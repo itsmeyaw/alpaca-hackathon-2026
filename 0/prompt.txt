@@ -1,0 +1,1 @@
+Create a prompt for image generation of cover image for the project that is professional, detailed, using the alpaca color scheme.

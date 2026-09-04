@@ -1,0 +1,55 @@
+{
+  "cli_version": "0.10.4",
+  "checkpoint_id": "01M1PCVQJSQFK7SHK8HYYJHHEB",
+  "session_id": "ses_f93720e48ffeTBtV0FQH6r7ka0",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-04T14:23:46.480325Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "README.md"
+  ],
+  "agent": "OpenCode",
+  "model": "gpt-5.6-terra",
+  "turn_id": "bd328cc38806",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 12,
+    "cache_creation_tokens": 26064,
+    "cache_read_tokens": 65870,
+    "output_tokens": 500,
+    "api_call_count": 4
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-04T14:23:46.468723Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 5,
+    "total_committed": 0,
+    "total_lines_changed": 5,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 296,
+      "user_lines_removed": 5,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "README.md": 3,
+        "presentation.html": 293
+      },
+      "user_removed_per_file": {
+        "README.md": 5
+      }
+    }
+  ]
+}
